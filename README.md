@@ -28,3 +28,18 @@ Built for **DE-Project Summer Semester 2026** at Otto-von-Guericke University Ma
 - **Science Backbone:** DWSIM (process modelling), OpenLCA (impact assessment)
 
 ## Repository Structure
+
+unity-project/      Unity project root
+blender-assets/     Source .blend files and FBX exports
+ce-data/            CEE deliverables — schema, equations, country data
+docs/               Sprint reports, architecture notes, handover docs
+
+## Status
+
+**Sprint 1** — Concept, work plan, deployment pipeline (08.05.2026)
+
+See [`docs/sprint-plan.md`](./docs/sprint-plan.md) for the full sprint roadmap.
+
+## License
+
+MIT
