@@ -15,8 +15,8 @@ Built for **DE-Project Summer Semester 2026** at Otto-von-Guericke University Ma
 - Sharan Murali — UI Components
 
 **Chemical Engineering**
-- Anjani Lohith Kosana — Process & LCA Lead
-- Hari Krishna Kondam — Transport & Materials
+- Anjani Lohith Kosana
+- Hari Krishna Kondam
 
 ## Tech Stack
 
