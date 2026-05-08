@@ -11,6 +11,7 @@
       --muted: #8b93a7;
       --accent: #4a7cff;
       --border: #1f2638;
+      --panel: #111726;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body {
@@ -30,9 +31,14 @@
         radial-gradient(circle at 80% 80%, rgba(74, 124, 255, 0.05), transparent 50%),
         var(--bg);
     }
+    .page {
+      max-width: 1100px;
+      width: 100%;
+    }
     main {
       max-width: 640px;
       width: 100%;
+      margin: 0 auto;
     }
     .badge {
       display: inline-block;
@@ -91,58 +97,399 @@
     }
     .meta strong { color: var(--fg); font-weight: 500; }
     footer {
-      margin-top: 2rem;
+      max-width: 640px;
+      margin: 2rem auto 0;
       padding-top: 1.5rem;
       border-top: 1px solid var(--border);
       font-size: 0.8rem;
       color: var(--muted);
     }
+
+    /* ============ PRESENTATION VIEWER ============ */
+    .presentation-wrap {
+      width: 100%;
+      margin: 2.5rem auto 0;
+    }
+    .pres-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+    .pres-header h2 {
+      font-size: 0.8rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-weight: 500;
+    }
+    .slide-counter {
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+    .slide-counter strong { color: var(--fg); }
+
+    .slide-frame {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .slide-frame iframe {
+      width: 100%;
+      height: 100%;
+      border: 0;
+      display: block;
+    }
+
+    .slide-controls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-top: 1rem;
+      flex-wrap: wrap;
+    }
+    .nav-btn {
+      background: var(--panel);
+      color: var(--fg);
+      border: 1px solid var(--border);
+      padding: 0.6rem 1.1rem;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-family: inherit;
+    }
+    .nav-btn:hover:not(:disabled) {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .nav-btn:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+    .dots {
+      display: flex;
+      gap: 0.5rem;
+    }
+    .dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--border);
+      border: none;
+      cursor: pointer;
+      padding: 0;
+      transition: background 0.15s;
+    }
+    .dot.active { background: var(--accent); }
+    .dot:hover { background: var(--muted); }
+
+    /* Slide-specific action buttons */
+    .slide-actions {
+      margin-top: 1rem;
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .action-btn {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      padding: 0.7rem 1.25rem;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: inherit;
+      transition: opacity 0.15s, transform 0.15s;
+    }
+    .action-btn:hover { opacity: 0.85; }
+    .action-btn.big {
+      padding: 1rem 2rem;
+      font-size: 1.05rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      box-shadow: 0 4px 14px rgba(74, 124, 255, 0.35);
+    }
+    .action-btn.big:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(74, 124, 255, 0.45);
+      opacity: 1;
+    }
+
+    /* ============ WIREFRAME DIALOG ============ */
+    dialog.wireframe-dialog {
+      border: 1px solid var(--border);
+      background: var(--panel);
+      color: var(--fg);
+      padding: 0;
+      border-radius: 12px;
+      max-width: 95vw;
+      max-height: 95vh;
+      width: 1100px;
+    }
+    dialog.wireframe-dialog::backdrop {
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(4px);
+    }
+    .dialog-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+      gap: 1rem;
+    }
+    .dialog-header h3 {
+      font-size: 1rem;
+      font-weight: 600;
+    }
+    .wf-counter {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-left: auto;
+    }
+    .wf-counter strong { color: var(--fg); }
+    .close-btn {
+      background: transparent;
+      color: var(--fg);
+      border: 1px solid var(--border);
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .close-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .dialog-body {
+      padding: 1.25rem;
+      background: #f5f5f0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 400px;
+    }
+    .dialog-body img {
+      max-width: 100%;
+      max-height: 70vh;
+      display: block;
+      border-radius: 4px;
+    }
+    .dialog-controls {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.75rem 1.5rem;
+      border-top: 1px solid var(--border);
+      gap: 1rem;
+    }
+
     @media (max-width: 480px) {
       body { padding: 1.5rem 1rem; }
       .team { grid-template-columns: 1fr; gap: 0.75rem; }
       .meta { gap: 0.5rem 1.25rem; }
+      .pres-header h2 { font-size: 0.75rem; }
     }
   </style>
 </head>
 <body>
-  <main>
-    <span class="badge">Sprint 1 · In Development</span>
-    <h1>WinDECEE — <span>BladeLoop</span></h1>
-    <p class="tagline">
-      An interactive visualisation of wind turbine blade thermal co-processing —
-      turning end-of-life GFRP blade waste into cement industry feedstock.
-    </p>
+  <div class="page">
+    <main>
+      <span class="badge">Sprint 1 · In Development</span>
+      <h1>WinDECEE — <span>BladeLoop</span></h1>
+      <p class="tagline">
+        An interactive visualisation of wind turbine blade thermal co-processing —
+        turning end-of-life GFRP blade waste into cement industry feedstock.
+      </p>
 
-    <div class="section">
-      <h2>Team — Digital Engineering</h2>
-      <div class="team">
-        <div>Ritwika Sen<div class="role">Lead · Architecture</div></div>
-        <div>Anirban Maji<div class="role">UI/UX · Dashboards</div></div>
-        <div>Akshat Daruka<div class="role">3D · Animations</div></div>
-        <div>Sharan Murali<div class="role">UI Components</div></div>
+      <div class="section">
+        <h2>Team — Digital Engineering</h2>
+        <div class="team">
+          <div>Ritwika Sen<div class="role">Lead · Architecture</div></div>
+          <div>Anirban Maji<div class="role">UI/UX · Dashboards</div></div>
+          <div>Akshat Daruka<div class="role">3D · Animations</div></div>
+          <div>Sharan Murali<div class="role">UI Components</div></div>
+        </div>
       </div>
-    </div>
 
-    <div class="section">
-      <h2>Team — Chemical Engineering</h2>
-      <div class="team">
-        <div>Anjani Lohith Kosana<div class="role">Process · LCA</div></div>
-        <div>Hari Krishna Kondam<div class="role">Transport · Materials</div></div>
+      <div class="section">
+        <h2>Team — Chemical Engineering</h2>
+        <div class="team">
+          <div>Anjani Lohith Kosana<div class="role">Process · LCA</div></div>
+          <div>Hari Krishna Kondam<div class="role">Transport · Materials</div></div>
+        </div>
       </div>
-    </div>
 
-    <div class="section">
-      <h2>Project</h2>
-      <div class="meta">
-        <span><strong>Course:</strong> DE-Project SS 2026</span>
-        <span><strong>University:</strong> OvGU Magdeburg</span>
-        <span><strong>Final:</strong> 11 Sept 2026</span>
+      <div class="section">
+        <h2>Project</h2>
+        <div class="meta">
+          <span><strong>Course:</strong> DE-Project SS 2026</span>
+          <span><strong>University:</strong> OvGU Magdeburg</span>
+          <span><strong>Final:</strong> 11 Sept 2026</span>
+        </div>
       </div>
-    </div>
+    </main>
+
+    <!-- ============ SPRINT 1 PRESENTATION ============ -->
+    <section class="presentation-wrap">
+      <div class="pres-header">
+        <h2>Sprint 1 — Presentation</h2>
+        <div class="slide-counter">
+          Slide <strong id="slideNum">1</strong> of <strong>6</strong>
+        </div>
+      </div>
+
+      <div class="slide-frame">
+        <iframe id="slideViewer" src="assets/presentation/slide-1.pdf#toolbar=0&navpanes=0&view=FitH" title="Presentation slide"></iframe>
+      </div>
+
+      <div class="slide-controls">
+        <button class="nav-btn" id="prevBtn">← Previous</button>
+        <div class="dots" id="dots"></div>
+        <button class="nav-btn" id="nextBtn">Next →</button>
+      </div>
+
+      <div class="slide-actions" id="slideActions"></div>
+    </section>
 
     <footer>
       Deployment pipeline verified. Application coming soon.
     </footer>
-  </main>
+  </div>
+
+  <!-- ============ WIREFRAME DIALOG ============ -->
+  <dialog class="wireframe-dialog" id="wireframeDialog">
+    <div class="dialog-header">
+      <h3>Wireframes — BladeLoop UI</h3>
+      <span class="wf-counter">
+        <strong id="wfNum">1</strong> / 3
+      </span>
+      <button class="close-btn" id="closeDialog" aria-label="Close">✕</button>
+    </div>
+    <div class="dialog-body">
+      <img id="wireframeImg" src="assets/wireframes/wireframe-1.png" alt="Wireframe" />
+    </div>
+    <div class="dialog-controls">
+      <button class="nav-btn" id="wfPrev">← Previous</button>
+      <button class="nav-btn" id="wfNext">Next →</button>
+    </div>
+  </dialog>
+
+  <script>
+    // ================== CONFIG ==================
+    const TOTAL_SLIDES = 6;
+    const LINEAR_URL = "https://linear.app/windecee/project/windecee-bladeloop-65078b3ddd17/overview"; // <-- REPLACE with your Linear project URL
+    // ============================================
+
+    let current = 1;
+
+    const viewer = document.getElementById('slideViewer');
+    const slideNum = document.getElementById('slideNum');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const dotsEl = document.getElementById('dots');
+    const actions = document.getElementById('slideActions');
+
+    // Build dot indicators
+    for (let i = 1; i <= TOTAL_SLIDES; i++) {
+      const d = document.createElement('button');
+      d.className = 'dot';
+      d.setAttribute('aria-label', `Go to slide ${i}`);
+      d.addEventListener('click', () => goTo(i));
+      dotsEl.appendChild(d);
+    }
+
+    function goTo(n) {
+      current = Math.max(1, Math.min(TOTAL_SLIDES, n));
+      viewer.src = `assets/presentation/slide-${current}.pdf#toolbar=0&navpanes=0&view=FitH`;
+      slideNum.textContent = current;
+      prevBtn.disabled = current === 1;
+      nextBtn.disabled = current === TOTAL_SLIDES;
+      [...dotsEl.children].forEach((d, i) => d.classList.toggle('active', i + 1 === current));
+      renderActions();
+    }
+
+    function renderActions() {
+      actions.innerHTML = '';
+      if (current === 3) {
+        const a = document.createElement('a');
+        a.className = 'action-btn';
+        a.href = LINEAR_URL;
+        a.target = '_blank';
+        a.rel = 'noopener';
+        a.innerHTML = '↗ Open Linear Project Board';
+        actions.appendChild(a);
+      }
+      if (current === 4) {
+        const b = document.createElement('button');
+        b.className = 'action-btn big';
+        b.innerHTML = '🖼  View Wireframes (3)';
+        b.addEventListener('click', openWireframes);
+        actions.appendChild(b);
+      }
+    }
+
+    prevBtn.addEventListener('click', () => goTo(current - 1));
+    nextBtn.addEventListener('click', () => goTo(current + 1));
+    document.addEventListener('keydown', (e) => {
+      if (document.getElementById('wireframeDialog').open) return;
+      if (e.key === 'ArrowLeft') goTo(current - 1);
+      if (e.key === 'ArrowRight') goTo(current + 1);
+    });
+
+    // ---- Wireframe dialog ----
+    const WF_TOTAL = 3;
+    let wfCurrent = 1;
+    const dialog = document.getElementById('wireframeDialog');
+    const wfImg = document.getElementById('wireframeImg');
+    const wfNum = document.getElementById('wfNum');
+    const wfPrev = document.getElementById('wfPrev');
+    const wfNext = document.getElementById('wfNext');
+
+    function openWireframes() {
+      wfCurrent = 1;
+      updateWireframe();
+      dialog.showModal();
+    }
+    function updateWireframe() {
+      wfImg.src = `assets/wireframes/wireframe-${wfCurrent}.png`;
+      wfNum.textContent = wfCurrent;
+      wfPrev.disabled = wfCurrent === 1;
+      wfNext.disabled = wfCurrent === WF_TOTAL;
+    }
+    wfPrev.addEventListener('click', () => { if (wfCurrent > 1) { wfCurrent--; updateWireframe(); } });
+    wfNext.addEventListener('click', () => { if (wfCurrent < WF_TOTAL) { wfCurrent++; updateWireframe(); } });
+    document.getElementById('closeDialog').addEventListener('click', () => dialog.close());
+    dialog.addEventListener('click', (e) => {
+      const r = dialog.getBoundingClientRect();
+      if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) {
+        dialog.close();
+      }
+    });
+    document.addEventListener('keydown', (e) => {
+      if (!dialog.open) return;
+      if (e.key === 'Escape') dialog.close();
+      if (e.key === 'ArrowLeft' && wfCurrent > 1) { wfCurrent--; updateWireframe(); }
+      if (e.key === 'ArrowRight' && wfCurrent < WF_TOTAL) { wfCurrent++; updateWireframe(); }
+    });
+
+    // Initial
+    goTo(1);
+  </script>
 </body>
 </html>
