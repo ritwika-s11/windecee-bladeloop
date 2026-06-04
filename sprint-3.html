@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WinDECEE — BladeLoop · Sprint 3</title>
+  <style>
+    :root {
+      --bg: #0a0e1a;
+      --fg: #e6e9ef;
+      --muted: #8b93a7;
+      --accent: #4a7cff;
+      --border: #1f2638;
+      --card-bg: #10162a;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      -webkit-font-smoothing: antialiased;
+    }
+    body {
+      min-height: 100vh;
+      padding: 2rem 1.25rem;
+      background:
+        radial-gradient(circle at 20% 20%, rgba(74, 124, 255, 0.08), transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(74, 124, 255, 0.05), transparent 50%),
+        var(--bg);
+    }
+    main { max-width: 880px; width: 100%; margin: 0 auto; }
+
+    .sprint-nav { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; }
+    .sprint-nav a {
+      display: inline-block; padding: 0.3rem 0.85rem;
+      font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase;
+      text-decoration: none; border-radius: 999px;
+      transition: background 0.2s, color 0.2s, border-color 0.2s;
+    }
+    .sprint-nav a.active { color: var(--bg); background: var(--accent); border: 1px solid var(--accent); }
+    .sprint-nav a:not(.active) { color: var(--muted); border: 1px solid var(--border); }
+    .sprint-nav a:not(.active):hover { color: var(--fg); border-color: var(--muted); }
+
+    .badge {
+      display: inline-block; padding: 0.25rem 0.75rem;
+      font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--accent); border: 1px solid var(--accent);
+      border-radius: 999px; margin-bottom: 1.5rem;
+    }
+    h1 {
+      font-size: clamp(1.6rem, 6vw, 2.5rem); font-weight: 600;
+      margin-bottom: 0.5rem; letter-spacing: -0.02em;
+      overflow-wrap: break-word; line-height: 1.15;
+    }
+    h1 span { color: var(--accent); }
+    .tagline {
+      color: var(--muted); font-size: clamp(0.95rem, 2.5vw, 1.1rem);
+      line-height: 1.5; margin-bottom: 2rem;
+    }
+    .section { padding-top: 1.5rem; margin-top: 1.5rem; border-top: 1px solid var(--border); }
+    .section h2 {
+      font-size: 0.8rem; letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 1rem; font-weight: 500;
+    }
+
+    /* slides frame */
+    .slides-frame {
+      position: relative; width: 100%; aspect-ratio: 16 / 9;
+      border: 1px dashed var(--border); border-radius: 8px;
+      background: var(--card-bg);
+      display: flex; align-items: center; justify-content: center;
+      text-align: center; padding: 1.5rem; overflow: hidden;
+    }
+    .slides-frame .placeholder-text { color: var(--muted); font-size: 0.85rem; max-width: 360px; line-height: 1.5; }
+    .slides-frame .placeholder-text strong { color: var(--fg); display: block; margin-bottom: 0.4rem; font-size: 0.95rem; }
+    .slides-frame iframe, .slides-frame img {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      border: 0; object-fit: cover; border-radius: 8px;
+    }
+    .slides-actions { margin-top: 0.75rem; display: flex; gap: 0.75rem; font-size: 0.8rem; }
+    .slides-actions a {
+      color: var(--accent); text-decoration: none;
+      border-bottom: 1px solid transparent; transition: border-color 0.2s;
+    }
+    .slides-actions a:hover { border-bottom-color: var(--accent); }
+
+    /* overview render — wide hero */
+    .overview-render {
+      background: var(--card-bg); border: 1px solid var(--border);
+      border-radius: 8px; overflow: hidden;
+    }
+    .overview-render img { width: 100%; display: block; }
+    .overview-render .caption {
+      padding: 0.85rem 1.1rem 1rem;
+      font-size: 0.85rem; color: var(--muted); line-height: 1.5;
+    }
+    .overview-render .caption strong { color: var(--fg); display: block; margin-bottom: 0.25rem; }
+
+    /* stage gallery grid */
+    .stage-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.85rem;
+    }
+    .stage-card {
+      background: var(--card-bg); border: 1px solid var(--border);
+      border-radius: 8px; overflow: hidden;
+    }
+    .stage-card img { width: 100%; aspect-ratio: 16 / 10; object-fit: cover; display: block; background: #060912; }
+    .stage-card .caption { padding: 0.65rem 0.95rem 0.95rem; }
+    .stage-card .tag {
+      font-size: 0.7rem; color: var(--accent);
+      letter-spacing: 0.08em; text-transform: uppercase;
+      margin-bottom: 0.25rem;
+    }
+    .stage-card .title { font-size: 0.95rem; color: var(--fg); font-weight: 500; margin-bottom: 0.25rem; }
+    .stage-card .meta { font-size: 0.78rem; color: var(--muted); line-height: 1.45; }
+
+    /* next steps */
+    .next {
+      display: grid; gap: 0.75rem;
+    }
+    .next-item {
+      background: var(--card-bg); border: 1px solid var(--border);
+      border-radius: 8px; padding: 1rem 1.2rem;
+      display: grid; grid-template-columns: 2.2rem 1fr; gap: 0.5rem 1rem;
+    }
+    .next-item .num { font-size: 1.2rem; color: var(--accent); font-weight: 600; line-height: 1; }
+    .next-item .label { font-size: 0.7rem; color: var(--accent); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 0.2rem; }
+    .next-item .what { font-size: 0.95rem; color: var(--fg); font-weight: 500; margin-bottom: 0.2rem; }
+    .next-item .who { font-size: 0.82rem; color: var(--muted); }
+
+    footer {
+      margin-top: 2.5rem; padding-top: 1.5rem;
+      border-top: 1px solid var(--border);
+      font-size: 0.8rem; color: var(--muted);
+    }
+
+    @media (max-width: 600px) {
+      .stage-grid { grid-template-columns: 1fr; }
+      .next-item { grid-template-columns: 1.8rem 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <nav class="sprint-nav">
+      <a href="index.html">Sprint 1</a>
+      <a href="sprint-2.html">Sprint 2</a>
+      <a href="sprint-3.html" class="active">Sprint 3</a>
+    </nav>
+
+    <span class="badge">Sprint 3 · From Process to 3D</span>
+    <h1>The Plant — <span>in Blender</span></h1>
+    <p class="tagline">
+      Five stages of the wind turbine blade recycling process, modelled in 3D.
+      Source assets handed off to the Unity team. Real-world references locked.
+    </p>
+
+    <!-- ===== SLIDES ===== -->
+    <div class="section">
+      <h2>Sprint 3 Deck</h2>
+      <div class="slides-frame">
+        <!-- REPLACE WITH: <iframe src="assets/WinDECEE-Sprint3.pdf#view=FitH&toolbar=0" title="Sprint 3 deck"></iframe> when slides are ready -->
+        <div class="placeholder-text">
+          <strong>Slides placeholder</strong>
+          Sprint 3 presentation deck will be embedded here.
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== PROCESS OVERVIEW HERO ===== -->
+    <div class="section">
+      <h2>Process Overview · 3D</h2>
+      <div class="overview-render">
+        <img src="assets/blender-goals/process-overview-all-stages.png" alt="All five process stages rendered in Blender">
+        <div class="caption">
+          <strong>End-to-end flow — 5 stages, 1,389 objects</strong>
+          From left: blade decommissioning yard · twin-shaft shredder · rotary kiln with discharge flame · cyclone separator · clinker silo. Single Blender scene, organised by stage prefix, ready to slice into per-stage Unity scenes.
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== PER-STAGE GALLERY ===== -->
+    <div class="section">
+      <h2>Per-Stage Detail</h2>
+
+      <div class="stage-grid">
+
+        <div class="stage-card">
+          <img src="assets/blender-goals/stage-1-decommissioning.png" alt="Stage 1 — Decommissioning yard with excavator">
+          <div class="caption">
+            <div class="tag">Stage 01</div>
+            <div class="title">Decommissioning &amp; Pre-Treatment</div>
+            <div class="meta">Wind turbine blade, hydraulic shears, excavator, scattered debris. 59 custom-built objects.</div>
+          </div>
+        </div>
+
+        <div class="stage-card">
+          <img src="assets/blender-goals/stage-2-shredder.png" alt="Stage 2 — Industrial twin-shaft shredder">
+          <div class="caption">
+            <div class="tag">Stage 02</div>
+            <div class="title">Mechanical Shredding</div>
+            <div class="meta">Twin-shaft shredder, hopper, magnetic separator, conveyor with GFRP granules. 114 custom-built objects.</div>
+          </div>
+        </div>
+
+        <div class="stage-card">
+          <img src="assets/blender-goals/stage-3-kiln.png" alt="Stage 3 — Rotary kiln with discharge flame">
+          <div class="caption">
+            <div class="tag">Stage 03</div>
+            <div class="title">Thermal Treatment</div>
+            <div class="meta">Rotary kiln, riding rings, roller stations, drive gear, discharge flame. 24 custom-built objects.</div>
+          </div>
+        </div>
+
+        <div class="stage-card">
+          <img src="assets/blender-goals/stage-4-cyclone.png" alt="Stage 4 — Cyclone separator">
+          <div class="caption">
+            <div class="tag">Stage 04</div>
+            <div class="title">Solid–Gas Separation</div>
+            <div class="meta">Production-grade cyclone separator with structural frame and cone bottom. Sourced via SketchFab.</div>
+          </div>
+        </div>
+
+        <div class="stage-card">
+          <img src="assets/blender-goals/stage-5-silo.png" alt="Stage 5 — Clinker storage silo">
+          <div class="caption">
+            <div class="tag">Stage 05</div>
+            <div class="title">Clinker Synthesis</div>
+            <div class="meta">Weathered concrete silo with rivets, panels, safety ladders, support legs. Sourced via SketchFab.</div>
+          </div>
+        </div>
+
+        <div class="stage-card" style="background: linear-gradient(135deg, #10162a 0%, #1a2444 100%);">
+          <img src="assets/blender-goals/process-overview-all-stages.png" alt="All stages overview" style="opacity: 0.4;">
+          <div class="caption">
+            <div class="tag">Coming next</div>
+            <div class="title">Detail pass in Unity</div>
+            <div class="meta">Source .blend handed off. Unity scene assembly + material refinement starts Sprint 4.</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ===== NEXT STEPS ===== -->
+    <div class="section">
+      <h2>Where We're Heading</h2>
+      <div class="next">
+
+        <div class="next-item">
+          <div class="num">01</div>
+          <div>
+            <div class="label">Sprint 4 — Unity Scene Assembly</div>
+            <div class="what">FBX export of all 5 stages → URP Unity project → WebGL build pipeline</div>
+            <div class="who">DE team, led by Anirban with Akshat on materials &amp; animations</div>
+          </div>
+        </div>
+
+        <div class="next-item">
+          <div class="num">02</div>
+          <div>
+            <div class="label">Sprint 5 — CEE Schema Handoff</div>
+            <div class="what">Surrogate equations from DWSIM model → versioned JSON schema → live parameter binding</div>
+            <div class="who">CEE team (Anjani, Hari) delivers; DE team integrates</div>
+          </div>
+        </div>
+
+        <div class="next-item">
+          <div class="num">03</div>
+          <div>
+            <div class="label">Sprint 6 — Interactive Drill-Down Scenes</div>
+            <div class="what">Click any stage in macro view → close-up 3D scene with parameter sliders &amp; live KPIs</div>
+            <div class="who">Full team integration sprint</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <footer>
+      Sprint 3 · 05 June 2026 · WinDECEE — BladeLoop · DE-Project SS 2026 · OvGU Magdeburg
+    </footer>
+  </main>
+</body>
+</html>
