@@ -153,7 +153,7 @@
     <span class="badge">Sprint 3 · From Process to 3D</span>
     <h1>The Plant — <span>in Blender</span></h1>
     <p class="tagline">
-      Five stages of the wind turbine blade recycling process, modelled in 3D.
+      Four stages of the wind turbine blade recycling process, modelled in 3D.
       Source assets handed off to the Unity team. Real-world references locked.
     </p>
 
@@ -175,7 +175,7 @@
       <div class="overview-render">
         <img src="assets/blender-goals/process-overview-all-stages.png" alt="All five process stages rendered in Blender">
         <div class="caption">
-          <strong>End-to-end flow — 5 stages, 1,389 objects</strong>
+          <strong>End-to-end flow — 4 stages, 1,389 objects</strong>
           From left: blade decommissioning yard · twin-shaft shredder · rotary kiln with discharge flame · cyclone separator · clinker silo. Single Blender scene, organised by stage prefix, ready to slice into per-stage Unity scenes.
         </div>
       </div>
@@ -188,11 +188,11 @@
       <div class="stage-grid">
 
         <div class="stage-card">
-          <img src="assets/blender-goals/stage-1-decommissioning.png" alt="Stage 1 — Decommissioning yard with excavator">
+          <img src="assets/blender-goals/stage-1-decommissioning.png" alt="Stage 1 — On-site treatment yard with excavator">
           <div class="caption">
             <div class="tag">Stage 01</div>
-            <div class="title">Decommissioning &amp; Pre-Treatment</div>
-            <div class="meta">Wind turbine blade, hydraulic shears, excavator, scattered debris. 59 custom-built objects.</div>
+            <div class="title">On-Site Treatment</div>
+            <div class="meta">Hydraulic shears cut blades to 1–2 m segments. Excavator, scattered debris, pallet base. 59 custom-built objects.</div>
           </div>
         </div>
 
@@ -201,34 +201,34 @@
           <div class="caption">
             <div class="tag">Stage 02</div>
             <div class="title">Mechanical Shredding</div>
-            <div class="meta">Twin-shaft shredder, hopper, magnetic separator, conveyor with GFRP granules. 114 custom-built objects.</div>
+            <div class="meta">Grinder reduces to 1–20 mm particles. Twin-shaft shredder, hopper, conveyor with GFRP granules. 114 custom-built objects.</div>
           </div>
         </div>
 
         <div class="stage-card">
-          <img src="assets/blender-goals/stage-3-kiln.png" alt="Stage 3 — Rotary kiln with discharge flame">
+          <img src="assets/blender-goals/stage-3-kiln.png" alt="Stage 3 — Thermal decomposition reactor">
           <div class="caption">
             <div class="tag">Stage 03</div>
-            <div class="title">Thermal Treatment</div>
-            <div class="meta">Rotary kiln, riding rings, roller stations, drive gear, discharge flame. 24 custom-built objects.</div>
+            <div class="title">Thermal Decomposition Reactor</div>
+            <div class="meta">Operates at 550–660 °C. Epoxy resin decomposes to gas + char; glass fibers stay solid. 24 custom-built objects.</div>
           </div>
         </div>
 
         <div class="stage-card">
-          <img src="assets/blender-goals/stage-4-cyclone.png" alt="Stage 4 — Cyclone separator">
+          <img src="assets/blender-goals/stage-4-cyclone.png" alt="Stage 4 — Integrated cyclone-classifier separation tower">
           <div class="caption">
             <div class="tag">Stage 04</div>
-            <div class="title">Solid–Gas Separation</div>
-            <div class="meta">Production-grade cyclone separator with structural frame and cone bottom. Sourced via SketchFab.</div>
+            <div class="title">Integrated Material Separation</div>
+            <div class="meta">One cyclone-classifier tower separates gas (top), then glass fiber and char by density. Three recovered streams.</div>
           </div>
         </div>
 
-        <div class="stage-card">
-          <img src="assets/blender-goals/stage-5-silo.png" alt="Stage 5 — Clinker storage silo">
+        <div class="stage-card" style="background: linear-gradient(135deg, #10162a 0%, #1a2444 100%);">
+          <img src="assets/blender-goals/stage-5-silo.png" alt="Downstream usage — cement plant silo">
           <div class="caption">
-            <div class="tag">Stage 05</div>
-            <div class="title">Clinker Synthesis</div>
-            <div class="meta">Weathered concrete silo with rivets, panels, safety ladders, support legs. Sourced via SketchFab.</div>
+            <div class="tag">Downstream</div>
+            <div class="title">Usage &amp; Replacement</div>
+            <div class="meta">Glass fiber → cement clinker. Char → coal substitute. Gas → process fuel. Diverts from landfill, replaces virgin inputs.</div>
           </div>
         </div>
 
@@ -253,7 +253,7 @@
           <div class="num">01</div>
           <div>
             <div class="label">Sprint 4 — Unity Scene Assembly</div>
-            <div class="what">FBX export of all 5 stages → URP Unity project → WebGL build pipeline</div>
+            <div class="what">FBX export of all 4 stages → URP Unity project → WebGL build pipeline</div>
             <div class="who">DE team, led by Anirban with Akshat on materials &amp; animations</div>
           </div>
         </div>
