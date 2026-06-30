@@ -1,0 +1,39 @@
+using UnityEngine;
+using UnityEngine.Playables;
+using UnityEngine.SceneManagement;
+using Unity.Cinemachine;
+
+public class StoryModeController : MonoBehaviour
+{
+    public PlayableDirector director;
+    public CinemachineCamera freeOrbitCam;
+    public GameObject pauseHintUI;
+
+    bool paused = false;
+
+    void Start()
+    {
+        if (freeOrbitCam != null) freeOrbitCam.Priority = 0;
+        if (pauseHintUI != null) pauseHintUI.SetActive(false);
+    }
+
+    void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.P))
+            TogglePause();
+        if (Input.GetKeyDown(KeyCode.Escape))
+            BackToMenu();
+    }
+
+    public void TogglePause()
+    {
+        paused = !paused;
+        if (director != null && director.playableGraph.IsValid())
+            director.playableGraph.GetRootPlayable(0).SetSpeed(paused ? 0 : 1);
+        if (freeOrbitCam != null)
+            freeOrbitCam.Priority = paused ? 100 : 0;
+        if (pauseHintUI != null) pauseHintUI.SetActive(paused);
+    }
+
+    public void BackToMenu() { SceneManager.LoadScene("MainMenu"); }
+}
