@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachineShot
   DisplayName: 
   VirtualCamera:
-    exposedName: 
+    exposedName: Stage4_StoryMode_clip2
     defaultValue: {fileID: 0}
 --- !u!114 &-6238661503450061563
 MonoBehaviour:
@@ -30,7 +30,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachineShot
   DisplayName: 
   VirtualCamera:
-    exposedName: 
+    exposedName: Stage4_StoryMode_clip3
     defaultValue: {fileID: 0}
 --- !u!114 &-2826130967792923339
 MonoBehaviour:
@@ -103,7 +103,7 @@ MonoBehaviour:
     m_PreExtrapolationMode: 0
     m_PostExtrapolationTime: 0
     m_PreExtrapolationTime: 0
-    m_DisplayName: 01_HoodReveal
+    m_DisplayName: S4_01_HoodReveal
   - m_Version: 1
     m_Start: 7
     m_ClipIn: 0
@@ -136,7 +136,7 @@ MonoBehaviour:
     m_PreExtrapolationMode: 0
     m_PostExtrapolationTime: 0
     m_PreExtrapolationTime: 0
-    m_DisplayName: 02_SealWiper
+    m_DisplayName: S4_02_SealWiper
   - m_Version: 1
     m_Start: 14
     m_ClipIn: 0
@@ -169,7 +169,7 @@ MonoBehaviour:
     m_PreExtrapolationMode: 0
     m_PostExtrapolationTime: 0
     m_PreExtrapolationTime: 0
-    m_DisplayName: 03_PipeUp
+    m_DisplayName: S4_03_PipeUp
   - m_Version: 1
     m_Start: 21
     m_ClipIn: 0
@@ -202,7 +202,7 @@ MonoBehaviour:
     m_PreExtrapolationMode: 0
     m_PostExtrapolationTime: 0
     m_PreExtrapolationTime: 0
-    m_DisplayName: 04_AirlockDrop
+    m_DisplayName: S4_04_AirlockDrop
   - m_Version: 1
     m_Start: 28
     m_ClipIn: 0
@@ -235,7 +235,7 @@ MonoBehaviour:
     m_PreExtrapolationMode: 0
     m_PostExtrapolationTime: 0
     m_PreExtrapolationTime: 0
-    m_DisplayName: 05_CycloneTower
+    m_DisplayName: S4_05_CycloneTower
   - m_Version: 1
     m_Start: 39
     m_ClipIn: 0
@@ -286,7 +286,7 @@ MonoBehaviour:
     m_PreExtrapolationMode: 0
     m_PostExtrapolationTime: 0
     m_PreExtrapolationTime: 0
-    m_DisplayName: 06_TwoOutputs
+    m_DisplayName: S4_06_TwoOutputs
   m_Markers:
     m_Objects: []
   TrackPriority: 0
@@ -304,7 +304,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachineShot
   DisplayName: 
   VirtualCamera:
-    exposedName: 
+    exposedName: Stage4_StoryMode_clip1
     defaultValue: {fileID: 0}
 --- !u!114 &11400000
 MonoBehaviour:
@@ -341,7 +341,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachineShot
   DisplayName: 
   VirtualCamera:
-    exposedName: 
+    exposedName: Stage4_StoryMode_clip0
     defaultValue: {fileID: 0}
 --- !u!114 &7754240541990976561
 MonoBehaviour:
@@ -357,7 +357,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachineShot
   DisplayName: 
   VirtualCamera:
-    exposedName: 
+    exposedName: Stage4_StoryMode_clip4
     defaultValue: {fileID: 0}
 --- !u!114 &9167855871525873635
 MonoBehaviour:
@@ -373,5 +373,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachineShot
   DisplayName: 
   VirtualCamera:
-    exposedName: 
+    exposedName: Stage4_StoryMode_clip5
     defaultValue: {fileID: 0}
