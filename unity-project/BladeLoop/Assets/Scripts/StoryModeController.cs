@@ -10,6 +10,7 @@ public class StoryModeController : MonoBehaviour
     public GameObject pauseHintUI;
 
     bool paused = false;
+    public bool IsPaused => paused;
 
     void Start()
     {

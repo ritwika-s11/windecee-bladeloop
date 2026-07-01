@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachineShot
   DisplayName: 
   VirtualCamera:
-    exposedName: 
+    exposedName: Stage2_StoryMode_clip1
     defaultValue: {fileID: 0}
 --- !u!114 &11400000
 MonoBehaviour:
@@ -51,7 +51,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachineShot
   DisplayName: 
   VirtualCamera:
-    exposedName: 
+    exposedName: Stage2_StoryMode_clip3
     defaultValue: {fileID: 0}
 --- !u!114 &2741332278760052106
 MonoBehaviour:
@@ -67,7 +67,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachineShot
   DisplayName: 
   VirtualCamera:
-    exposedName: 
+    exposedName: Stage2_StoryMode_clip2
     defaultValue: {fileID: 0}
 --- !u!114 &2747199398102372047
 MonoBehaviour:
@@ -83,7 +83,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachineShot
   DisplayName: 
   VirtualCamera:
-    exposedName: 
+    exposedName: Stage2_StoryMode_clip0
     defaultValue: {fileID: 0}
 --- !u!114 &8118242801261756591
 MonoBehaviour:
@@ -156,7 +156,7 @@ MonoBehaviour:
     m_PreExtrapolationMode: 0
     m_PostExtrapolationTime: 0
     m_PreExtrapolationTime: 0
-    m_DisplayName: 01_PlantEntry
+    m_DisplayName: S2_01_PlantEntry
   - m_Version: 1
     m_Start: 7
     m_ClipIn: 0
@@ -189,7 +189,7 @@ MonoBehaviour:
     m_PreExtrapolationMode: 0
     m_PostExtrapolationTime: 0
     m_PreExtrapolationTime: 0
-    m_DisplayName: 02_TruckDump
+    m_DisplayName: S2_02_TruckDump
   - m_Version: 1
     m_Start: 16
     m_ClipIn: 0
@@ -222,7 +222,7 @@ MonoBehaviour:
     m_PreExtrapolationMode: 0
     m_PostExtrapolationTime: 0
     m_PreExtrapolationTime: 0
-    m_DisplayName: 03_TeethSpin
+    m_DisplayName: S2_03_TeethSpin
   - m_Version: 1
     m_Start: 26
     m_ClipIn: 0
@@ -273,7 +273,7 @@ MonoBehaviour:
     m_PreExtrapolationMode: 0
     m_PostExtrapolationTime: 0
     m_PreExtrapolationTime: 0
-    m_DisplayName: 04_OutputGranules
+    m_DisplayName: S2_04_OutputGranules
   m_Markers:
     m_Objects: []
   TrackPriority: 0

@@ -71,7 +71,7 @@ MonoBehaviour:
     m_PreExtrapolationMode: 0
     m_PostExtrapolationTime: 0
     m_PreExtrapolationTime: 0
-    m_DisplayName: 01_BoilerReveal
+    m_DisplayName: S5_01_BoilerReveal
   - m_Version: 1
     m_Start: 9
     m_ClipIn: 0
@@ -104,7 +104,7 @@ MonoBehaviour:
     m_PreExtrapolationMode: 0
     m_PostExtrapolationTime: 0
     m_PreExtrapolationTime: 0
-    m_DisplayName: 02_SteamPath
+    m_DisplayName: S5_02_SteamPath
   - m_Version: 1
     m_Start: 18
     m_ClipIn: 0
@@ -137,7 +137,7 @@ MonoBehaviour:
     m_PreExtrapolationMode: 0
     m_PostExtrapolationTime: 0
     m_PreExtrapolationTime: 0
-    m_DisplayName: 03_TurbineSpin
+    m_DisplayName: S5_03_TurbineSpin
   - m_Version: 1
     m_Start: 27
     m_ClipIn: 0
@@ -170,7 +170,7 @@ MonoBehaviour:
     m_PreExtrapolationMode: 0
     m_PostExtrapolationTime: 0
     m_PreExtrapolationTime: 0
-    m_DisplayName: 04_GeneratorOutput
+    m_DisplayName: S5_04_GeneratorOutput
   - m_Version: 1
     m_Start: 36
     m_ClipIn: 0
@@ -221,7 +221,7 @@ MonoBehaviour:
     m_PreExtrapolationMode: 0
     m_PostExtrapolationTime: 0
     m_PreExtrapolationTime: 0
-    m_DisplayName: 05_PowerLoopFull
+    m_DisplayName: S5_05_PowerLoopFull
   m_Markers:
     m_Objects: []
   TrackPriority: 0
@@ -239,7 +239,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachineShot
   DisplayName: 
   VirtualCamera:
-    exposedName: 
+    exposedName: Stage5_StoryMode_clip1
     defaultValue: {fileID: 0}
 --- !u!114 &-1691594567996006903
 MonoBehaviour:
@@ -255,7 +255,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachineShot
   DisplayName: 
   VirtualCamera:
-    exposedName: 
+    exposedName: Stage5_StoryMode_clip4
     defaultValue: {fileID: 0}
 --- !u!114 &11400000
 MonoBehaviour:
@@ -292,7 +292,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachineShot
   DisplayName: 
   VirtualCamera:
-    exposedName: 
+    exposedName: Stage5_StoryMode_clip3
     defaultValue: {fileID: 0}
 --- !u!114 &6110729257578453624
 MonoBehaviour:
@@ -308,7 +308,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachineShot
   DisplayName: 
   VirtualCamera:
-    exposedName: 
+    exposedName: Stage5_StoryMode_clip2
     defaultValue: {fileID: 0}
 --- !u!114 &7831507718696091526
 MonoBehaviour:
@@ -324,5 +324,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachineShot
   DisplayName: 
   VirtualCamera:
-    exposedName: 
+    exposedName: Stage5_StoryMode_clip0
     defaultValue: {fileID: 0}
