@@ -18032,6 +18032,8 @@ PlayableDirector:
   m_SceneBindings:
   - key: {fileID: -8699115615964545110, guid: 00fe8c60b2af04ba0bae6df9d721da5d, type: 2}
     value: {fileID: 961739754}
+  - key: {fileID: -1635788110842198812, guid: 00fe8c60b2af04ba0bae6df9d721da5d, type: 2}
+    value: {fileID: 1715841224}
   m_ExposedReferences:
     m_References:
     - Stage1_StoryMode_clip3: {fileID: 2084849512}
@@ -23998,6 +24000,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1715841223}
+  - component: {fileID: 1715841224}
   m_Layer: 0
   m_Name: CAM_S1_01_WideAerial
   m_TagString: Untagged
@@ -24021,6 +24024,28 @@ Transform:
   - {fileID: 1625051778}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!95 &1715841224
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1715841222}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 0}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &1719952288
 GameObject:
   m_ObjectHideFlags: 0
