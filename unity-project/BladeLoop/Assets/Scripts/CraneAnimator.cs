@@ -37,6 +37,8 @@ public class CraneAnimator : MonoBehaviour
     public float cycleDuration = 6f;
     public float startDelay = 0f;
 
+    float sceneT0; // scene-relative clock (Time.time keeps running across chained scene loads)
+
     float pickupYaw;
     float dropYaw;
     float pickupTrolleyX;
@@ -56,6 +58,7 @@ public class CraneAnimator : MonoBehaviour
     {
         if (slew == null || trolley == null || hookRig == null) return;
 
+        sceneT0 = Time.time;
         Vector3 slewWorld = slew.position;
         Vector2 pickupOff = new Vector2(pickupWorldPos.x - slewWorld.x, pickupWorldPos.z - slewWorld.z);
         Vector2 dropOff = new Vector2(dropWorldPos.x - slewWorld.x, dropWorldPos.z - slewWorld.z);
@@ -102,7 +105,7 @@ public class CraneAnimator : MonoBehaviour
             return;
         }
 
-        float t2 = Time.time - startDelay;
+        float t2 = Time.time - sceneT0 - startDelay;
         if (t2 < 0f) {
             UpdateCable();
             return;

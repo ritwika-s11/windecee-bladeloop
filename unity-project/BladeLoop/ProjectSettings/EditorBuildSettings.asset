@@ -29,5 +29,8 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/FullPlantTour.unity
     guid: ca1027440c09b4a05a4c69ac10860ca0
+  - enabled: 1
+    path: Assets/Scenes/Transport_StoryMode.unity
+    guid: 2c4bbc3f4a5374bfe8231fb5e38dd3b3
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}

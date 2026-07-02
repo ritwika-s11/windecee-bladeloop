@@ -150,18 +150,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TourSceneSequencer
   sceneSequence:
   - Stage1_StoryMode
+  - Transport_StoryMode
   - Stage2_StoryMode
   - Stage3_StoryMode
-  - Stage4_StoryMode
-  - Stage5_StoryMode
   sceneDurations:
   - 38
+  - 15
   - 38
-  - 50
-  - 50
-  - 48
+  - 112
   fadeCanvas: {fileID: 787970055}
   fadeDuration: 0.5
+  endHold: 1
 --- !u!4 &138009250
 Transform:
   m_ObjectHideFlags: 0
