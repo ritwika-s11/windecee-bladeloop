@@ -153,11 +153,13 @@ MonoBehaviour:
   - Transport_StoryMode
   - Stage2_StoryMode
   - Stage3_StoryMode
+  - Stage4_StoryMode
   sceneDurations:
   - 38
   - 15
   - 38
   - 112
+  - 80
   fadeCanvas: {fileID: 787970055}
   fadeDuration: 0.5
   endHold: 1

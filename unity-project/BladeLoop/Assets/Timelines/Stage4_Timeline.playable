@@ -32,6 +32,22 @@ MonoBehaviour:
   VirtualCamera:
     exposedName: Stage4_StoryMode_clip3
     defaultValue: {fileID: 0}
+--- !u!114 &-5010570424166589007
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 90fb794a295e73545af71bcdb7375791, type: 3}
+  m_Name: CinemachineShot
+  m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachineShot
+  DisplayName: 
+  VirtualCamera:
+    exposedName: shot_f02b1d137ad34211890f2ff886cdbc89
+    defaultValue: {fileID: 0}
 --- !u!114 &-2826130967792923339
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -204,10 +220,10 @@ MonoBehaviour:
     m_PreExtrapolationTime: 0
     m_DisplayName: S4_04_AirlockDrop
   - m_Version: 1
-    m_Start: 28
+    m_Start: 37.5
     m_ClipIn: 0
     m_Asset: {fileID: 7754240541990976561}
-    m_Duration: 12
+    m_Duration: 11
     m_TimeScale: 1
     m_ParentTrack: {fileID: -2826130967792923339}
     m_EaseInDuration: 0
@@ -237,10 +253,109 @@ MonoBehaviour:
     m_PreExtrapolationTime: 0
     m_DisplayName: S4_05_CycloneTower
   - m_Version: 1
-    m_Start: 39
+    m_Start: 57.5
     m_ClipIn: 0
     m_Asset: {fileID: 9167855871525873635}
+    m_Duration: 9.5
+    m_TimeScale: 1
+    m_ParentTrack: {fileID: -2826130967792923339}
+    m_EaseInDuration: 0
+    m_EaseOutDuration: 0
+    m_BlendInDuration: 1
+    m_BlendOutDuration: 1
+    m_MixInCurve:
+      serializedVersion: 2
+      m_Curve: []
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    m_MixOutCurve:
+      serializedVersion: 2
+      m_Curve: []
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    m_BlendInCurveMode: 0
+    m_BlendOutCurveMode: 0
+    m_ExposedParameterNames: []
+    m_AnimationCurves: {fileID: 0}
+    m_Recordable: 0
+    m_PostExtrapolationMode: 0
+    m_PreExtrapolationMode: 0
+    m_PostExtrapolationTime: 0
+    m_PreExtrapolationTime: 0
+    m_DisplayName: S4_06_TwoOutputs
+  - m_Version: 1
+    m_Start: 28
+    m_ClipIn: 0
+    m_Asset: {fileID: -2198982217917669836}
+    m_Duration: 10.5
+    m_TimeScale: 1
+    m_ParentTrack: {fileID: -2826130967792923339}
+    m_EaseInDuration: 0
+    m_EaseOutDuration: 0
+    m_BlendInDuration: 1
+    m_BlendOutDuration: 1
+    m_MixInCurve:
+      serializedVersion: 2
+      m_Curve: []
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    m_MixOutCurve:
+      serializedVersion: 2
+      m_Curve: []
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    m_BlendInCurveMode: 0
+    m_BlendOutCurveMode: 0
+    m_ExposedParameterNames: []
+    m_AnimationCurves: {fileID: 0}
+    m_Recordable: 0
+    m_PostExtrapolationMode: 0
+    m_PreExtrapolationMode: 0
+    m_PostExtrapolationTime: 0
+    m_PreExtrapolationTime: 0
+    m_DisplayName: S4_07_HeatExchanger
+  - m_Version: 1
+    m_Start: 47.5
+    m_ClipIn: 0
+    m_Asset: {fileID: -5010570424166589007}
     m_Duration: 11
+    m_TimeScale: 1
+    m_ParentTrack: {fileID: -2826130967792923339}
+    m_EaseInDuration: 0
+    m_EaseOutDuration: 0
+    m_BlendInDuration: 1
+    m_BlendOutDuration: 1
+    m_MixInCurve:
+      serializedVersion: 2
+      m_Curve: []
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    m_MixOutCurve:
+      serializedVersion: 2
+      m_Curve: []
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    m_BlendInCurveMode: 0
+    m_BlendOutCurveMode: 0
+    m_ExposedParameterNames: []
+    m_AnimationCurves: {fileID: 0}
+    m_Recordable: 0
+    m_PostExtrapolationMode: 0
+    m_PreExtrapolationMode: 0
+    m_PostExtrapolationTime: 0
+    m_PreExtrapolationTime: 0
+    m_DisplayName: S4_08_CondenserTower
+  - m_Version: 1
+    m_Start: 66
+    m_ClipIn: 0
+    m_Asset: {fileID: 8861366939556138212}
+    m_Duration: 13.5
     m_TimeScale: 1
     m_ParentTrack: {fileID: -2826130967792923339}
     m_EaseInDuration: 0
@@ -286,7 +401,7 @@ MonoBehaviour:
     m_PreExtrapolationMode: 0
     m_PostExtrapolationTime: 0
     m_PreExtrapolationTime: 0
-    m_DisplayName: S4_06_TwoOutputs
+    m_DisplayName: S4_09_PowerLoop
   m_Markers:
     m_Objects: []
   TrackPriority: 0
@@ -305,6 +420,22 @@ MonoBehaviour:
   DisplayName: 
   VirtualCamera:
     exposedName: Stage4_StoryMode_clip1
+    defaultValue: {fileID: 0}
+--- !u!114 &-2198982217917669836
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 90fb794a295e73545af71bcdb7375791, type: 3}
+  m_Name: CinemachineShot
+  m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachineShot
+  DisplayName: 
+  VirtualCamera:
+    exposedName: shot_a376a28393fc47e2bb0b32b6f90fadef
     defaultValue: {fileID: 0}
 --- !u!114 &11400000
 MonoBehaviour:
@@ -358,6 +489,22 @@ MonoBehaviour:
   DisplayName: 
   VirtualCamera:
     exposedName: Stage4_StoryMode_clip4
+    defaultValue: {fileID: 0}
+--- !u!114 &8861366939556138212
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 90fb794a295e73545af71bcdb7375791, type: 3}
+  m_Name: CinemachineShot
+  m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachineShot
+  DisplayName: 
+  VirtualCamera:
+    exposedName: shot_1966a8dd31a34acd9a1b260e65899066
     defaultValue: {fileID: 0}
 --- !u!114 &9167855871525873635
 MonoBehaviour:
