@@ -11,9 +11,18 @@ public class TransportBeats : MonoBehaviour
     public CinemachineCamera camA;
     public CinemachineCamera camB;
     public float switchTime = 9f;
+
+    [Tooltip("Optional narration audio, played with a small lead-in delay.")]
+    public AudioSource voiceover;
+    public float voiceoverDelay = 0.5f;
+
     float t0;
 
-    void Start() { t0 = Time.time; }
+    void Start()
+    {
+        t0 = Time.time;
+        if (voiceover != null && voiceover.clip != null) voiceover.PlayDelayed(voiceoverDelay);
+    }
 
     void Update()
     {
