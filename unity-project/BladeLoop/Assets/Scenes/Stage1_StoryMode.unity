@@ -10919,7 +10919,7 @@ MonoBehaviour:
   - {fileID: 1097312204}
   - {fileID: 803693966}
   cycleDuration: 3.5
-  startDelay: 16
+  startDelay: 24
 --- !u!1 &729107679
 GameObject:
   m_ObjectHideFlags: 0
