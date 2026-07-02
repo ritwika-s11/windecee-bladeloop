@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.Playables;
+using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 using Unity.Cinemachine;
 
@@ -20,9 +21,11 @@ public class StoryModeController : MonoBehaviour
 
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.P))
+        var kb = Keyboard.current;
+        if (kb == null) return;
+        if (kb.spaceKey.wasPressedThisFrame || kb.pKey.wasPressedThisFrame)
             TogglePause();
-        if (Input.GetKeyDown(KeyCode.Escape))
+        if (kb.escapeKey.wasPressedThisFrame)
             BackToMenu();
     }
 
