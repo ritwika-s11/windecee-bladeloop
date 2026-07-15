@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using TMPro;
+using UnityEngine.SceneManagement;
 
 /// <summary>
 /// Self-building interactive dashboard for the BladeLoop pyrolysis plant.
@@ -129,6 +130,7 @@ public class PlantExplorerController : MonoBehaviour
     {
         var bg = MakeImage(root, "BG", PanelBg);
         Stretch(bg.rectTransform);
+        BuildBackButton(root);
 
         var content = new GameObject("Content", typeof(RectTransform), typeof(VerticalLayoutGroup)).GetComponent<RectTransform>();
         content.SetParent(root, false);
@@ -184,23 +186,23 @@ public class PlantExplorerController : MonoBehaviour
         gasLbl   = MakeText(lblRow, "a", "", 13, GasCol,   TextAlignmentOptions.Center); Anchor(gasLbl.rectTransform, 0.33f,0,0.66f,1);
         charLbl  = MakeText(lblRow, "c", "", 13, CharCol,  TextAlignmentOptions.Right);  Anchor(charLbl.rectTransform, 0.66f,0,1,1);
 
-        var sepCard = MakeImage(content, "SepCard", TileBg); SetH(sepCard.rectTransform, 130);
+        var sepCard = MakeImage(content, "SepCard", TileBg); SetH(sepCard.rectTransform, 240);
         var sc = new GameObject("sc", typeof(RectTransform)).GetComponent<RectTransform>();
-        sc.SetParent(sepCard.transform, false); Stretch(sc); Inset(sc, 20, 14);
+        sc.SetParent(sepCard.transform, false); Stretch(sc); Inset(sc, 20, 16);
         var st = MakeText(sc, "st", "SEPARATION WINDOW  (char 0.0032  <  gas  <  glass 0.0368 m/s)", 15, TextSub, TextAlignmentOptions.TopLeft);
-        Anchor(st.rectTransform, 0,0.72f,1,1);
-        var track = MakeImage(sc, "track", Hex("05070E")); Anchor(track.rectTransform, 0,0.42f,1,0.6f);
+        Anchor(st.rectTransform, 0,0.86f,1,1);
+        var track = MakeImage(sc, "track", Hex("05070E")); Anchor(track.rectTransform, 0,0.70f,1,0.80f);
         var safe = MakeImage(track.rectTransform, "safe", Hex("173A25"));
         safe.rectTransform.anchorMin = new Vector2(0.0032f/0.05f, 0);
         safe.rectTransform.anchorMax = new Vector2(0.0368f/0.05f, 1);
         safe.rectTransform.offsetMin = Vector2.zero; safe.rectTransform.offsetMax = Vector2.zero;
         var marker = MakeImage(track.rectTransform, "marker", TextMain);
-        marker.rectTransform.sizeDelta = new Vector2(4, 14);
+        marker.rectTransform.sizeDelta = new Vector2(4, 16);
         sepMarker = marker.rectTransform;
-        var slRow = MakeRow(sc, "sepSlider", 44); Anchor(slRow, 0,0.02f,1,0.36f);
+        var slRow = MakeRow(sc, "sepSlider", 70); Anchor(slRow, 0,0.24f,1,0.64f);
         MakeSlider(slRow, "Fluidizing", "m/s\u00d71000", 1, 50, 15, v => { model.FluidizingVelocity = v/1000.0; Recompute(); });
-        sepMsg = MakeText(sc, "sepMsg", "", 14, Good, TextAlignmentOptions.Left);
-        Anchor(sepMsg.rectTransform, 0,0,1,0.02f); sepMsg.rectTransform.sizeDelta = new Vector2(0,22);
+        sepMsg = MakeText(sc, "sepMsg", "", 15, Good, TextAlignmentOptions.Left);
+        Anchor(sepMsg.rectTransform, 0,0,1,0.18f);
     }
 
     RectTransform MakeRow(Transform parent, string name, float height)
@@ -304,7 +306,25 @@ public class PlantExplorerController : MonoBehaviour
         return t;
     }
 
-    void EnsureEventSystem()
+    void BuildBackButton(Transform root)
+    {
+        var go = new GameObject("BackButton", typeof(RectTransform), typeof(Image), typeof(Button));
+        go.transform.SetParent(root, false);
+        var rt = go.GetComponent<RectTransform>();
+        rt.anchorMin = new Vector2(0, 1); rt.anchorMax = new Vector2(0, 1); rt.pivot = new Vector2(0, 1);
+        rt.anchoredPosition = new Vector2(30, -30); rt.sizeDelta = new Vector2(150, 46);
+        var img = go.GetComponent<Image>(); img.color = TileBg;
+        var btn = go.GetComponent<Button>();
+        var cb = btn.colors;
+        cb.normalColor = TileBg; cb.highlightedColor = Accent; cb.pressedColor = new Color(0.23f,0.39f,0.8f,1f);
+        cb.selectedColor = TileBg; cb.fadeDuration = 0.15f;
+        btn.colors = cb;
+        btn.onClick.AddListener(() => SceneManager.LoadScene("MainMenu"));
+        var t = MakeText(rt, "lbl", "\u2190  Menu", 18, TextMain, TextAlignmentOptions.Center);
+        t.fontStyle = FontStyles.Bold;
+    }
+
+        void EnsureEventSystem()
     {
         if (Object.FindFirstObjectByType<EventSystem>() == null)
             new GameObject("EventSystem", typeof(EventSystem),
