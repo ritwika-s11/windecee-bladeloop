@@ -10,6 +10,7 @@ public class SceneLoader : MonoBehaviour
     public void LoadStage5()   { SceneManager.LoadScene("Stage5_StoryMode"); }
     public void LoadFullTour() { SceneManager.LoadScene("FullPlantTour"); }
     public void LoadMainMenu() { SceneManager.LoadScene("MainMenu"); }
+    public void LoadPlantExplorer() { SceneManager.LoadScene("PlantExplorer"); }
 
     public void QuitApp()
     {
