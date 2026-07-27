@@ -23,10 +23,10 @@ public class PlantExplorerController : MonoBehaviour
     static void InitPalette()
     {
         if (paletteReady) return;
-        PanelBg  = Hex("0A0E1A"); TileBg = Hex("10162A"); Accent = Hex("4A7CFF");
-        TextMain = Hex("FFFFFF"); TextSub = Hex("B0B8C7"); Hot    = Hex("FF8B15");
-        Good     = Hex("3FB56B"); Bad    = Hex("E5534B");
-        GlassCol = Hex("6FA8DC"); GasCol = Hex("E8926B"); CharCol = Hex("9AA0A6");
+        PanelBg  = Hex("F5F6F8"); TileBg = Hex("FFFFFF"); Accent = Hex("2563EB");
+        TextMain = Hex("1E293B"); TextSub = Hex("475569"); Hot    = Hex("D97706");
+        Good     = Hex("16A34A"); Bad    = Hex("DC2626");
+        GlassCol = Hex("3B82F6"); GasCol = Hex("D97706"); CharCol = Hex("6B7280");
         paletteReady = true;
     }
 
@@ -191,8 +191,8 @@ public class PlantExplorerController : MonoBehaviour
         sc.SetParent(sepCard.transform, false); Stretch(sc); Inset(sc, 20, 16);
         var st = MakeText(sc, "st", "SEPARATION WINDOW  (char 0.0032  <  gas  <  glass 0.0368 m/s)", 15, TextSub, TextAlignmentOptions.TopLeft);
         Anchor(st.rectTransform, 0,0.86f,1,1);
-        var track = MakeImage(sc, "track", Hex("05070E")); Anchor(track.rectTransform, 0,0.70f,1,0.80f);
-        var safe = MakeImage(track.rectTransform, "safe", Hex("173A25"));
+        var track = MakeImage(sc, "track", Hex("E2E8F0")); Anchor(track.rectTransform, 0,0.70f,1,0.80f);
+        var safe = MakeImage(track.rectTransform, "safe", Hex("C9EBD5"));
         safe.rectTransform.anchorMin = new Vector2(0.0032f/0.05f, 0);
         safe.rectTransform.anchorMax = new Vector2(0.0368f/0.05f, 1);
         safe.rectTransform.offsetMin = Vector2.zero; safe.rectTransform.offsetMax = Vector2.zero;
@@ -244,7 +244,7 @@ public class PlantExplorerController : MonoBehaviour
         var sGO = new GameObject("Slider", typeof(RectTransform), typeof(Slider));
         var sr = sGO.GetComponent<RectTransform>(); sr.SetParent(pad, false);
         Anchor(sr, 0,0.30f,1,0.60f);
-        var bgImg = MakeImage(sr, "bg", Hex("05070E")); Stretch(bgImg.rectTransform);
+        var bgImg = MakeImage(sr, "bg", Hex("E2E8F0")); Stretch(bgImg.rectTransform);
         var fillArea = new GameObject("FillArea", typeof(RectTransform)).GetComponent<RectTransform>();
         fillArea.SetParent(sr, false); Stretch(fillArea);
         var fill = MakeImage(fillArea, "Fill", Accent); fill.rectTransform.anchorMin = new Vector2(0,0); fill.rectTransform.anchorMax = new Vector2(0,1);
@@ -292,6 +292,11 @@ public class PlantExplorerController : MonoBehaviour
         var go = new GameObject(name, typeof(RectTransform), typeof(Image));
         go.transform.SetParent(parent, false);
         var img = go.GetComponent<Image>(); img.color = col;
+        if (col == TileBg) {
+            var sh = go.AddComponent<UnityEngine.UI.Shadow>();
+            sh.effectColor = new Color(0.08f, 0.12f, 0.2f, 0.13f);
+            sh.effectDistance = new Vector2(0f, -3f);
+        }
         return img;
     }
 
@@ -300,7 +305,7 @@ public class PlantExplorerController : MonoBehaviour
         var go = new GameObject(name, typeof(RectTransform));
         go.transform.SetParent(parent, false);
         var t = go.AddComponent<TextMeshProUGUI>();
-        t.text = text; t.fontSize = size; t.color = col; t.alignment = align;
+        t.text = text; t.fontSize = size * 1.18f; t.color = col; t.alignment = align;
         t.raycastTarget = false;
         Stretch(t.rectTransform);
         return t;
