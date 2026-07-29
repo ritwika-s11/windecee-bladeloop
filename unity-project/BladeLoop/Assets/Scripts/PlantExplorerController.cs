@@ -43,6 +43,7 @@ public class PlantExplorerController : MonoBehaviour
     float aFeed, aKiln, aBurner, aCo2;
     float tFeed, tKiln, tBurner, tCo2;
     Color verdictTarget;
+    KilnVisualizer kilnViz;
 
     void Awake()
     {
@@ -51,7 +52,8 @@ public class PlantExplorerController : MonoBehaviour
         var canvas = BuildCanvas();
         BuildUI(canvas.transform);
         Recompute();
-        aFeed = tFeed; aKiln = tKiln; aBurner = tBurner; aCo2 = tCo2;
+        kilnViz = Object.FindFirstObjectByType<KilnVisualizer>();
+        aFeed = tFeed; aKiln = tKiln; aBurner = tBurner; aCo2 = tCo2;;
     }
 
     void Update()
@@ -110,7 +112,9 @@ public class PlantExplorerController : MonoBehaviour
         } else {
             sepMsg.text = "Char lifts out, glass falls through. Clean separation.";
             sepMsg.color = Good;
-        }
+                }
+
+        if (kilnViz != null) kilnViz.SetHeat((float)model.PyrolysisTempC);
     }
 
     Canvas BuildCanvas()
@@ -129,15 +133,16 @@ public class PlantExplorerController : MonoBehaviour
     void BuildUI(Transform root)
     {
         var bg = MakeImage(root, "BG", PanelBg);
-        Stretch(bg.rectTransform);
+        bg.rectTransform.anchorMin = new Vector2(0f, 0f); bg.rectTransform.anchorMax = new Vector2(0.70f, 1f);;
+        bg.rectTransform.offsetMin = Vector2.zero; bg.rectTransform.offsetMax = Vector2.zero;
         BuildBackButton(root);
 
         var content = new GameObject("Content", typeof(RectTransform), typeof(VerticalLayoutGroup)).GetComponent<RectTransform>();
         content.SetParent(root, false);
-        content.anchorMin = new Vector2(0.5f, 1); content.anchorMax = new Vector2(0.5f, 1);
+        content.anchorMin = new Vector2(0.35f, 1); content.anchorMax = new Vector2(0.35f, 1);;
         content.pivot = new Vector2(0.5f, 1);
         content.anchoredPosition = new Vector2(0, -40);
-        content.sizeDelta = new Vector2(1500, 0);
+        content.sizeDelta = new Vector2(1080, 0);
         var vlg = content.GetComponent<VerticalLayoutGroup>();
         vlg.spacing = 18; vlg.childControlWidth = true; vlg.childForceExpandWidth = true;
         vlg.childControlHeight = true; vlg.childForceExpandHeight = false;
