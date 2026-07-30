@@ -33,7 +33,9 @@ public class KilnVisualizer : MonoBehaviour
     public float hotIntensity  = 1.4f;
     public float dangerIntensity = 2.6f;
 
-    Material[] mats;
+        Material[] mats;
+    float baseRpm = 6f;   // set from retention time
+    float heatSpin = 1f;  // multiplier from temperature
 
     void Awake()
     {
@@ -83,8 +85,18 @@ public class KilnVisualizer : MonoBehaviour
 
         if (rotator != null)
         {
-            // spins a little faster when hotter — subtle life
-            rotator.rpm = Mathf.Lerp(4f, 9f, u);
+                        // heat adds a small spin multiplier on top of the retention-driven base
+            heatSpin = Mathf.Lerp(1f, 1.4f, u);
+            rotator.rpm = baseRpm * heatSpin;
         }
+        }
+
+    /// <summary>Set base rotation speed from retention time. Shorter retention = material moves through faster = faster spin.</summary>
+    public void SetRotation(float retentionMinutes)
+    {
+        // retention 10..60 min maps to rpm 9..3 (inverse: short retention spins faster)
+        float t = Mathf.InverseLerp(10f, 60f, retentionMinutes);
+        baseRpm = Mathf.Lerp(20f, 6f, t);
+        if (rotator != null) rotator.rpm = baseRpm * heatSpin;
     }
 }
