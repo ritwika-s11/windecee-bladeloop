@@ -99,4 +99,16 @@ public class KilnVisualizer : MonoBehaviour
         baseRpm = Mathf.Lerp(20f, 6f, t);
         if (rotator != null) rotator.rpm = baseRpm * heatSpin;
     }
+
+    public ParticleSystem smoke;
+    public void SetSeparation(bool ok)
+    {
+        if (smoke == null) return;
+        var main = smoke.main;
+        var em = smoke.emission;
+        // Same pale smoke both ways; failure just makes it thicker/more turbulent (plant working harder).
+        main.startColor = new Color(0.85f, 0.86f, 0.9f, ok ? 0.35f : 0.55f);
+        em.rateOverTime = ok ? 7f : 26f;
+    }
+
 }

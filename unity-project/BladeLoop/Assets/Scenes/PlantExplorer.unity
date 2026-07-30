@@ -512,7 +512,7 @@ ParticleSystem:
       serializedVersion: 2
       minMaxState: 0
       minColor: {r: 1, g: 1, b: 1, a: 1}
-      maxColor: {r: 0.5, g: 0.5, b: 0.52, a: 0.12}
+      maxColor: {r: 0.85, g: 0.86, b: 0.9, a: 0.35}
       maxGradient:
         serializedVersion: 2
         key0: {r: 1, g: 1, b: 1, a: 1}
@@ -1159,7 +1159,7 @@ ParticleSystem:
     rateOverTime:
       serializedVersion: 2
       minMaxState: 0
-      scalar: 4
+      scalar: 7
       minScalar: 10
       maxCurve:
         serializedVersion: 2
@@ -1597,8 +1597,8 @@ ParticleSystem:
       maxColor: {r: 1, g: 1, b: 1, a: 1}
       maxGradient:
         serializedVersion: 2
-        key0: {r: 0.55, g: 0.55, b: 0.58, a: 0}
-        key1: {r: 0.45, g: 0.45, b: 0.48, a: 0.18}
+        key0: {r: 0.9, g: 0.9, b: 0.94, a: 0}
+        key1: {r: 0.7, g: 0.72, b: 0.78, a: 0.4}
         key2: {r: 0, g: 0, b: 0, a: 0}
         key3: {r: 0, g: 0, b: 0, a: 0}
         key4: {r: 0, g: 0, b: 0, a: 0}
@@ -12556,6 +12556,7 @@ MonoBehaviour:
   coolIntensity: 0.4
   hotIntensity: 1.4
   dangerIntensity: 2.6
+  smoke: {fileID: 153425608}
 --- !u!1 &1939836758
 GameObject:
   m_ObjectHideFlags: 0

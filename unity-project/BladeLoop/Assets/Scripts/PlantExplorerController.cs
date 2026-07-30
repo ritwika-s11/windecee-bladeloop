@@ -23,10 +23,10 @@ public class PlantExplorerController : MonoBehaviour
     static void InitPalette()
     {
         if (paletteReady) return;
-        PanelBg  = Hex("0A0E15"); TileBg = Hex("151C2C"); Accent = Hex("4A7CFF");
-        TextMain = Hex("FFFFFF"); TextSub = Hex("9AA6BF"); Hot    = Hex("FF8B15");;
+        PanelBg  = Hex("F5F6F8"); TileBg = Hex("FFFFFF"); Accent = Hex("2563EB");
+        TextMain = Hex("1E293B"); TextSub = Hex("475569"); Hot    = Hex("D97706");;
         Good     = Hex("16A34A"); Bad    = Hex("DC2626");
-        GlassCol = Hex("6FA8DC"); GasCol = Hex("E8926B"); CharCol = Hex("9AA0A6");;
+        GlassCol = Hex("3B82F6"); GasCol = Hex("D97706"); CharCol = Hex("6B7280");;
         paletteReady = true;
     }
 
@@ -114,7 +114,7 @@ public class PlantExplorerController : MonoBehaviour
             sepMsg.color = Good;
                 }
 
-        if (kilnViz != null) { kilnViz.SetHeat((float)model.PyrolysisTempC); kilnViz.SetRotation((float)model.RetentionMinutes); };
+        if (kilnViz != null) { kilnViz.SetHeat((float)model.PyrolysisTempC); kilnViz.SetRotation((float)model.RetentionMinutes); kilnViz.SetSeparation(o.SeparationOk); };
     }
 
     Canvas BuildCanvas()
@@ -132,7 +132,7 @@ public class PlantExplorerController : MonoBehaviour
 
     void BuildUI(Transform root)
     {
-        var bg = MakeImage(root, "BG", new Color(0,0,0,0)); bg.raycastTarget = false;;
+        var bg = MakeImage(root, "BG", PanelBg); bg.raycastTarget = false;
         bg.rectTransform.anchorMin = new Vector2(0f, 0f); bg.rectTransform.anchorMax = new Vector2(0.70f, 1f);;
         bg.rectTransform.offsetMin = Vector2.zero; bg.rectTransform.offsetMax = Vector2.zero;
         BuildBackButton(root);
@@ -173,7 +173,7 @@ public class PlantExplorerController : MonoBehaviour
         feedVal   = MakeCard(cards, "FEED RATE",   "kg/h");
         kilnVal   = MakeCard(cards, "KILN DRUM",   "m \u2300 \u00d7 length");
         burnerVal = MakeCard(cards, "BURNER",      "kW gross");
-        co2Val    = MakeCard(cards, "CO\u2082 AVOIDED", "t/yr \u00b7 DE grid");
+        co2Val    = MakeCard(cards, "CO<sub>2</sub> AVOIDED", "t/yr \u00b7 DE grid");
 
         var massCard = MakeImage(content, "MassCard", TileBg); SetH(massCard.rectTransform, 110);
         var mc = new GameObject("mc", typeof(RectTransform)).GetComponent<RectTransform>();
