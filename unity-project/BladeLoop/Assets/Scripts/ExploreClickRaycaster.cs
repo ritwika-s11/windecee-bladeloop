@@ -18,6 +18,8 @@ public class ExploreClickRaycaster : MonoBehaviour
 
     Vector2 pressPos;
     bool pressed;
+    float esWait;
+    bool esCreated;
 
     void Start()
     {
@@ -27,6 +29,20 @@ public class ExploreClickRaycaster : MonoBehaviour
 
     void Update()
     {
+        // The additive _Dashboard scene brings its own EventSystem. Only create
+        // one here if none has appeared after 2s (standalone stage play) —
+        // avoids the "2 event systems in the scene" duplicate.
+        if (!esCreated && EventSystem.current == null)
+        {
+            esWait += Time.unscaledDeltaTime;
+            if (esWait > 2f)
+            {
+                new GameObject("EventSystem", typeof(EventSystem),
+                    typeof(UnityEngine.InputSystem.UI.InputSystemUIInputModule));
+                esCreated = true;
+            }
+        }
+
         var mouse = Mouse.current;
         if (mouse == null) return;
         if (controller != null && !controller.IsPaused) return;
