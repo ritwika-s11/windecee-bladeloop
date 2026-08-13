@@ -99,7 +99,10 @@ public class SeparationVisualizer : MonoBehaviour
             m.DisableKeyword("_SURFACE_TYPE_OPAQUE");
             m.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
             m.renderQueue = 3000;
-            var tex = UnityEditor.AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Textures/SoftParticle.png");
+            Texture2D tex = Resources.Load<Texture2D>("SoftParticle");
+#if UNITY_EDITOR
+            if (tex == null) tex = UnityEditor.AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Textures/SoftParticle.png");
+#endif
             if (tex != null) { m.SetTexture("_BaseMap", tex); if (m.HasProperty("_MainTex")) m.SetTexture("_MainTex", tex); }
             go.GetComponent<ParticleSystemRenderer>().sharedMaterial = m;
         }

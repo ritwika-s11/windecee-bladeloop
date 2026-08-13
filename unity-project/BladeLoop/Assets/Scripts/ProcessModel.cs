@@ -56,6 +56,36 @@ public class ProcessModel
     public Status LedFeed      => StatusFor(DevFeed);
     public Status LedOxygen    => OxygenPct < 0.4f ? Status.Optimal : (OxygenPct < 2.8f ? Status.Caution : Status.Critical);
 
+    // Per-input live description (shown in each slider's info popup, updates with value).
+    public string TempInfo()
+    {
+        if (DevTemp < 0.15f) return "Holding near 600 \u00b0C \u2014 clean resin cracking, glass fibre intact.";
+        if (DevTemp < 0.45f) return TempC < OptTemp ? "Cooler than target \u2014 resin breakdown is slowing." : "Hotter than target \u2014 extra thermal stress on the glass fibre.";
+        return TempC < OptTemp ? "Critically cold \u2014 resin not fully cracking, fibre purity falling." : "Critically hot \u2014 fibre strength degrading, char output rising.";
+    }
+    public string RetentionInfo()
+    {
+        if (DevRetention < 0.15f) return "On target \u2014 fibres fully freed of resin without over-cooking.";
+        if (DevRetention < 0.45f) return RetentionMin < OptRetention ? "Short of target \u2014 some resin may stay bound to the fibre." : "Above target \u2014 fibre held in the heat longer than needed.";
+        return RetentionMin < OptRetention ? "Critically short \u2014 incomplete breakdown, low purity." : "Critically long \u2014 embrittlement and more char.";
+    }
+    public string FeedInfo()
+    {
+        if (DevFeed < 0.15f) return "At design throughput \u2014 kiln residence time per particle is ideal.";
+        if (DevFeed < 0.45f) return FeedKgH > OptFeed ? "Above target \u2014 approaching kiln throughput limits." : "Below target \u2014 running under design point.";
+        return FeedKgH > OptFeed ? "Far above capacity \u2014 residence time per particle cut short." : "Far below capacity \u2014 well under design throughput.";
+    }
+    public string OxygenInfo()
+    {
+        if (OxygenPct < 0.4f) return "0% oxygen \u2014 sealed, inert atmosphere, no oxidation risk.";
+        if (OxygenPct < 2.8f) return "Trace oxygen in the drum \u2014 check the nitrogen purge.";
+        return "Significant oxygen ingress \u2014 fibres risk combustion, major strength loss.";
+    }
+    public Status TempStatus => LedTemp;
+    public Status RetentionStatus => LedRetention;
+    public Status FeedStatus => LedFeed;
+    public Status OxygenStatus => LedOxygen;
+
     public struct Diag { public Status level; public string text; }
     public List<Diag> Diagnostics()
     {
