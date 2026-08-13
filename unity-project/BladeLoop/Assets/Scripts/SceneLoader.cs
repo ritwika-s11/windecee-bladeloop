@@ -11,6 +11,7 @@ public class SceneLoader : MonoBehaviour
     public void LoadFullTour() { SceneManager.LoadScene("FullPlantTour"); }
     public void LoadMainMenu() { SceneManager.LoadScene("MainMenu"); }
     public void LoadPlantExplorer() { SceneManager.LoadScene("PlantExplorer"); }
+    public void LoadSeparationExplorer() { SceneManager.LoadScene("SeparationExplorer"); }
 
     public void QuitApp()
     {
