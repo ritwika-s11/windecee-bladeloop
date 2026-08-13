@@ -35,5 +35,8 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/PlantExplorer.unity
     guid: 0fd0851737fc8fd4fbf03ad75c9f157d
+  - enabled: 1
+    path: Assets/Scenes/SeparationExplorer.unity
+    guid: c4f12a8b4382b884fb471d0f8b9cc324
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}

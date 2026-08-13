@@ -66,12 +66,12 @@ public class SeparationController : MonoBehaviour
 
         var content = new GameObject("Content", typeof(RectTransform)).GetComponent<RectTransform>();
         content.SetParent(root, false);
-        content.anchorMin = new Vector2(0.35f, 1); content.anchorMax = new Vector2(0.35f, 1);
-        content.pivot = new Vector2(0.5f, 1);
-        content.anchoredPosition = new Vector2(0, -40);
+        content.anchorMin = new Vector2(0.35f, 1f); content.anchorMax = new Vector2(0.35f, 1f);
+        content.pivot = new Vector2(0.5f, 1f);
+        content.anchoredPosition = new Vector2(0, -70);
         content.sizeDelta = new Vector2(1080, 0);
         var vlayout = content.gameObject.AddComponent<VerticalLayoutGroup>();
-        vlayout.spacing = 16; vlayout.childControlWidth = true; vlayout.childControlHeight = true;
+        vlayout.spacing = 18; vlayout.childControlWidth = true; vlayout.childControlHeight = true;
         vlayout.childForceExpandWidth = true; vlayout.padding = new RectOffset(20,20,20,20);
         content.gameObject.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
@@ -86,6 +86,18 @@ public class SeparationController : MonoBehaviour
         bbtn.onClick.AddListener(() => SceneManager.LoadScene("MainMenu"));
         var bt = MakeText(brt, "lbl", "\u2190  Menu", 18, TextMain, TextAlignmentOptions.Center);
         bt.fontStyle = FontStyles.Bold;
+
+        // Cross-link to the Plant Explorer dashboard
+        var pgo = new GameObject("PlantLink", typeof(RectTransform), typeof(Image), typeof(Button));
+        pgo.transform.SetParent(root, false);
+        var prt = pgo.GetComponent<RectTransform>();
+        prt.anchorMin = new Vector2(0,1); prt.anchorMax = new Vector2(0,1); prt.pivot = new Vector2(0,1);
+        prt.anchoredPosition = new Vector2(190, -30); prt.sizeDelta = new Vector2(220, 46);
+        pgo.GetComponent<Image>().color = Accent;
+        var pbtn = pgo.GetComponent<Button>();
+        pbtn.onClick.AddListener(() => SceneManager.LoadScene("PlantExplorer"));
+        var ptx = MakeText(prt, "lbl", "\u2190 Plant Explorer", 18, Hex("FFFFFF"), TextAlignmentOptions.Center);
+        ptx.fontStyle = FontStyles.Bold;
 
         // Title
         var title = MakeText(content, "Title", "SEPARATION EXPLORER", 34, Accent, TextAlignmentOptions.Center);
@@ -186,7 +198,7 @@ public class SeparationController : MonoBehaviour
         if (glassStreamVal) glassStreamVal.text = o.GlassStreamKgH.ToString("#,0") + " kg/h";
         if (charStreamVal) charStreamVal.text = o.CharStreamKgH.ToString("#,0") + " kg/h";
 
-        if (viz != null) viz.SetSeparation(o.SeparationOk, v);
+        if (viz != null) { viz.SetSeparation(o.SeparationOk, v); viz.SetParticleSize((float)model.ParticleSizeMicrons); }
     }
 
     // ---------- tiny UI helpers ----------
@@ -197,6 +209,12 @@ public class SeparationController : MonoBehaviour
         var go = new GameObject(name, typeof(RectTransform), typeof(Image));
         go.transform.SetParent(parent, false);
         var img = go.GetComponent<Image>(); img.color = col;
+        // match PlantExplorer: soft drop shadow on tile-colored cards
+        if (col == TileBg) {
+            var sh = go.AddComponent<UnityEngine.UI.Shadow>();
+            sh.effectColor = new Color(0.08f, 0.12f, 0.2f, 0.13f);
+            sh.effectDistance = new Vector2(0f, -3f);
+        }
         return img;
     }
 
@@ -205,7 +223,7 @@ public class SeparationController : MonoBehaviour
         var go = new GameObject(name, typeof(RectTransform));
         go.transform.SetParent(parent, false);
         var t = go.AddComponent<TextMeshProUGUI>();
-        t.text = text; t.fontSize = size; t.color = col; t.alignment = align;
+        t.text = text; t.fontSize = size * 1.18f; t.color = col; t.alignment = align; t.raycastTarget = false;
         var rt = go.GetComponent<RectTransform>();
         rt.anchorMin = Vector2.zero; rt.anchorMax = Vector2.one; rt.offsetMin = Vector2.zero; rt.offsetMax = Vector2.zero;
         return t;
@@ -256,7 +274,7 @@ public class SeparationController : MonoBehaviour
         var fill = go.transform.Find("Fill Area/Fill");
         if (fill) fill.GetComponent<Image>().color = Accent;
         var handle = go.transform.Find("Handle Slide Area/Handle");
-        if (handle) { handle.GetComponent<Image>().color = Accent; handle.GetComponent<RectTransform>().sizeDelta = new Vector2(20f, 20f); }
+        if (handle) { handle.GetComponent<Image>().color = TextMain; handle.GetComponent<RectTransform>().sizeDelta = new Vector2(16f, 16f); }
         return rt;
     }
 

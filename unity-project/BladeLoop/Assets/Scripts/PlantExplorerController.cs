@@ -37,8 +37,6 @@ public class PlantExplorerController : MonoBehaviour
     Image    verdictBg;
     Image    glassSeg, gasSeg, charSeg;
     TMP_Text glassLbl, gasLbl, charLbl;
-    RectTransform sepMarker;
-    TMP_Text sepMsg;
 
     float aFeed, aKiln, aBurner, aCo2;
     float tFeed, tKiln, tBurner, tCo2;
@@ -98,23 +96,7 @@ public class PlantExplorerController : MonoBehaviour
         gasLbl.text   = "Gas "   + (o.SyngasTonnesYr / 1000.0).ToString("0.0") + "k t";
         charLbl.text  = "Char "  + (o.CharTonnesYr / 1000.0).ToString("0.0") + "k t";
 
-        float f = (float)model.FluidizingVelocity;
-        float pct = Mathf.Clamp01(f / 0.05f);
-        sepMarker.anchorMin = new Vector2(pct, 0);
-        sepMarker.anchorMax = new Vector2(pct, 1);
-        sepMarker.anchoredPosition = Vector2.zero;
-        if (f < PlantModel.CharTerminalVelocity) {
-            sepMsg.text = "Gas too slow \u2014 char settles with the glass. Contaminated product.";
-            sepMsg.color = Bad;
-        } else if (f > PlantModel.GlassTerminalVelocity) {
-            sepMsg.text = "Gas too fast \u2014 glass fibres blow out with the char. Yield lost.";
-            sepMsg.color = Bad;
-        } else {
-            sepMsg.text = "Char lifts out, glass falls through. Clean separation.";
-            sepMsg.color = Good;
-                }
-
-        if (kilnViz != null) { kilnViz.SetHeat((float)model.PyrolysisTempC); kilnViz.SetRotation((float)model.RetentionMinutes); kilnViz.SetSeparation(o.SeparationOk); };
+        if (kilnViz != null) { kilnViz.SetHeat((float)model.PyrolysisTempC); kilnViz.SetRotation((float)model.RetentionMinutes); }
     }
 
     Canvas BuildCanvas()
@@ -139,20 +121,22 @@ public class PlantExplorerController : MonoBehaviour
 
         var content = new GameObject("Content", typeof(RectTransform), typeof(VerticalLayoutGroup)).GetComponent<RectTransform>();
         content.SetParent(root, false);
-        content.anchorMin = new Vector2(0.35f, 1); content.anchorMax = new Vector2(0.35f, 1);;
-        content.pivot = new Vector2(0.5f, 1);
-        content.anchoredPosition = new Vector2(0, -40);
+        content.anchorMin = new Vector2(0.35f, 1f); content.anchorMax = new Vector2(0.35f, 1f);
+        content.pivot = new Vector2(0.5f, 1f);
+        content.anchoredPosition = new Vector2(0, -70);
         content.sizeDelta = new Vector2(1080, 0);
         var vlg = content.GetComponent<VerticalLayoutGroup>();
-        vlg.spacing = 18; vlg.childControlWidth = true; vlg.childForceExpandWidth = true;
+        vlg.spacing = 30; vlg.childControlWidth = true; vlg.childForceExpandWidth = true;
         vlg.childControlHeight = true; vlg.childForceExpandHeight = false;
+        var csf = content.gameObject.AddComponent<ContentSizeFitter>();
+        csf.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
         var title = MakeText(content, "Title", "PLANT EXPLORER", 40, Accent, TextAlignmentOptions.Center);
         title.fontStyle = FontStyles.Bold; SetH(title.rectTransform, 56);
         var sub = MakeText(content, "Sub", "Live parametric model \u00b7 change an input, the whole plant recomputes", 18, TextSub, TextAlignmentOptions.Center);
         SetH(sub.rectTransform, 26);
 
-        var sliders = MakeRow(content, "Sliders", 120);
+        var sliders = MakeRow(content, "Sliders", 140);
         MakeSlider(sliders, "Capacity", "t/yr", 20000, 100000, 52000, v => { model.AnnualCapacityTonnes = v; Recompute(); });
         MakeSlider(sliders, "Pyrolysis", "\u00b0C", 550, 660, 600, v => { model.PyrolysisTempC = v; Recompute(); });
         MakeSlider(sliders, "WHRB eff", "%", 10, 35, 22, v => { model.WHRBEfficiency = v / 100.0; Recompute(); });
@@ -169,13 +153,13 @@ public class PlantExplorerController : MonoBehaviour
         verdictNum = MakeText(bl, "VN", "", 30, Hex("F4FFF4"), TextAlignmentOptions.MidlineRight); verdictNum.fontStyle = FontStyles.Bold;
         Anchor(verdictNum.rectTransform, 0.7f,0,1,1);
 
-        var cards = MakeRow(content, "Cards", 130);
+        var cards = MakeRow(content, "Cards", 150);
         feedVal   = MakeCard(cards, "FEED RATE",   "kg/h");
         kilnVal   = MakeCard(cards, "KILN DRUM",   "m \u2300 \u00d7 length");
         burnerVal = MakeCard(cards, "BURNER",      "kW gross");
         co2Val    = MakeCard(cards, "CO<sub>2</sub> AVOIDED", "t/yr \u00b7 DE grid");
 
-        var massCard = MakeImage(content, "MassCard", TileBg); SetH(massCard.rectTransform, 110);
+        var massCard = MakeImage(content, "MassCard", TileBg); SetH(massCard.rectTransform, 140);
         var mc = new GameObject("mc", typeof(RectTransform)).GetComponent<RectTransform>();
         mc.SetParent(massCard.transform, false); Stretch(mc); Inset(mc, 20, 16);
         var mt = MakeText(mc, "mt", "MASS BALANCE", 15, TextSub, TextAlignmentOptions.TopLeft);
@@ -191,23 +175,7 @@ public class PlantExplorerController : MonoBehaviour
         gasLbl   = MakeText(lblRow, "a", "", 13, GasCol,   TextAlignmentOptions.Center); Anchor(gasLbl.rectTransform, 0.33f,0,0.66f,1);
         charLbl  = MakeText(lblRow, "c", "", 13, CharCol,  TextAlignmentOptions.Right);  Anchor(charLbl.rectTransform, 0.66f,0,1,1);
 
-        var sepCard = MakeImage(content, "SepCard", TileBg); SetH(sepCard.rectTransform, 240);
-        var sc = new GameObject("sc", typeof(RectTransform)).GetComponent<RectTransform>();
-        sc.SetParent(sepCard.transform, false); Stretch(sc); Inset(sc, 20, 16);
-        var st = MakeText(sc, "st", "SEPARATION WINDOW  (char 0.0032  <  gas  <  glass 0.0368 m/s)", 15, TextSub, TextAlignmentOptions.TopLeft);
-        Anchor(st.rectTransform, 0,0.86f,1,1);
-        var track = MakeImage(sc, "track", Hex("E2E8F0")); Anchor(track.rectTransform, 0,0.70f,1,0.80f);
-        var safe = MakeImage(track.rectTransform, "safe", Hex("C9EBD5"));
-        safe.rectTransform.anchorMin = new Vector2(0.0032f/0.05f, 0);
-        safe.rectTransform.anchorMax = new Vector2(0.0368f/0.05f, 1);
-        safe.rectTransform.offsetMin = Vector2.zero; safe.rectTransform.offsetMax = Vector2.zero;
-        var marker = MakeImage(track.rectTransform, "marker", TextMain);
-        marker.rectTransform.sizeDelta = new Vector2(4, 16);
-        sepMarker = marker.rectTransform;
-        var slRow = MakeRow(sc, "sepSlider", 70); Anchor(slRow, 0,0.24f,1,0.64f);
-        MakeSlider(slRow, "Fluidizing", "m/s\u00d71000", 1, 50, 15, v => { model.FluidizingVelocity = v/1000.0; Recompute(); });
-        sepMsg = MakeText(sc, "sepMsg", "", 15, Good, TextAlignmentOptions.Left);
-        Anchor(sepMsg.rectTransform, 0,0,1,0.18f);
+        // Separation moved to its own Stage 4 dashboard (SeparationExplorer).
     }
 
     RectTransform MakeRow(Transform parent, string name, float height)
@@ -332,6 +300,18 @@ public class PlantExplorerController : MonoBehaviour
         btn.onClick.AddListener(() => SceneManager.LoadScene("MainMenu"));
         var t = MakeText(rt, "lbl", "\u2190  Menu", 18, TextMain, TextAlignmentOptions.Center);
         t.fontStyle = FontStyles.Bold;
+
+        // Cross-link to the Separation Explorer (Stage 4 dashboard)
+        var sgo = new GameObject("SeparationLink", typeof(RectTransform), typeof(Image), typeof(Button));
+        sgo.transform.SetParent(root, false);
+        var srt = sgo.GetComponent<RectTransform>();
+        srt.anchorMin = new Vector2(0, 1); srt.anchorMax = new Vector2(0, 1); srt.pivot = new Vector2(0, 1);
+        srt.anchoredPosition = new Vector2(190, -30); srt.sizeDelta = new Vector2(200, 46);
+        sgo.GetComponent<Image>().color = Accent;
+        var sbtn = sgo.GetComponent<Button>();
+        sbtn.onClick.AddListener(() => SceneManager.LoadScene("SeparationExplorer"));
+        var stx = MakeText(srt, "lbl", "Separation \u2192", 18, Hex("FFFFFF"), TextAlignmentOptions.Center);
+        stx.fontStyle = FontStyles.Bold;
     }
 
         void EnsureEventSystem()
