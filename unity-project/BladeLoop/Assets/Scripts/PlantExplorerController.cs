@@ -137,10 +137,10 @@ public class PlantExplorerController : MonoBehaviour
         SetH(sub.rectTransform, 26);
 
         var sliders = MakeRow(content, "Sliders", 140);
-        MakeSlider(sliders, "Capacity", "t/yr", 20000, 100000, 52000, v => { model.AnnualCapacityTonnes = v; Recompute(); });
-        MakeSlider(sliders, "Pyrolysis", "\u00b0C", 550, 660, 600, v => { model.PyrolysisTempC = v; Recompute(); });
-        MakeSlider(sliders, "WHRB eff", "%", 10, 35, 22, v => { model.WHRBEfficiency = v / 100.0; Recompute(); });
-        MakeSlider(sliders, "Retention", "min", 10, 60, 30, v => { model.RetentionMinutes = v; Recompute(); });
+        MakeSlider(sliders, "Capacity", "t/yr", 20000, 100000, 52000, v => { model.AnnualCapacityTonnes = v; Recompute(); }, "Annual throughput of blade material. It's the master lever \u2014 raising it increases the feed rate, which cascades into a bigger kiln, more burner demand and a tighter energy margin. Baseline 52,000 t/yr.");
+        MakeSlider(sliders, "Pyrolysis", "\u00b0C", 550, 660, 600, v => { model.PyrolysisTempC = v; Recompute(); }, "Sets the kiln reactor temperature. Higher temperature cracks the resin faster and makes the kiln glow hotter, but adds thermal stress on the glass fibres and raises burner demand. 600 \u00b0C is the balance point.");
+        MakeSlider(sliders, "WHRB eff", "%", 10, 35, 22, v => { model.WHRBEfficiency = v / 100.0; Recompute(); }, "How efficiently the Waste Heat Recovery Boiler turns leftover heat into electricity. This decides whether the plant powers itself \u2014 below about 20% the shredders can't be run on-site and the plant draws from the grid. Baseline 22%.");
+        MakeSlider(sliders, "Retention", "min", 10, 60, 30, v => { model.RetentionMinutes = v; Recompute(); }, "How long material stays inside the kiln. Longer retention needs a physically bigger kiln and more fuel; too short and the resin doesn't fully crack. Drives the drum rotation speed. Baseline 30 min.");
 
         var banner = MakeImage(content, "Verdict", Good); SetH(banner.rectTransform, 92);
         var bl = new GameObject("V", typeof(RectTransform)).GetComponent<RectTransform>();
@@ -201,18 +201,20 @@ public class PlantExplorerController : MonoBehaviour
         le.flexibleWidth = Mathf.Max(0.001f, frac);
     }
 
-    void MakeSlider(Transform parent, string label, string unit, float min, float max, float val, UnityEngine.Events.UnityAction<float> onChange)
+    void MakeSlider(Transform parent, string label, string unit, float min, float max, float val, UnityEngine.Events.UnityAction<float> onChange, string info = null)
     {
         var cell = MakeImage(parent, label + "Cell", TileBg);
         var pad = new GameObject("p", typeof(RectTransform)).GetComponent<RectTransform>();
         pad.SetParent(cell.transform, false); Stretch(pad); Inset(pad, 14, 10);
 
         var lab = MakeText(pad, "l", label, 15, TextMain, TextAlignmentOptions.TopLeft);
-        Anchor(lab.rectTransform, 0,0.62f,0.6f,1);
+        Anchor(lab.rectTransform, 0,0.62f,0.55f,1);
         var valTxt = MakeText(pad, "v", "", 15, Accent, TextAlignmentOptions.TopRight); valTxt.fontStyle = FontStyles.Bold;
-        Anchor(valTxt.rectTransform, 0.4f,0.62f,1,1);
+        Anchor(valTxt.rectTransform, 0.4f,0.62f,0.86f,1);
         var unitTxt = MakeText(pad, "u", unit, 12, TextSub, TextAlignmentOptions.BottomLeft);
         Anchor(unitTxt.rectTransform, 0,0,1,0.32f);
+
+        if (!string.IsNullOrEmpty(info)) MakeInfoButton(pad, label, info);
 
         var sGO = new GameObject("Slider", typeof(RectTransform), typeof(Slider));
         var sr = sGO.GetComponent<RectTransform>(); sr.SetParent(pad, false);
@@ -236,6 +238,88 @@ public class PlantExplorerController : MonoBehaviour
         sl.onValueChanged.AddListener(v => { valTxt.text = FormatVal(v, unit); onChange(v); });
         valTxt.text = FormatVal(val, unit);
     }
+
+    void MakeInfoButton(Transform parent, string title, string info)
+    {
+        var go = new GameObject("Info", typeof(RectTransform), typeof(Image), typeof(Button));
+        go.transform.SetParent(parent, false);
+        var rt = go.GetComponent<RectTransform>();
+        rt.anchorMin = new Vector2(1,1); rt.anchorMax = new Vector2(1,1); rt.pivot = new Vector2(1,1);
+        rt.anchoredPosition = new Vector2(0, 2); rt.sizeDelta = new Vector2(22, 22);
+        var img = go.GetComponent<Image>(); img.color = Hex("E2E8F0");
+        var t = MakeText(rt, "i", "i", 14, TextSub, TextAlignmentOptions.Center); t.fontStyle = FontStyles.Bold | FontStyles.Italic;
+        var btn = go.GetComponent<Button>();
+        btn.onClick.AddListener(() => ToggleInfoPopup(rt, title, info));
+    }
+
+    GameObject infoPopup;
+    TMP_Text infoPopupTitle, infoPopupBody;
+    string infoPopupFor;
+
+    void ToggleInfoPopup(RectTransform anchor, string title, string body)
+    {
+        if (infoPopup == null) BuildInfoPopup();
+        if (infoPopup.activeSelf && infoPopupFor == title) { infoPopup.SetActive(false); return; }
+        infoPopupFor = title;
+        infoPopupTitle.text = title;
+        infoPopupBody.text = body;
+        infoPopup.SetActive(true);
+        infoPopup.transform.SetAsLastSibling();
+        // position the floating panel just below the info button
+        var panel = infoPanel.GetComponent<RectTransform>();
+        panel.position = anchor.TransformPoint(new Vector3(0, -anchor.rect.height - 2f, 0));
+        // nudge left so the 320-wide panel stays on-screen under the button
+        panel.anchoredPosition += new Vector2(-296, 0);
+    }
+
+    GameObject infoPanel;
+
+    void BuildInfoPopup()
+    {
+        var canvas = Object.FindFirstObjectByType<Canvas>();
+
+        // Root holds a full-screen invisible backdrop (click to dismiss) + the panel.
+        var root = new GameObject("InfoPopup", typeof(RectTransform));
+        root.transform.SetParent(canvas.transform, false);
+        var rrt = root.GetComponent<RectTransform>(); Stretch(rrt);
+
+        var backdrop = new GameObject("Backdrop", typeof(RectTransform), typeof(Image), typeof(Button));
+        backdrop.transform.SetParent(root.transform, false);
+        Stretch(backdrop.GetComponent<RectTransform>());
+        backdrop.GetComponent<Image>().color = new Color(0,0,0,0.01f); // nearly invisible but catches clicks
+        backdrop.GetComponent<Button>().onClick.AddListener(() => infoPopup.SetActive(false));
+
+        // Floating panel
+        var go = new GameObject("Panel", typeof(RectTransform), typeof(Image));
+        go.transform.SetParent(root.transform, false);
+        var rt = go.GetComponent<RectTransform>();
+        rt.sizeDelta = new Vector2(320, 160);
+        rt.pivot = new Vector2(0, 1);
+        var img = go.GetComponent<Image>(); img.color = Hex("1E293B");
+        var sh = go.AddComponent<UnityEngine.UI.Shadow>();
+        sh.effectColor = new Color(0,0,0,0.4f); sh.effectDistance = new Vector2(0,-5);
+        infoPanel = go;
+
+        var pad = new GameObject("p", typeof(RectTransform)).GetComponent<RectTransform>();
+        pad.SetParent(go.transform, false); Stretch(pad); Inset(pad, 18, 16);
+        infoPopupTitle = MakeText(pad, "t", "", 16, Hex("FFFFFF"), TextAlignmentOptions.TopLeft);
+        infoPopupTitle.fontStyle = FontStyles.Bold; Anchor(infoPopupTitle.rectTransform, 0,0.82f,0.9f,1);
+        infoPopupBody = MakeText(pad, "b", "", 13.5f, Hex("CBD5E1"), TextAlignmentOptions.TopLeft);
+        infoPopupBody.enableWordWrapping = true; Anchor(infoPopupBody.rectTransform, 0,0,1,0.78f);
+
+        var xgo = new GameObject("x", typeof(RectTransform), typeof(Image), typeof(Button));
+        xgo.transform.SetParent(go.transform, false);
+        var xrt = xgo.GetComponent<RectTransform>();
+        xrt.anchorMin = new Vector2(1,1); xrt.anchorMax = new Vector2(1,1); xrt.pivot = new Vector2(1,1);
+        xrt.anchoredPosition = new Vector2(-8,-8); xrt.sizeDelta = new Vector2(22,22);
+        xgo.GetComponent<Image>().color = Hex("334155");
+        MakeText(xrt, "xt", "\u00d7", 16, Hex("FFFFFF"), TextAlignmentOptions.Center);
+        xgo.GetComponent<Button>().onClick.AddListener(() => infoPopup.SetActive(false));
+
+        root.SetActive(false);
+        infoPopup = root;
+    }
+
 
     string FormatVal(float v, string unit)
     {
