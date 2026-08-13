@@ -108,3 +108,7 @@ InitTestScene*.unity*
 
 Assets/Screenshots/
 Assets/_Recovery/
+
+# debug renders
+/[Aa]ssets/Screenshots/
+/[Aa]ssets/Screenshots.meta

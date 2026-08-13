@@ -18,8 +18,8 @@ RenderSettings:
   m_FogColor: {r: 0.71, g: 0.78, b: 0.87, a: 1}
   m_FogMode: 1
   m_FogDensity: 0.01
-  m_LinearFogStart: 45
-  m_LinearFogEnd: 300
+  m_LinearFogStart: 500
+  m_LinearFogEnd: 2600
   m_AmbientSkyColor: {r: 0.455, g: 0.525, b: 0.635, a: 1}
   m_AmbientEquatorColor: {r: 0.33, g: 0.345, b: 0.375, a: 1}
   m_AmbientGroundColor: {r: 0.165, g: 0.155, b: 0.14, a: 1}
@@ -97055,10 +97055,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Unity.RenderPipelines.Core.Runtime::UnityEngine.Rendering.Volume
   m_IsGlobal: 1
-  priority: 0
+  priority: 1
   blendDistance: 0
   weight: 1
-  sharedProfile: {fileID: 11400000, guid: 250d1432c76e946868d394da8b6fa260, type: 2}
+  sharedProfile: {fileID: 11400000, guid: 1f216aaf42ee537488054f165a12c107, type: 2}
 --- !u!4 &1135300426
 Transform:
   m_ObjectHideFlags: 0
