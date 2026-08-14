@@ -14,7 +14,7 @@ using UnityEngine.SceneManagement;
 public class PlantExplorerController : MonoBehaviour
 {
     static Color PanelBg, TileBg, Accent, TextMain, TextSub, Line;
-    static Color Ok, Warn, Crit, GlassCol, GasCol, CharCol;
+    static Color Ok, Warn, Crit, GlassCol, GasCol, CharCol, LossCol, OilCol;
     static bool paletteReady;
     static void InitPalette()
     {
@@ -22,16 +22,16 @@ public class PlantExplorerController : MonoBehaviour
         PanelBg  = Hex("F5F6F8"); TileBg = Hex("FFFFFF"); Accent = Hex("2563EB");
         TextMain = Hex("1E293B"); TextSub = Hex("64748B"); Line = Hex("E2E8F0");
         Ok       = Hex("16A34A"); Warn = Hex("D97706"); Crit = Hex("DC2626");
-        GlassCol = Hex("2563EB"); GasCol = Hex("16A34A"); CharCol = Hex("C2703D");
+        GlassCol = Hex("2563EB"); GasCol = Hex("16A34A"); CharCol = Hex("C2703D"); LossCol = Hex("94A3B8"); OilCol = Hex("CA8A04");
         paletteReady = true;
     }
 
     ProcessModel model = new ProcessModel();
 
-    Image ledTemp, ledRetention, ledFeed, ledOxygen;
+    Image ledTemp, ledRetention, ledFeed, ledParticle;
     TMP_Text effNum, statusVal; Image statusLight;
-    Image tankGlass, tankSyngas, tankChar;
-    TMP_Text pctGlass, pctSyngas, pctChar, rateGlass, rateSyngas, rateChar;
+    Image tankGlass, tankOil, tankSyngas, tankChar, tankLoss;
+    TMP_Text pctGlass, pctOil, pctSyngas, pctChar, pctLoss, rateGlass, rateOil, rateSyngas, rateChar, rateLoss;
     TMP_Text purityVal, tensileVal;
 
     KilnVisualizer kilnViz;
@@ -114,7 +114,7 @@ public class PlantExplorerController : MonoBehaviour
         ledTemp      = MakeSlider(host, "Kiln temperature", "\u00b0C", 400, 700, 600, v => { model.TempC = v; Recompute(); }, () => model.TempInfo(), () => model.TempStatus);
         ledRetention = MakeSlider(host, "Retention time", "min", 30, 45, 35, v => { model.RetentionMin = v; Recompute(); }, () => model.RetentionInfo(), () => model.RetentionStatus);
         ledFeed      = MakeSlider(host, "Feed rate", "kg/h", 4000, 9000, 6500, v => { model.FeedKgH = v; Recompute(); }, () => model.FeedInfo(), () => model.FeedStatus);
-        ledOxygen    = MakeSlider(host, "Residual oxygen", "%", 0, 8, 0, v => { model.OxygenPct = v; Recompute(); }, () => model.OxygenInfo(), () => model.OxygenStatus);
+        ledParticle  = MakeSlider(host, "Particle size", "mm", 1, 20, 2, v => { model.ParticleSizeMm = v; Recompute(); }, () => model.ParticleInfo(), () => model.ParticleStatus);
     }
 
     void BuildOutputsColumn(RectTransform col)
@@ -133,8 +133,10 @@ public class PlantExplorerController : MonoBehaviour
         var hlg = tanks.GetComponent<HorizontalLayoutGroup>();
         hlg.spacing = 10; hlg.childControlWidth = true; hlg.childForceExpandWidth = true; hlg.childControlHeight = true; hlg.childForceExpandHeight = true;
         BuildTank(tanks, "Glass fibre", GlassCol, out tankGlass, out pctGlass, out rateGlass);
+        BuildTank(tanks, "Oil",         OilCol,   out tankOil,   out pctOil,   out rateOil);
         BuildTank(tanks, "Syngas",      GasCol,   out tankSyngas, out pctSyngas, out rateSyngas);
         BuildTank(tanks, "Char dust",   CharCol,  out tankChar,  out pctChar,  out rateChar);
+        BuildTank(tanks, "Losses",      LossCol,  out tankLoss,  out pctLoss,  out rateLoss);
 
         var q = new GameObject("quality", typeof(RectTransform), typeof(VerticalLayoutGroup)).GetComponent<RectTransform>();
         q.SetParent(col, false); Anchor(q, 0, 0.0f, 1, 0.21f);
@@ -175,7 +177,7 @@ public class PlantExplorerController : MonoBehaviour
         SetLed(ledTemp, model.LedTemp);
         SetLed(ledRetention, model.LedRetention);
         SetLed(ledFeed, model.LedFeed);
-        SetLed(ledOxygen, model.LedOxygen);
+        SetLed(ledParticle, model.LedParticle);
 
         int eff = model.EfficiencyPct;
         var st = model.SystemStatus;
@@ -186,8 +188,10 @@ public class PlantExplorerController : MonoBehaviour
 
         var sp = model.OutputSplit();
         SetTank(tankGlass, pctGlass, rateGlass, sp.GlassPct);
+        SetTank(tankOil, pctOil, rateOil, sp.OilPct);
         SetTank(tankSyngas, pctSyngas, rateSyngas, sp.SyngasPct);
         SetTank(tankChar, pctChar, rateChar, sp.CharPct);
+        SetTank(tankLoss, pctLoss, rateLoss, sp.LossPct);
 
         purityVal.text = model.FiberPurityPct.ToString("0.0") + "%";
         purityVal.color = model.FiberPurityPct > 95 ? Ok : (model.FiberPurityPct > 80 ? Warn : Crit);
@@ -346,15 +350,6 @@ public class PlantExplorerController : MonoBehaviour
         go.GetComponent<Image>().color = TileBg;
         go.GetComponent<Button>().onClick.AddListener(() => SceneManager.LoadScene("MainMenu"));
         var t = MakeText(rt, "lbl", "\u2190  Menu", 18, TextMain, TextAlignmentOptions.Center); t.fontStyle = FontStyles.Bold;
-
-        var sgo = new GameObject("SeparationLink", typeof(RectTransform), typeof(Image), typeof(Button));
-        sgo.transform.SetParent(root, false);
-        var srt = sgo.GetComponent<RectTransform>();
-        srt.anchorMin = new Vector2(0, 1); srt.anchorMax = new Vector2(0, 1); srt.pivot = new Vector2(0, 1);
-        srt.anchoredPosition = new Vector2(190, -30); srt.sizeDelta = new Vector2(220, 46);
-        sgo.GetComponent<Image>().color = Accent;
-        sgo.GetComponent<Button>().onClick.AddListener(() => SceneManager.LoadScene("SeparationExplorer"));
-        var stx = MakeText(srt, "lbl", "Separation \u2192", 18, Hex("FFFFFF"), TextAlignmentOptions.Center); stx.fontStyle = FontStyles.Bold;
     }
 
     void EnsureEventSystem()
