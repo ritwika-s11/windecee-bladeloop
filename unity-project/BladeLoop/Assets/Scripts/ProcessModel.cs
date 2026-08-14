@@ -142,4 +142,195 @@ public class ProcessModel
 
         return list;
     }
+
+    // ===================================================================================
+    // ADDITIVE SECTION — live explanations for the dashboard.
+    // Everything below is READ-ONLY: it only reads the existing inputs/derived values.
+    // No formula, constant, weight or existing method above has been modified.
+    // ===================================================================================
+
+    public enum InputKind { Temp, Retention, Feed, Particle }
+
+    /// <summary>Which input is currently hurting the process most (deviation x its weight).</summary>
+    public InputKind DominantInput()
+    {
+        float t = DevTemp * 0.30f, r = DevRetention * 0.22f, f = DevFeed * 0.16f, p = DevParticle * 0.32f;
+        InputKind k = InputKind.Temp; float best = t;
+        if (r > best) { best = r; k = InputKind.Retention; }
+        if (f > best) { best = f; k = InputKind.Feed; }
+        if (p > best) { best = p; k = InputKind.Particle; }
+        return k;
+    }
+
+    public string InputName(InputKind k) =>
+        k == InputKind.Temp ? "Kiln temperature" :
+        k == InputKind.Retention ? "Retention time" :
+        k == InputKind.Feed ? "Feed rate" : "Particle size";
+
+    public float InputDev(InputKind k) =>
+        k == InputKind.Temp ? DevTemp :
+        k == InputKind.Retention ? DevRetention :
+        k == InputKind.Feed ? DevFeed : DevParticle;
+
+    public Status InputStatus(InputKind k) => StatusFor(InputDev(k));
+
+    /// <summary>Plain-language cause -> effect for one input at its current value.</summary>
+    public string CauseEffect(InputKind k)
+    {
+        switch (k)
+        {
+            case InputKind.Temp:
+                if (DevTemp < 0.15f) return "Kiln at " + TempC.ToString("0") + " °C: resin cracks cleanly, fibre comes out intact.";
+                return TempC < OptTemp
+                    ? "Kiln " + (OptTemp - TempC).ToString("0") + " °C below target: resin cracks slower, so more stays stuck to the fibre."
+                    : "Kiln " + (TempC - OptTemp).ToString("0") + " °C above target: extra heat attacks the fibre and drives carbon into char.";
+
+            case InputKind.Retention:
+                if (DevRetention < 0.15f) return "Held " + RetentionMin.ToString("0") + " min: long enough to free the fibre, short enough to avoid over-cooking.";
+                return RetentionMin < OptRetention
+                    ? "Only " + RetentionMin.ToString("0") + " min in the kiln: resin has less time to release, so fibre leaves dirtier."
+                    : RetentionMin.ToString("0") + " min in the kiln: the fibre bakes longer than needed and starts to embrittle.";
+
+            case InputKind.Feed:
+                if (DevFeed < 0.15f) return "Feeding " + FeedKgH.ToString("N0") + " kg/h: each particle gets its full designed time in the kiln.";
+                return FeedKgH > OptFeed
+                    ? "Feeding " + FeedKgH.ToString("N0") + " kg/h: more material sharing the same kiln, so each particle gets less time inside."
+                    : "Feeding " + FeedKgH.ToString("N0") + " kg/h: below the design point, so kiln capacity is going unused.";
+
+            default:
+                if (DevParticle < 0.15f) return "Feed ground to " + ParticleSizeMm.ToString("0") + " mm: heat reaches every core, so decomposition finishes.";
+                return "Feed at " + ParticleSizeMm.ToString("0") + " mm: heat cannot reach the core, so the middle of each chunk never fully decomposes.";
+        }
+    }
+
+    /// <summary>One line tying the current inputs to what the output bars are doing.</summary>
+    public string OutputConsequence()
+    {
+        var sp = OutputSplit();
+        if (OverallDeviation < 0.15f)
+            return "Recovery is at the design split: fibre " + sp.GlassPct.ToString("0.0") + "%, losses only " + sp.LossPct.ToString("0.0") + "%.";
+        return "That unconverted material has to go somewhere: fibre down to " + sp.GlassPct.ToString("0.0")
+             + "% (design 69%), char up to " + sp.CharPct.ToString("0.0") + "%, losses " + sp.LossPct.ToString("0.0") + "%.";
+    }
+
+    /// <summary>One line on whether the product still meets quality spec.</summary>
+    public string QualityConsequence()
+    {
+        float pu = FiberPurityPct, te = TensileRetentionPct;
+        if (pu > 95f && te > 90f) return "Fibre passes spec: " + pu.ToString("0.0") + "% pure, " + te.ToString("0") + "% of its original strength.";
+        if (pu > 80f && te > 70f) return "Quality slipping: purity " + pu.ToString("0.0") + "%, strength " + te.ToString("0") + "% — usable, but off spec.";
+        return "Quality failing: purity " + pu.ToString("0.0") + "%, strength " + te.ToString("0") + "% — fibre no longer meets cement-feedstock spec.";
+    }
+
+    /// <summary>Why the SYSTEM STATUS pill is the colour it is.</summary>
+    public string StatusReason()
+    {
+        var st = SystemStatus;
+        string dom = InputName(DominantInput()).ToLower();
+        if (st == Status.Optimal) return "All four inputs sit close to their set-points, so the plant is running at its design case.";
+        if (st == Status.Caution) return "Inputs have drifted from set-point — " + dom + " most of all. The plant still runs, but recovery and quality are being given up.";
+        return "Inputs are far from set-point — " + dom + " most of all. Decomposition is incomplete, so product is being lost to char and dust.";
+    }
+
+    public struct Explanation { public Status level; public string headline; public List<Diag> rows; }
+
+    /// <summary>Headline + up to four short cause/effect rows describing the current state.</summary>
+    public Explanation ExplainNow()
+    {
+        var ex = new Explanation();
+        ex.level = SystemStatus;
+        ex.rows = new List<Diag>();
+
+        var dom = DominantInput();
+        ex.headline = OverallDeviation < 0.15f
+            ? "Every input is on set-point — this is the plant's design case."
+            : InputName(dom) + " is what is holding the plant back right now.";
+
+        // 1) the dominant input, always shown
+        ex.rows.Add(new Diag { level = InputStatus(dom), text = CauseEffect(dom) });
+
+        // 2) the next-worst input, only if it is genuinely off target
+        InputKind second = InputKind.Temp; float bestDev = -1f;
+        foreach (InputKind k in new[] { InputKind.Temp, InputKind.Retention, InputKind.Feed, InputKind.Particle })
+        {
+            if (k == dom) continue;
+            float d = InputDev(k);
+            if (d > bestDev) { bestDev = d; second = k; }
+        }
+        if (bestDev >= 0.15f) ex.rows.Add(new Diag { level = InputStatus(second), text = CauseEffect(second) });
+
+        // 3) what that does to the output bars
+        ex.rows.Add(new Diag { level = SystemStatus, text = OutputConsequence() });
+
+        // 4) what it does to product quality
+        float pu = FiberPurityPct, te = TensileRetentionPct;
+        Status qs = (pu > 95f && te > 90f) ? Status.Optimal : ((pu > 80f && te > 70f) ? Status.Caution : Status.Critical);
+        ex.rows.Add(new Diag { level = qs, text = QualityConsequence() });
+
+        return ex;
+    }
+
+    // ---- info-popup text for the OUTPUT side (mirrors the input popups) ----
+
+    public string EfficiencyInfo()
+    {
+        return "Process efficiency is how close all four inputs sit to their set-points, weighted by how much each one matters "
+             + "(particle size 32%, temperature 30%, retention 22%, feed 16%). Right now it reads " + EfficiencyPct
+             + "%. " + (OverallDeviation < 0.15f ? "Nothing is pulling it down." : InputName(DominantInput()) + " is pulling it down the most.");
+    }
+
+    public string GlassInfo()
+    {
+        var sp = OutputSplit();
+        return "Reclaimed E-glass fibre — the product that goes on to cement feedstock. At the design case it is about 69% of the feed; "
+             + "it now reads " + sp.GlassPct.ToString("0.0") + "% (" + sp.GlassKgH.ToString("N0") + " kg/h). "
+             + (DevParticle >= 0.15f || OverallDeviation >= 0.15f
+                ? "Whatever the kiln fails to decompose leaves as char or dust instead of clean fibre, so this bar falls first."
+                : "Conditions are on target, so almost nothing is diverted away from it.");
+    }
+
+    public string OilInfo()
+    {
+        var sp = OutputSplit();
+        return "Pyrolytic oil condensed from the vapour — stored and burned as plant fuel. About 16% of the feed at the design case, "
+             + "now " + sp.OilPct.ToString("0.0") + "% (" + sp.OilKgH.ToString("N0") + " kg/h). It shrinks slowly as conditions drift, because less resin is cracked into condensable vapour.";
+    }
+
+    public string SyngasInfo()
+    {
+        var sp = OutputSplit();
+        return "Light combustible gas piped back to the kiln burners — this is what lets the plant part-fuel itself. About 8% of the feed at the design case, "
+             + "now " + sp.SyngasPct.ToString("0.0") + "% (" + sp.SyngasKgH.ToString("N0") + " kg/h).";
+    }
+
+    public string CharInfo()
+    {
+        var sp = OutputSplit();
+        return "Fixed-carbon residue. About 6% of the feed when everything is on target, now " + sp.CharPct.ToString("0.0")
+             + "% (" + sp.CharKgH.ToString("N0") + " kg/h). "
+             + (sp.CharPct > 10f
+                ? "It is high because resin that should have cracked into gas and oil is instead staying behind as solid carbon on the fibre."
+                : "It stays low while decomposition is completing properly.");
+    }
+
+    public string LossInfo()
+    {
+        var sp = OutputSplit();
+        return "Mass that never becomes product: fugitive dust past the baghouse, moisture flash-off and residue stuck inside the plant. "
+             + "It is taken out of the feed first, so everything else shares what is left. Baseline is about 1.5%; it now reads "
+             + sp.LossPct.ToString("0.0") + "% (" + sp.LossKgH.ToString("N0") + " kg/h). Coarser feed is the main thing that pushes it up.";
+    }
+
+    public string PurityInfo()
+    {
+        return "How much of the reclaimed fibre is actually clean glass rather than leftover resin or carbon. Spec is above 95%; it now reads "
+             + FiberPurityPct.ToString("0.0") + "%. "
+             + (DevParticle >= 0.15f ? "Coarse feed hurts it most, because undecomposed cores leave residue on the fibre." : "Temperature and retention are the two things that move it.");
+    }
+
+    public string TensileInfo()
+    {
+        return "How much of its original strength the recovered fibre keeps. 100% means undamaged; it now reads "
+             + TensileRetentionPct.ToString("0") + "%. Heat damage is the cause — too hot, or too long in the kiln, and the glass embrittles.";
+    }
 }

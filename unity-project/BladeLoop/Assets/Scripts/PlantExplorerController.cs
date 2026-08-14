@@ -115,6 +115,76 @@ public class PlantExplorerController : MonoBehaviour
         ledRetention = MakeSlider(host, "Retention time", "min", 30, 45, 35, v => { model.RetentionMin = v; Recompute(); }, () => model.RetentionInfo(), () => model.RetentionStatus);
         ledFeed      = MakeSlider(host, "Feed rate", "kg/h", 4000, 9000, 6500, v => { model.FeedKgH = v; Recompute(); }, () => model.FeedInfo(), () => model.FeedStatus);
         ledParticle  = MakeSlider(host, "Particle size", "mm", 1, 20, 2, v => { model.ParticleSizeMm = v; Recompute(); }, () => model.ParticleInfo(), () => model.ParticleStatus);
+
+        BuildExplainCard(col);   // additive: live "what's happening" card in the empty space below
+    }
+
+    // ---------------- ADDITIVE: live explanation card ----------------
+    // Sits in the previously empty white space under the sliders. Purely presentational:
+    // it reads ProcessModel and never writes to it.
+    TMP_Text explHeadline; Image explHeadDot;
+    Image[] explDots = new Image[4]; TMP_Text[] explTexts = new TMP_Text[4]; GameObject[] explRows = new GameObject[4];
+
+    void BuildExplainCard(RectTransform col)
+    {
+        var card = MakeImage(col, "ExplainCard", TileBg);
+        Anchor(card.rectTransform, 0, 0.005f, 1, 0.455f);
+
+        var pad = new GameObject("p", typeof(RectTransform)).GetComponent<RectTransform>();
+        pad.SetParent(card.transform, false); Stretch(pad); Inset(pad, 16, 14);
+
+        var hdr = MakeText(pad, "hdr", "WHAT'S HAPPENING", 12, TextSub, TextAlignmentOptions.TopLeft);
+        Anchor(hdr.rectTransform, 0, 0.88f, 1, 1f); hdr.characterSpacing = 3;
+
+        explHeadDot = MakeImage(pad, "hdot", Ok);
+        explHeadDot.rectTransform.anchorMin = new Vector2(0, 0.80f); explHeadDot.rectTransform.anchorMax = new Vector2(0, 0.80f);
+        explHeadDot.rectTransform.pivot = new Vector2(0, 1); explHeadDot.rectTransform.sizeDelta = new Vector2(9, 9);
+        explHeadDot.rectTransform.anchoredPosition = new Vector2(0, -3);
+
+        explHeadline = MakeText(pad, "head", "", 14, TextMain, TextAlignmentOptions.TopLeft);
+        explHeadline.fontStyle = FontStyles.Bold; explHeadline.enableWordWrapping = true;
+        Anchor(explHeadline.rectTransform, 0, 0.62f, 1, 0.86f);
+        explHeadline.rectTransform.offsetMin = new Vector2(16, 0);
+
+        for (int i = 0; i < 4; i++)
+        {
+            float top = 0.585f - i * 0.148f;
+            var row = new GameObject("row" + i, typeof(RectTransform));
+            row.transform.SetParent(pad, false);
+            var rr = row.GetComponent<RectTransform>();
+            Anchor(rr, 0, top - 0.138f, 1, top);
+            explRows[i] = row;
+
+            var dot = MakeImage(rr, "d", Ok);
+            dot.rectTransform.anchorMin = new Vector2(0, 1); dot.rectTransform.anchorMax = new Vector2(0, 1);
+            dot.rectTransform.pivot = new Vector2(0, 1); dot.rectTransform.sizeDelta = new Vector2(7, 7);
+            dot.rectTransform.anchoredPosition = new Vector2(1, -5);
+            explDots[i] = dot;
+
+            var t = MakeText(rr, "t", "", 12.5f, TextSub, TextAlignmentOptions.TopLeft);
+            t.enableWordWrapping = true; Stretch(t.rectTransform);
+            t.rectTransform.offsetMin = new Vector2(16, 0);
+            explTexts[i] = t;
+        }
+    }
+
+    Color StatusColor(ProcessModel.Status s) =>
+        s == ProcessModel.Status.Optimal ? Ok : (s == ProcessModel.Status.Caution ? Warn : Crit);
+
+    void UpdateExplainCard()
+    {
+        if (explHeadline == null) return;
+        var ex = model.ExplainNow();
+        explHeadline.text = ex.headline;
+        explHeadDot.color = StatusColor(ex.level);
+        for (int i = 0; i < explRows.Length; i++)
+        {
+            bool on = i < ex.rows.Count;
+            if (explRows[i].activeSelf != on) explRows[i].SetActive(on);
+            if (!on) continue;
+            explTexts[i].text = ex.rows[i].text;
+            explDots[i].color = StatusColor(ex.rows[i].level);
+        }
     }
 
     void BuildOutputsColumn(RectTransform col)
@@ -143,6 +213,46 @@ public class PlantExplorerController : MonoBehaviour
         var qh = q.GetComponent<VerticalLayoutGroup>(); qh.spacing = 8; qh.childControlWidth = true; qh.childForceExpandWidth = true; qh.childControlHeight = true; qh.childForceExpandHeight = true;
         purityVal  = BuildMetric(q, "FIBRE PURITY", "99.0%");
         tensileVal = BuildMetric(q, "TENSILE RETENTION", "100%");
+
+        // ---- ADDITIVE: info buttons on the output side (same popup system as the sliders) ----
+        AddInfoAt(col, new Vector2(0, 0.885f), new Vector2(0, 0.885f), new Vector2(196, 0),
+                  "Process efficiency", () => model.EfficiencyInfo(), () => model.SystemStatus);
+
+        AddTankInfo(tanks, "Glass fibre", () => model.GlassInfo());
+        AddTankInfo(tanks, "Oil",         () => model.OilInfo());
+        AddTankInfo(tanks, "Syngas",      () => model.SyngasInfo());
+        AddTankInfo(tanks, "Char dust",   () => model.CharInfo());
+        AddTankInfo(tanks, "Losses",      () => model.LossInfo());
+
+        AddMetricInfo(q, "FIBRE PURITY", "Fibre purity", () => model.PurityInfo());
+        AddMetricInfo(q, "TENSILE RETENTION", "Tensile retention", () => model.TensileInfo());
+    }
+
+    /// <summary>Places a 20x20 info button at an explicit spot inside a parent rect.</summary>
+    void AddInfoAt(RectTransform parent, Vector2 aMin, Vector2 aMax, Vector2 offset,
+                   string title, System.Func<string> info, System.Func<ProcessModel.Status> status)
+    {
+        var wrap = new GameObject("iw", typeof(RectTransform)).GetComponent<RectTransform>();
+        wrap.SetParent(parent, false);
+        wrap.anchorMin = aMin; wrap.anchorMax = aMax; wrap.pivot = new Vector2(1, 1);
+        wrap.sizeDelta = new Vector2(20, 20); wrap.anchoredPosition = offset;
+        MakeInfoButton(wrap, title, info, status);
+    }
+
+    void AddTankInfo(RectTransform tanks, string label, System.Func<string> info)
+    {
+        var tank = tanks.Find("tank_" + label) as RectTransform;
+        if (tank == null) return;
+        AddInfoAt(tank, new Vector2(1, 1), new Vector2(1, 1), new Vector2(-4, -3),
+                  label, info, () => model.SystemStatus);
+    }
+
+    void AddMetricInfo(RectTransform q, string key, string title, System.Func<string> info)
+    {
+        var m = q.Find("m_" + key) as RectTransform;
+        if (m == null) return;
+        AddInfoAt(m, new Vector2(1, 1), new Vector2(1, 1), new Vector2(-6, -4),
+                  title, info, () => model.SystemStatus);
     }
 
     void BuildTank(Transform parent, string label, Color col, out Image fill, out TMP_Text pct, out TMP_Text rate)
@@ -205,6 +315,8 @@ public class PlantExplorerController : MonoBehaviour
         }
 
         if (kilnViz != null) { kilnViz.SetHeat(model.TempC); kilnViz.SetRotation(model.RetentionMin); }
+
+        UpdateExplainCard();   // additive: refresh the live explanation card
     }
 
     void SetTank(Image fill, TMP_Text pct, TMP_Text rate, float pctVal)
