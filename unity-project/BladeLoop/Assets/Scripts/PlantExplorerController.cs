@@ -36,6 +36,9 @@ public class PlantExplorerController : MonoBehaviour
 
     KilnVisualizer kilnViz;
 
+    // Sliders paired with their optimum value, for the Reset-to-optimum button.
+    readonly List<(Slider slider, float optimum)> resetTargets = new List<(Slider, float)>();
+
     void Awake()
     {
         InitPalette();
@@ -135,6 +138,19 @@ public class PlantExplorerController : MonoBehaviour
 
         var hdr = MakeText(pad, "hdr", "WHAT'S HAPPENING", 12, TextSub, TextAlignmentOptions.TopLeft);
         Anchor(hdr.rectTransform, 0, 0.88f, 1, 1f); hdr.characterSpacing = 3;
+
+        // Small Reset button, top-right of the card, aligned with the WHAT'S HAPPENING header.
+        // Restores all sliders to the design set-point (one-click recovery from CAUTION/CRITICAL).
+        {
+            var rb = new GameObject("ResetButton", typeof(RectTransform), typeof(Image), typeof(Button));
+            rb.transform.SetParent(pad, false);
+            var rt = rb.GetComponent<RectTransform>();
+            rt.anchorMin = new Vector2(1, 1); rt.anchorMax = new Vector2(1, 1); rt.pivot = new Vector2(1, 1);
+            rt.anchoredPosition = new Vector2(0, 4); rt.sizeDelta = new Vector2(92, 30);
+            rb.GetComponent<Image>().color = Accent;
+            rb.GetComponent<Button>().onClick.AddListener(ResetToOptimum);
+            var rl = MakeText(rt, "lbl", "Reset", 13, Color.white, TextAlignmentOptions.Center); rl.fontStyle = FontStyles.Bold;
+        }
 
         explHeadDot = MakeImage(pad, "hdot", Ok);
         explHeadDot.rectTransform.anchorMin = new Vector2(0, 0.80f); explHeadDot.rectTransform.anchorMax = new Vector2(0, 0.80f);
@@ -368,8 +384,18 @@ public class PlantExplorerController : MonoBehaviour
         sl.direction = Slider.Direction.LeftToRight; sl.minValue = min; sl.maxValue = max; sl.wholeNumbers = false; sl.value = val;
         sl.onValueChanged.AddListener(v => { valTxt.text = FormatVal(v, unit); onChange(v); });
         valTxt.text = FormatVal(val, unit);
+        resetTargets.Add((sl, val));   // remember this slider's optimum for the Reset button
         return led;
     }
+
+    // Restores every slider to its design set-point (fires each slider's onValueChanged,
+    // which updates the model, LEDs, tanks, quality metrics and kiln automatically).
+    void ResetToOptimum()
+    {
+        foreach (var t in resetTargets)
+            t.slider.value = t.optimum;
+    }
+
 
     string FormatVal(float v, string unit)
     {
@@ -454,15 +480,119 @@ public class PlantExplorerController : MonoBehaviour
 
     void BuildBackButtons(Transform root)
     {
-        var go = new GameObject("BackButton", typeof(RectTransform), typeof(Image), typeof(Button));
+        // Menu button (existing spec: 150x46, TileBg, label 18 bold) at top-left.
+        MakeNavButton(root, "BackButton", "\u2190  Menu", new Vector2(30, -30),
+                      TileBg, TextMain, () => SceneManager.LoadScene("MainMenu"));
+
+        // Stage navigation lives on the kiln itself: markers trace the material's
+        // path inlet -> body -> outlet (Shredder -> Reactor -> Separation).
+        BuildKilnStageMarkers(root);
+    }
+
+    // Shared nav-button factory: keeps Menu + stage buttons on one spec (150x46, label 18 bold).
+    void MakeNavButton(Transform root, string name, string label, Vector2 pos,
+                       Color bg, Color fg, UnityEngine.Events.UnityAction onClick)
+    {
+        var go = new GameObject(name, typeof(RectTransform), typeof(Image), typeof(Button));
         go.transform.SetParent(root, false);
         var rt = go.GetComponent<RectTransform>();
         rt.anchorMin = new Vector2(0, 1); rt.anchorMax = new Vector2(0, 1); rt.pivot = new Vector2(0, 1);
-        rt.anchoredPosition = new Vector2(30, -30); rt.sizeDelta = new Vector2(150, 46);
-        go.GetComponent<Image>().color = TileBg;
-        go.GetComponent<Button>().onClick.AddListener(() => SceneManager.LoadScene("MainMenu"));
-        var t = MakeText(rt, "lbl", "\u2190  Menu", 18, TextMain, TextAlignmentOptions.Center); t.fontStyle = FontStyles.Bold;
+        rt.anchoredPosition = pos; rt.sizeDelta = new Vector2(150, 46);
+        go.GetComponent<Image>().color = bg;
+        go.GetComponent<Button>().onClick.AddListener(onClick);
+        var t = MakeText(rt, "lbl", label, 18, fg, TextAlignmentOptions.Center); t.fontStyle = FontStyles.Bold;
     }
+
+    // Stage markers pinned over the kiln (right ~28% of screen). Anchored to the canvas
+    // right edge and stacked top->bottom so they trace inlet -> body -> outlet without
+    // resolution-fragile world-to-screen math. Each marker loads its stage scene.
+    // Stage markers as a horizontal row above the kiln (right side). Left-to-right they
+    // trace the material path Shredder -> Reactor -> Separation; Reactor is 'current'.
+    // Anchored top-right of the canvas so the row sits over the kiln's horizontal span,
+    // below the SYSTEM STATUS pill, leaving the kiln clear beneath.
+    // Stage markers as a vertical stack sitting over the kiln zone (right ~28%),
+    // horizontally centred on the kiln and running top->bottom to trace the material
+    // path Shredder -> Reactor -> Separation. Reactor is 'current'. Pills are wide so
+    // names never wrap; anchored to canvas centre-x of the kiln zone.
+    // Stage markers as a large vertical stack occupying the kiln zone (right ~28%),
+    // vertically centred to share the kiln's centre and horizontally centred on it.
+    // Three EQUAL doorways (no 'current' state) - this dashboard is a navigation hub:
+    // the user jumps to any stage and comes back. Top->bottom traces the material path
+    // Shredder -> Reactor -> Separation.
+    // Stage markers as a large vertical stack in the empty band just LEFT of the kiln
+    // (between the output panel and the kiln), vertically centred to line up with the
+    // kiln's height without covering it. Three EQUAL doorways (no 'current' state) -
+    // this dashboard is a navigation hub: the user jumps to any stage and comes back.
+    // Top->bottom traces the material path Shredder -> Reactor -> Separation.
+    // Stage markers as a large vertical stack sitting on TOP of the kiln zone (right ~28%).
+    // The kiln drum sits low, so the stack is anchored to the top of that zone and centred
+    // on the kiln's x - it sits above the drum, not covering it. Three EQUAL doorways (no
+    // 'current' state): this dashboard is a navigation hub - jump to any stage and come back.
+    // Top->bottom traces the material path Shredder -> Reactor -> Separation.
+    // Stage markers as a large vertical stack sitting on TOP of the kiln zone (right ~28%),
+    // centred on the kiln's x and anchored to the top so they sit above the drum.
+    // Three EQUAL doorways (no 'current' state): this dashboard is a navigation hub -
+    // jump to any stage and come back. Top->bottom traces Shredder -> Reactor -> Separation.
+    // Stage markers as a large vertical stack sitting high on the kiln zone (right ~28%),
+    // centred on the kiln's x and anchored near the top, well clear of the drum below.
+    // Three EQUAL doorways (no 'current' state): this dashboard is a navigation hub -
+    // jump to any stage and come back. Top->bottom traces Shredder -> Reactor -> Separation.
+    void BuildKilnStageMarkers(Transform root)
+    {
+        // x ~= 0.86 = kiln centre; anchored high so markers sit above the drum with clearance.
+        var col = new GameObject("KilnStageStack", typeof(RectTransform)).GetComponent<RectTransform>();
+        col.SetParent(root, false);
+        col.anchorMin = new Vector2(0.86f, 1); col.anchorMax = new Vector2(0.86f, 1); col.pivot = new Vector2(0.5f, 1);
+        col.sizeDelta = new Vector2(240, 320); col.anchoredPosition = new Vector2(0, -40);
+
+        // Evenly spaced down the stack (pill height 84, pitch 108).
+        MakeStageMarker(col, "Mk2", "2", "Shredder",  "Feed inlet", new Vector2(0,  -42),
+                        () => SceneManager.LoadScene("Stage2_StoryMode"));
+        MakeStageMarker(col, "Mk3", "3", "Reactor",   "Pyrolysis kiln", new Vector2(0, -150),
+                        () => SceneManager.LoadScene("Stage3_StoryMode"));
+        MakeStageMarker(col, "Mk4", "4", "Separation", "Discharge", new Vector2(0, -258),
+                        () => SceneManager.LoadScene("Stage4_StoryMode"));
+    }
+
+    // One kiln marker = numbered circle pin + a label pill (name + sublabel).
+    // current=true renders it accent-filled (the reactor this dashboard controls).
+    // One stage marker for the horizontal row: numbered pin + name + sublabel.
+    // current=true renders accent-filled (the reactor this dashboard controls).
+    // One stage marker: numbered pin (left) + name + sublabel, placed at pos in the stack.
+    // current=true renders accent-filled (the reactor this dashboard controls). Wide pill
+    // (188px) so 'Separation' etc. never wrap.
+    // One stage marker: numbered pin (left) + name + sublabel, placed at pos in the stack.
+    // All markers are equal doorways (no current state). Large pill (210x84) sized to sit
+    // alongside the kiln; names never wrap.
+    void MakeStageMarker(Transform col, string name, string num, string title, string sub,
+                         Vector2 pos, UnityEngine.Events.UnityAction onClick)
+    {
+        var go = new GameObject(name, typeof(RectTransform), typeof(Image), typeof(Button));
+        go.transform.SetParent(col, false);
+        var rt = go.GetComponent<RectTransform>();
+        rt.anchorMin = new Vector2(0.5f, 0.5f); rt.anchorMax = new Vector2(0.5f, 0.5f); rt.pivot = new Vector2(0.5f, 0.5f);
+        rt.sizeDelta = new Vector2(210, 84); rt.anchoredPosition = pos;
+        go.GetComponent<Image>().color = TileBg;
+        go.GetComponent<Button>().onClick.AddListener(onClick);
+
+        // Numbered circle pin on the left of the pill.
+        var pin = MakeImage(rt, "pin", Accent);
+        pin.rectTransform.anchorMin = new Vector2(0, 0.5f); pin.rectTransform.anchorMax = new Vector2(0, 0.5f);
+        pin.rectTransform.pivot = new Vector2(0, 0.5f);
+        pin.rectTransform.sizeDelta = new Vector2(40, 40); pin.rectTransform.anchoredPosition = new Vector2(14, 0);
+        var pn = MakeText(pin.rectTransform, "n", num, 18, Color.white, TextAlignmentOptions.Center);
+        pn.fontStyle = FontStyles.Bold;
+
+        // Title + sublabel stacked to the right of the pin.
+        var tt = MakeText(rt, "t", title, 18, TextMain, TextAlignmentOptions.Left); tt.fontStyle = FontStyles.Bold;
+        tt.enableWordWrapping = false; tt.overflowMode = TextOverflowModes.Overflow;
+        Anchor(tt.rectTransform, 0, 0.46f, 1, 0.94f); tt.rectTransform.offsetMin = new Vector2(66, 0); tt.rectTransform.offsetMax = new Vector2(-12, 0);
+        var st = MakeText(rt, "s", sub, 12.5f, TextSub, TextAlignmentOptions.Left);
+        st.enableWordWrapping = false; st.overflowMode = TextOverflowModes.Overflow;
+        Anchor(st.rectTransform, 0, 0.08f, 1, 0.48f); st.rectTransform.offsetMin = new Vector2(66, 0); st.rectTransform.offsetMax = new Vector2(-12, 0);
+    }
+
+
 
     void EnsureEventSystem()
     {
