@@ -25617,14 +25617,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ExploreOrbitCamera
   controller: {fileID: 657623979}
   target: {fileID: 487721218}
-  orbitSpeed: 0.25
+  orbitSpeed: 0.22
   minPitch: 5
   maxPitch: 75
-  zoomSpeed: 0.01
-  keyZoomSpeed: 12
-  minDistance: 3
-  maxDistance: 30
+  zoomSpeed: 0.06
+  keyZoomSpeed: 18
+  minDistance: 2
+  maxDistance: 38
   startDistance: 13
+  zoomDamping: 10
+  rotationDamping: 9
+  spinInertia: 0.4
 --- !u!1 &575119852
 GameObject:
   m_ObjectHideFlags: 0
@@ -28476,6 +28479,7 @@ GameObject:
   - component: {fileID: 657623980}
   - component: {fileID: 657623979}
   - component: {fileID: 657623981}
+  - component: {fileID: 657623982}
   m_Layer: 0
   m_Name: StoryController
   m_TagString: Untagged
@@ -28542,6 +28546,24 @@ PlayableDirector:
     - Stage2_clip2: {fileID: 1333029093}
     - Stage2_clip3: {fileID: 1188960611}
     - Stage2_StoryMode_clip0: {fileID: 1875186719}
+--- !u!114 &657623982
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 657623978}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8d8ccb5928f2b0f4c8a0a92979c3e507, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PauseFramePreserver
+  controller: {fileID: 657623979}
+  orbit: {fileID: 572877036}
+  fallbackDistance: 12
+  probeDistance: 300
+  minPivotDistance: 2
+  logOnPause: 0
 --- !u!1 &658827545
 GameObject:
   m_ObjectHideFlags: 0
