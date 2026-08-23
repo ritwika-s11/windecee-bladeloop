@@ -16,10 +16,10 @@ public class TourSceneSequencer : MonoBehaviour
         "Transport_StoryMode",
         "Stage2_StoryMode",
         "Stage3_StoryMode",
-        "Stage4_StoryMode"
+        "Stage4_V2"
     };
     [Tooltip("Fallback per-scene duration when a scene has no PlayableDirector.")]
-    public float[] sceneDurations = { 43f, 13f, 32f, 84f, 120f };
+    public float[] sceneDurations = { 43f, 13f, 32f, 84f, 86f };
     public CanvasGroup fadeCanvas;
     public float fadeDuration = 0.5f;
     [Tooltip("Extra hold on the last frame of each stage before cutting.")]
