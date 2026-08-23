@@ -637,16 +637,22 @@ public class PlantExplorerController : MonoBehaviour
         var col = new GameObject("KilnStageStack", typeof(RectTransform)).GetComponent<RectTransform>();
         col.SetParent(root, false);
         col.anchorMin = new Vector2(0.86f, 1); col.anchorMax = new Vector2(0.86f, 1); col.pivot = new Vector2(0.5f, 1);
-        col.sizeDelta = new Vector2(240, 320); col.anchoredPosition = new Vector2(0, -40);
+        col.sizeDelta = new Vector2(240, 340); col.anchoredPosition = new Vector2(0, -30);
 
-        // Clicking a marker opens a preview popup (context + Enter/Cancel) rather than
-        // hard-loading the cinematic, so a non-expert knows what they're about to see.
-        MakeStageMarker(col, "Mk2", "2", "Shredder",  "Feed inlet", new Vector2(0,  -42),
+        // Cards anchored to container CENTRE. Top card centred at -66 (top edge -24).
+        MakeStageMarker(col, "Mk2", "2", "Shredder",  "Watch the shredder", new Vector2(0,  -66),
             () => ShowStagePreview("2", "Shredder", "Blades are crushed to 1-20 mm chips so heat can reach the core evenly.", "Stage2_StoryMode"));
-        MakeStageMarker(col, "Mk3", "3", "Reactor",   "Pyrolysis kiln", new Vector2(0, -150),
+        MakeStageMarker(col, "Mk3", "3", "Reactor",   "See inside the reactor", new Vector2(0, -174),
             () => ShowStagePreview("3", "Reactor", "A sealed 600 \u00b0C kiln with no oxygen cracks the resin into gas, oil and char.", "Stage3_StoryMode"));
-        MakeStageMarker(col, "Mk4", "4", "Separation", "Discharge", new Vector2(0, -258),
+        MakeStageMarker(col, "Mk4", "4", "Separation", "Watch separation", new Vector2(0, -282),
             () => ShowStagePreview("4", "Separation", "A cyclone and air classifier sort glass fibre, char and gas by weight.", "Stage4_StoryMode"));
+
+        // Header anchored to container CENTRE, clearly above the top card (top edge -24).
+        var hdr = MakeText(col, "storyHdr", "WATCH IT HAPPEN", 12, new Color(1f,1f,1f,0.92f), TextAlignmentOptions.Center);
+        hdr.fontStyle = FontStyles.Bold; hdr.characterSpacing = 4;
+        hdr.rectTransform.anchorMin = new Vector2(0.5f, 0.5f); hdr.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+        hdr.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+        hdr.rectTransform.sizeDelta = new Vector2(220, 18); hdr.rectTransform.anchoredPosition = new Vector2(0, 14);
     }
 
     GameObject stagePreview;
@@ -830,32 +836,68 @@ public class PlantExplorerController : MonoBehaviour
     // One stage marker: numbered pin (left) + name + sublabel, placed at pos in the stack.
     // All markers are equal doorways (no current state). Large pill (210x84) sized to sit
     // alongside the kiln; names never wrap.
+    // A stage marker styled as a raised, playable "story card": bevel base for thickness,
+    // gradient face, drop shadow, a play-triangle in an accent disc, the stage name, and an
+    // invitation sublabel ("Watch ..."). Press feedback dips the face onto its bevel.
+    // A stage marker styled as a raised, playable "story card": bevel base for thickness,
+    // gradient face, drop shadow, a play-triangle in an accent disc, the stage name, and an
+    // invitation sublabel ("Watch ..."). Press feedback dips the face onto its bevel.
+    // A stage marker styled as a raised, playable "story card": bevel base for thickness,
+    // gradient face, drop shadow, a play-triangle in an accent disc, the stage name, and an
+    // invitation sublabel ("Watch ..."). Press feedback dips the face onto its bevel.
     void MakeStageMarker(Transform col, string name, string num, string title, string sub,
                          Vector2 pos, UnityEngine.Events.UnityAction onClick)
     {
+        var size = new Vector2(214, 84);
+
+        // Bevel base (clearly darker, offset down) = visible card thickness.
+        var baseGO = new GameObject(name + "Base", typeof(RectTransform), typeof(Image));
+        baseGO.transform.SetParent(col, false);
+        var brt = baseGO.GetComponent<RectTransform>();
+        brt.anchorMin = new Vector2(0.5f, 0.5f); brt.anchorMax = new Vector2(0.5f, 0.5f); brt.pivot = new Vector2(0.5f, 0.5f);
+        brt.sizeDelta = size; brt.anchoredPosition = pos + new Vector2(0, -6);
+        baseGO.GetComponent<Image>().color = new Color(0.72f, 0.76f, 0.83f, 1f);
+
+        // Face (the button) with a stronger gradient so the 3D reads clearly.
         var go = new GameObject(name, typeof(RectTransform), typeof(Image), typeof(Button));
         go.transform.SetParent(col, false);
         var rt = go.GetComponent<RectTransform>();
         rt.anchorMin = new Vector2(0.5f, 0.5f); rt.anchorMax = new Vector2(0.5f, 0.5f); rt.pivot = new Vector2(0.5f, 0.5f);
-        rt.sizeDelta = new Vector2(210, 84); rt.anchoredPosition = pos;
-        go.GetComponent<Image>().color = TileBg;
+        rt.sizeDelta = size; rt.anchoredPosition = pos;
+        go.GetComponent<Image>().color = Color.white;
+        var grad = go.AddComponent<UIGradient>();
+        grad.top = new Color(1f, 1f, 1f, 1f); grad.bottom = new Color(0.78f, 0.82f, 0.88f, 1f);
+        var sh = go.AddComponent<UnityEngine.UI.Shadow>();
+        sh.effectColor = new Color(0.10f, 0.14f, 0.22f, 0.30f); sh.effectDistance = new Vector2(0, -3);
         go.GetComponent<Button>().onClick.AddListener(onClick);
 
-        // Numbered circle pin on the left of the pill.
-        var pin = MakeImage(rt, "pin", Accent);
-        pin.rectTransform.anchorMin = new Vector2(0, 0.5f); pin.rectTransform.anchorMax = new Vector2(0, 0.5f);
-        pin.rectTransform.pivot = new Vector2(0, 0.5f);
-        pin.rectTransform.sizeDelta = new Vector2(40, 40); pin.rectTransform.anchoredPosition = new Vector2(14, 0);
-        var pn = MakeText(pin.rectTransform, "n", num, 18, Color.white, TextAlignmentOptions.Center);
-        pn.fontStyle = FontStyles.Bold;
+        // Press feedback: dip the face onto the bevel.
+        var et = go.AddComponent<UnityEngine.EventSystems.EventTrigger>();
+        var down = new UnityEngine.EventSystems.EventTrigger.Entry { eventID = UnityEngine.EventSystems.EventTriggerType.PointerDown };
+        down.callback.AddListener(_ => rt.anchoredPosition = pos + new Vector2(0, -6)); et.triggers.Add(down);
+        var up = new UnityEngine.EventSystems.EventTrigger.Entry { eventID = UnityEngine.EventSystems.EventTriggerType.PointerUp };
+        up.callback.AddListener(_ => rt.anchoredPosition = pos); et.triggers.Add(up);
 
-        // Title + sublabel stacked to the right of the pin.
+        // Play disc (accent square) on the left; the triangle is an Image reshaped by
+        // UITriangleEffect (BaseMeshEffect renders reliably here, unlike a bare Graphic).
+        var disc = MakeImage(rt, "disc", Accent);
+        disc.rectTransform.anchorMin = new Vector2(0, 0.5f); disc.rectTransform.anchorMax = new Vector2(0, 0.5f);
+        disc.rectTransform.pivot = new Vector2(0, 0.5f);
+        disc.rectTransform.sizeDelta = new Vector2(44, 44); disc.rectTransform.anchoredPosition = new Vector2(14, 0);
+        var triGO = new GameObject("play", typeof(RectTransform), typeof(Image));
+        triGO.transform.SetParent(disc.rectTransform, false);
+        var triImg = triGO.GetComponent<Image>(); triImg.color = Color.white; triImg.raycastTarget = false;
+        triGO.AddComponent<UITriangleEffect>();
+        var trt = triGO.GetComponent<RectTransform>(); trt.anchorMin = new Vector2(0.5f, 0.5f); trt.anchorMax = new Vector2(0.5f, 0.5f);
+        trt.pivot = new Vector2(0.5f, 0.5f); trt.sizeDelta = new Vector2(18, 20); trt.anchoredPosition = new Vector2(2, 0);
+
+        // Title + invitation sublabel to the right of the disc.
         var tt = MakeText(rt, "t", title, 18, TextMain, TextAlignmentOptions.Left); tt.fontStyle = FontStyles.Bold;
         tt.enableWordWrapping = false; tt.overflowMode = TextOverflowModes.Overflow;
-        Anchor(tt.rectTransform, 0, 0.46f, 1, 0.94f); tt.rectTransform.offsetMin = new Vector2(66, 0); tt.rectTransform.offsetMax = new Vector2(-12, 0);
-        var st = MakeText(rt, "s", sub, 12.5f, TextSub, TextAlignmentOptions.Left);
+        Anchor(tt.rectTransform, 0, 0.46f, 1, 0.94f); tt.rectTransform.offsetMin = new Vector2(70, 0); tt.rectTransform.offsetMax = new Vector2(-12, 0);
+        var st = MakeText(rt, "s", sub, 12f, Accent, TextAlignmentOptions.Left);
         st.enableWordWrapping = false; st.overflowMode = TextOverflowModes.Overflow;
-        Anchor(st.rectTransform, 0, 0.08f, 1, 0.48f); st.rectTransform.offsetMin = new Vector2(66, 0); st.rectTransform.offsetMax = new Vector2(-12, 0);
+        Anchor(st.rectTransform, 0, 0.08f, 1, 0.46f); st.rectTransform.offsetMin = new Vector2(70, 0); st.rectTransform.offsetMax = new Vector2(-12, 0);
     }
 
 
@@ -897,6 +939,43 @@ public class UIGradient : UnityEngine.UI.BaseMeshEffect
             var v = verts[i];
             float t = (v.position.y - minY) / h;
             v.color = v.color * Color.Lerp(bottom, top, t);
+            verts[i] = v;
+        }
+        vh.Clear();
+        vh.AddUIVertexTriangleStream(verts);
+    }
+}
+
+// A simple right-pointing triangle Graphic (play glyph) drawn from 3 vertices - avoids
+// relying on a font character (circled/▶ glyphs aren't in LiberationSans).
+// Reshapes a UI Image's quad into a right-pointing triangle (play glyph). Implemented as
+// a BaseMeshEffect (same proven path as UIGradient) so it renders reliably, unlike a bare
+// Graphic subclass. Put this on a normal Image; the Image's colour becomes the triangle.
+public class UITriangleEffect : UnityEngine.UI.BaseMeshEffect
+{
+    public override void ModifyMesh(UnityEngine.UI.VertexHelper vh)
+    {
+        if (!IsActive() || vh.currentVertCount == 0) return;
+        var verts = new System.Collections.Generic.List<UnityEngine.UIVertex>();
+        vh.GetUIVertexStream(verts);
+        float minX = float.MaxValue, maxX = float.MinValue, minY = float.MaxValue, maxY = float.MinValue;
+        for (int i = 0; i < verts.Count; i++)
+        {
+            var p = verts[i].position;
+            if (p.x < minX) minX = p.x; if (p.x > maxX) maxX = p.x;
+            if (p.y < minY) minY = p.y; if (p.y > maxY) maxY = p.y;
+        }
+        float midY = (minY + maxY) * 0.5f;
+        // A quad is two triangles (6 verts). Collapse the right edge to the mid-point so the
+        // shape reads as a right-pointing triangle.
+        for (int i = 0; i < verts.Count; i++)
+        {
+            var v = verts[i];
+            if (v.position.x > (minX + maxX) * 0.5f)
+            {
+                v.position.x = maxX;
+                v.position.y = midY;
+            }
             verts[i] = v;
         }
         vh.Clear();
