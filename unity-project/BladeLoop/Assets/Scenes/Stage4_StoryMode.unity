@@ -46156,6 +46156,7 @@ GameObject:
   - component: {fileID: 657623980}
   - component: {fileID: 657623979}
   - component: {fileID: 657623981}
+  - component: {fileID: 657623982}
   m_Layer: 0
   m_Name: StoryController
   m_TagString: Untagged
@@ -46306,6 +46307,24 @@ PlayableDirector:
     - shot_a376a28393fc47e2bb0b32b6f90fadef: {fileID: 1027498150}
     - 583844f4-a3b8-4a0f-b5f2-4b4db3c293cf: {fileID: 1508127731}
     - 4630cb1d-5744-444a-bb0b-e403a5eff44c: {fileID: 694902048}
+--- !u!114 &657623982
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 657623978}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8d8ccb5928f2b0f4c8a0a92979c3e507, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PauseFramePreserver
+  controller: {fileID: 657623979}
+  orbit: {fileID: 1958710095}
+  fallbackDistance: 12
+  probeDistance: 300
+  minPivotDistance: 2
+  logOnPause: 0
 --- !u!1 &657942000
 GameObject:
   m_ObjectHideFlags: 0
