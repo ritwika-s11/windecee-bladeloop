@@ -20,9 +20,12 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Stage3_StoryMode.unity
     guid: 442955acc12e44b229544d7639d2c45c
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/Stage4_StoryMode.unity
     guid: 2e5dea4240f9c4e1293228ae4b6af9cd
+  - enabled: 1
+    path: Assets/Scenes/Stage4_V2.unity
+    guid: 797510911440d4342bd619cee0b9056d
   - enabled: 1
     path: Assets/Scenes/Stage5_StoryMode.unity
     guid: a5e24d40347444e669da6f53b4fbd471

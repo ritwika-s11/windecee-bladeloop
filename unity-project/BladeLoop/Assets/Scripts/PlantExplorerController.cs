@@ -645,7 +645,7 @@ public class PlantExplorerController : MonoBehaviour
         MakeStageMarker(col, "Mk3", "3", "Reactor",   "See inside the reactor", new Vector2(0, -174),
             () => ShowStagePreview("3", "Reactor", "A sealed 600 \u00b0C kiln with no oxygen cracks the resin into gas, oil and char.", "Stage3_StoryMode"));
         MakeStageMarker(col, "Mk4", "4", "Separation", "Watch separation", new Vector2(0, -282),
-            () => ShowStagePreview("4", "Separation", "A cyclone and air classifier sort glass fibre, char and gas by weight.", "Stage4_StoryMode"));
+            () => ShowStagePreview("4", "Separation", "A cyclone and air classifier sort glass fibre, char and gas by weight.", "Stage4_V2"));
 
         // Header anchored to container CENTRE, clearly above the top card (top edge -24).
         var hdr = MakeText(col, "storyHdr", "WATCH IT HAPPEN", 12, new Color(1f,1f,1f,0.92f), TextAlignmentOptions.Center);
