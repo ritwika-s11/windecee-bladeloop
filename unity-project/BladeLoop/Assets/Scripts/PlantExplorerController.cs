@@ -278,8 +278,13 @@ public class PlantExplorerController : MonoBehaviour
     {
         var tank = tanks.Find("tank_" + label) as RectTransform;
         if (tank == null) return;
-        AddInfoAt(tank, new Vector2(1, 1), new Vector2(1, 1), new Vector2(-4, -3),
-                  label, info, () => model.SystemStatus);
+        // Info button centred on the label row (label band 0.87-0.98, centre ~0.925).
+        var wrap = new GameObject("iw", typeof(RectTransform)).GetComponent<RectTransform>();
+        wrap.SetParent(tank, false);
+        wrap.anchorMin = new Vector2(1, 0.925f); wrap.anchorMax = new Vector2(1, 0.925f);
+        wrap.pivot = new Vector2(1, 0.5f);
+        wrap.sizeDelta = new Vector2(20, 20); wrap.anchoredPosition = new Vector2(-6, 0);
+        MakeInfoButton(wrap, label, info, () => model.SystemStatus);
     }
 
     void AddMetricInfo(RectTransform q, string key, string title, System.Func<string> info)
@@ -293,10 +298,17 @@ public class PlantExplorerController : MonoBehaviour
     void BuildTank(Transform parent, string label, Color col, out Image fill, out TMP_Text pct, out TMP_Text rate)
     {
         var tank = MakeImage(parent, "tank_" + label, TileBg);
-        var lbl = MakeText(tank.rectTransform, "l", label, 14, TextMain, TextAlignmentOptions.Top);
-        lbl.fontStyle = FontStyles.Bold; Anchor(lbl.rectTransform, 0, 0.88f, 1, 0.99f);
+        // Header row: label (left) sits on the same centred band (y 0.87-0.98) as the info
+        // button, both vertically centred, so name and 'i' always align on one line.
+        string shown = label == "Glass fibre" ? "Glass"
+                     : label == "Char dust"   ? "Char"
+                     : label;
+        var lbl = MakeText(tank.rectTransform, "l", shown, 13, TextMain, TextAlignmentOptions.Left);
+        lbl.fontStyle = FontStyles.Bold; lbl.enableWordWrapping = false; lbl.overflowMode = TextOverflowModes.Overflow;
+        Anchor(lbl.rectTransform, 0, 0.87f, 1, 0.98f);
+        lbl.rectTransform.offsetMin = new Vector2(10, 0); lbl.rectTransform.offsetMax = new Vector2(-28, 0);
         var body = MakeImage(tank.rectTransform, "body", Hex("EEF1F5"));
-        body.rectTransform.anchorMin = new Vector2(0.24f, 0.24f); body.rectTransform.anchorMax = new Vector2(0.76f, 0.85f);
+        body.rectTransform.anchorMin = new Vector2(0.24f, 0.24f); body.rectTransform.anchorMax = new Vector2(0.76f, 0.83f);
         body.rectTransform.offsetMin = Vector2.zero; body.rectTransform.offsetMax = Vector2.zero;
         // subtle inner-well shadow at the top of the empty tank body for containment depth
         var well = body.gameObject.AddComponent<UnityEngine.UI.Shadow>();
@@ -522,8 +534,24 @@ public class PlantExplorerController : MonoBehaviour
         infoPopupTitle.color = s == ProcessModel.Status.Optimal ? Ok : (s == ProcessModel.Status.Caution ? Warn : Crit);
         infoPopup.SetActive(true); infoPopup.transform.SetAsLastSibling();
         var panel = infoPanel.GetComponent<RectTransform>();
+
+        // Drop the panel below the info button, shifted left so it sits over the dashboard.
         panel.position = anchor.TransformPoint(new Vector3(0, -anchor.rect.height - 2f, 0));
         panel.anchoredPosition += new Vector2(-296, 0);
+
+        // Clamp fully on-screen. Panel pivot is top-left (0,1), so it spans
+        // x:[ap.x, ap.x+pw], y:[ap.y-ph, ap.y] in the centre-anchored canvas.
+        // This handles the Tensile Retention button near the panel foot (was spilling
+        // off the bottom): the panel is pushed up so its whole height stays visible.
+        var canvasRT = infoPopup.GetComponent<RectTransform>();
+        float pw = panel.rect.width, ph = panel.rect.height;
+        float halfW = canvasRT.rect.width * 0.5f, halfH = canvasRT.rect.height * 0.5f;
+        Vector2 ap = panel.anchoredPosition;
+        if (ap.y - ph < -halfH + 8f) ap.y = -halfH + 8f + ph;   // bottom clamp
+        if (ap.y > halfH - 8f)       ap.y = halfH - 8f;          // top clamp
+        if (ap.x < -halfW + 8f)      ap.x = -halfW + 8f;         // left clamp
+        if (ap.x + pw > halfW - 8f)  ap.x = halfW - 8f - pw;     // right clamp
+        panel.anchoredPosition = ap;
     }
 
     void BuildInfoPopup()
