@@ -1,0 +1,18 @@
+# Stage 4 - Segment 7: Discharge Hood & Gas Vapour Path
+# One cue per narration beat, matched to the timeline audio clips.
+# Format: start | end | text   (seconds on the Stage4_V2 timeline)
+
+1.50  | 3.92  | Everything leaving the kiln arrives as one stream.
+5.70  | 11.85 | At six hundred degrees the hood splits it: solids fall, vapour rises. Nothing burns - no oxygen.
+13.90 | 18.41 | What falls is glass fibre and carbon char, still glowing, still bound together.
+20.70 | 25.49 | A water-jacketed screw cools them from six hundred degrees to fifty, under nitrogen.
+27.10 | 29.79 | A rotary valve lets them out without letting air in.
+31.90 | 35.54 | Now air does the sorting. The mixture is lifted into a classifier.
+37.50 | 41.86 | Glass fibre is the heavier fraction. It drops out first: seventy percent.
+43.70 | 46.58 | The lighter char is carried on and drummed off - six percent.
+49.90 | 51.94 | Meanwhile, the vapour takes the high road.
+53.90 | 57.42 | First a heat exchanger, which gives its heat to the kiln's burner air.
+60.10 | 63.32 | Then a cyclone spins the last of that dust back out of the gas.
+67.50 | 70.62 | Cooled to forty-five degrees, the heavy fractions rain out.
+72.70 | 77.47 | Liquid settles as pyrolysis oil - sixteen percent. What stays gas is syngas.
+79.10 | 83.15 | Eight percent, and it goes back to fire the kiln. The plant heats itself.
