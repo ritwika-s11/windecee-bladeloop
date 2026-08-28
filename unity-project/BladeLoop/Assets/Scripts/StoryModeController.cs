@@ -32,8 +32,16 @@ public class StoryModeController : MonoBehaviour
     public void TogglePause()
     {
         paused = !paused;
-        if (director != null && director.playableGraph.IsValid())
-            director.playableGraph.GetRootPlayable(0).SetSpeed(paused ? 0 : 1);
+        // Pause the director properly rather than setting graph speed to 0.
+        // Audio cannot play at zero speed, so Timeline STOPPED the voiceover
+        // source instead of pausing it, and never re-scheduled it on resume —
+        // the VO stayed mute until the next clip began. Pause()/Resume() is
+        // Unity's supported path and keeps audio scheduling intact.
+        if (director != null)
+        {
+            if (paused) director.Pause();
+            else        director.Resume();
+        }
         if (freeOrbitCam != null)
             freeOrbitCam.Priority = paused ? 100 : 0;
         // The Timeline's Cinemachine track keeps overriding the Brain even at
