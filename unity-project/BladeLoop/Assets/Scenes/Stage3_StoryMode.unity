@@ -18961,7 +18961,7 @@ Canvas:
   m_SortingBucketNormalizedSize: 0
   m_VertexColorAlwaysGammaSpace: 0
   m_UseReflectionProbes: 0
-  m_AdditionalShaderChannelsFlag: 0
+  m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
   m_SortingOrder: 99
@@ -50594,7 +50594,7 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
+    rgba: 4294438374
   m_fontColor: {r: 0.9, g: 0.93, b: 0.97, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
@@ -50607,7 +50607,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -61218,7 +61218,7 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
+    rgba: 4282067230
   m_fontColor: {r: 0.118, g: 0.161, b: 0.231, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
@@ -61231,7 +61231,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -106152,9 +106152,15 @@ MonoBehaviour:
   m_GameObject: {fileID: 1183874359}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 53c9230f833c9450082ebddefbf56480, type: 3}
+  m_Script: {fileID: 11500000, guid: d0ad672f22278de47b39dc2dcd8fbcbc, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::FaceCamera
+  m_EditorClassIdentifier: Assembly-CSharp::ScreenSafeLabel
+  anchor: {x: -3, y: 4.35, z: 0}
+  marginX: 0.07
+  marginY: 0.12
+  faceCamera: 1
+  hideWhenBehind: 1
+  damping: 10
 --- !u!21 &1189913140
 Material:
   serializedVersion: 8
@@ -112985,7 +112991,7 @@ Canvas:
   m_SortingBucketNormalizedSize: 0
   m_VertexColorAlwaysGammaSpace: 0
   m_UseReflectionProbes: 0
-  m_AdditionalShaderChannelsFlag: 0
+  m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
   m_SortingOrder: 100
@@ -134374,9 +134380,15 @@ MonoBehaviour:
   m_GameObject: {fileID: 1586023662}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 53c9230f833c9450082ebddefbf56480, type: 3}
+  m_Script: {fileID: 11500000, guid: d0ad672f22278de47b39dc2dcd8fbcbc, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::FaceCamera
+  m_EditorClassIdentifier: Assembly-CSharp::ScreenSafeLabel
+  anchor: {x: -6.4, y: 4.35, z: 0}
+  marginX: 0.07
+  marginY: 0.12
+  faceCamera: 1
+  hideWhenBehind: 1
+  damping: 10
 --- !u!1 &1586631260
 GameObject:
   m_ObjectHideFlags: 0
@@ -141311,9 +141323,15 @@ MonoBehaviour:
   m_GameObject: {fileID: 1692748376}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 53c9230f833c9450082ebddefbf56480, type: 3}
+  m_Script: {fileID: 11500000, guid: d0ad672f22278de47b39dc2dcd8fbcbc, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::FaceCamera
+  m_EditorClassIdentifier: Assembly-CSharp::ScreenSafeLabel
+  anchor: {x: -0.1, y: 4.35, z: 0}
+  marginX: 0.07
+  marginY: 0.12
+  faceCamera: 1
+  hideWhenBehind: 1
+  damping: 10
 --- !u!1 &1698411502
 GameObject:
   m_ObjectHideFlags: 0
@@ -159407,9 +159425,15 @@ MonoBehaviour:
   m_GameObject: {fileID: 1875037027}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 53c9230f833c9450082ebddefbf56480, type: 3}
+  m_Script: {fileID: 11500000, guid: d0ad672f22278de47b39dc2dcd8fbcbc, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::FaceCamera
+  m_EditorClassIdentifier: Assembly-CSharp::ScreenSafeLabel
+  anchor: {x: -8.6, y: 3.6, z: 0}
+  marginX: 0.07
+  marginY: 0.12
+  faceCamera: 1
+  hideWhenBehind: 1
+  damping: 10
 --- !u!1 &1876696000
 GameObject:
   m_ObjectHideFlags: 0
