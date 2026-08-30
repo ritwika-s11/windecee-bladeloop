@@ -43,8 +43,8 @@ public class PlantExplorerController : MonoBehaviour
     float effShown, effTarget = 100f;
     readonly float[] tankShown = new float[5];
     readonly float[] tankTarget = new float[5];
-    float purityShown, purityTarget = 99f;
-    float tensileShown, tensileTarget = 100f;
+    float purityShown, purityTarget = 93f;
+    float tensileShown, tensileTarget = 90f;
     bool animInit;
     const float EaseSpeed = 12f;   // higher = snappier; ~0.15-0.2s settle
     Coroutine resetRoutine;
@@ -246,8 +246,8 @@ public class PlantExplorerController : MonoBehaviour
         var q = new GameObject("quality", typeof(RectTransform), typeof(VerticalLayoutGroup)).GetComponent<RectTransform>();
         q.SetParent(col, false); Anchor(q, 0, 0.0f, 1, 0.21f);
         var qh = q.GetComponent<VerticalLayoutGroup>(); qh.spacing = 8; qh.childControlWidth = true; qh.childForceExpandWidth = true; qh.childControlHeight = true; qh.childForceExpandHeight = true;
-        purityVal  = BuildMetric(q, "FIBRE PURITY", "99.0%");
-        tensileVal = BuildMetric(q, "TENSILE RETENTION", "100%");
+        purityVal  = BuildMetric(q, "FIBRE PURITY", "93.0%");
+        tensileVal = BuildMetric(q, "TENSILE RETENTION", "90%");
 
         // ---- ADDITIVE: info buttons on the output side (same popup system as the sliders) ----
         AddInfoAt(col, new Vector2(0, 0.885f), new Vector2(0, 0.885f), new Vector2(196, 0),
@@ -412,9 +412,12 @@ public class PlantExplorerController : MonoBehaviour
         SetTank(tankLoss, pctLoss, rateLoss, tankShown[4]);
 
         purityVal.text = purityShown.ToString("0.0") + "%";
-        purityVal.color = purityShown > 95 ? Ok : (purityShown > 80 ? Warn : Crit);
+        // Grade-tier boundaries (see ProcessModel quality metrics, re-anchored 30 Aug 2026).
+        // These MUST stay below the metric ceilings (93% purity / 90% tensile) or the
+        // green state becomes unreachable.
+        purityVal.color = purityShown > 90 ? Ok : (purityShown > 78 ? Warn : Crit);
         tensileVal.text = tensileShown.ToString("0") + "%";
-        tensileVal.color = tensileShown > 90 ? Ok : (tensileShown > 70 ? Warn : Crit);
+        tensileVal.color = tensileShown > 85 ? Ok : (tensileShown > 70 ? Warn : Crit);
     }
 
     void SetTank(Image fill, TMP_Text pct, TMP_Text rate, float pctVal)
