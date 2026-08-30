@@ -82,8 +82,26 @@ public class ProcessModel
         };
     }
 
-    public float FiberPurityPct  => Mathf.Clamp(99f - 18f * OverallDeviation - 20f * DevParticle, 50f, 99.4f);
-    public float TensileRetentionPct => Mathf.Clamp(100f - 40f * DevParticle - 12f * DevTemp - 10f * DevRetention, 30f, 100f);
+    // ── Quality metrics, re-anchored 30 Aug 2026 to published pyrolysis results ──
+    // Previously these peaked at 99% purity / 100% tensile retention at the design case,
+    // which claims thermal recovery does no damage to the fibre. The literature does not
+    // support that: recovered-fibre tensile retention tops out around 90-93% under
+    // optimised multi-step pyrolysis, and standard single-step processes cluster at
+    // 72-76% (see docs/BLADELOOP-PRODUCT-VISION.md §3 and the CEE source list).
+    // Ceilings are now 93% purity / 90% tensile so the design case represents
+    // best-in-class recovery rather than perfect recovery. Slopes are scaled by the same
+    // factor, so the SHAPE of every response curve is unchanged - only the anchor moved.
+    //
+    // Resulting design case: 93.0% purity / 90.0% tensile  (best-in-class, 90-93% band)
+    //          mid preset:   82.5% purity / 76.5% tensile  (matches the published 76%
+    //                                                       two-step wind-blade result)
+    //          low preset:   69.8% purity / 58.3% tensile  (deliberately under-driven)
+    //
+    // "Purity" is our own definition - no published standard expresses recovered fibre
+    // quality as a purity %. It means: the mass fraction of recovered material that is
+    // fibre, rather than adhered char and resin residue.
+    public float FiberPurityPct  => Mathf.Clamp(93f - 17f * OverallDeviation - 19f * DevParticle, 45f, 93f);
+    public float TensileRetentionPct => Mathf.Clamp(90f - 36f * DevParticle - 11f * DevTemp - 9f * DevRetention, 28f, 90f);
 
     public Status LedTemp      => StatusFor(DevTemp);
     public Status LedRetention => StatusFor(DevRetention);
@@ -217,9 +235,10 @@ public class ProcessModel
     public string QualityConsequence()
     {
         float pu = FiberPurityPct, te = TensileRetentionPct;
-        if (pu > 95f && te > 90f) return "Fibre passes spec: " + pu.ToString("0.0") + "% pure, " + te.ToString("0") + "% of its original strength.";
-        if (pu > 80f && te > 70f) return "Quality slipping: purity " + pu.ToString("0.0") + "%, strength " + te.ToString("0") + "% — usable, but off spec.";
-        return "Quality failing: purity " + pu.ToString("0.0") + "%, strength " + te.ToString("0") + "% — fibre no longer meets cement-feedstock spec.";
+        // Grade tiers, not pass/fail: every output has a buyer, just a different one.
+        if (pu > 90f && te > 85f) return "High grade: " + pu.ToString("0.0") + "% pure, " + te.ToString("0") + "% of its original strength — good enough to go back into new composite parts.";
+        if (pu > 78f && te > 70f) return "Mid grade: purity " + pu.ToString("0.0") + "%, strength " + te.ToString("0") + "% — not structural, but sells as reinforcing filler for precast concrete.";
+        return "Low grade: purity " + pu.ToString("0.0") + "%, strength " + te.ToString("0") + "% — coarse mixed material, co-processed in cement kilns as silica and fuel.";
     }
 
     /// <summary>Why the SYSTEM STATUS pill is the colour it is.</summary>
@@ -264,7 +283,7 @@ public class ProcessModel
 
         // 4) what it does to product quality
         float pu = FiberPurityPct, te = TensileRetentionPct;
-        Status qs = (pu > 95f && te > 90f) ? Status.Optimal : ((pu > 80f && te > 70f) ? Status.Caution : Status.Critical);
+        Status qs = (pu > 90f && te > 85f) ? Status.Optimal : ((pu > 78f && te > 70f) ? Status.Caution : Status.Critical);
         ex.rows.Add(new Diag { level = qs, text = QualityConsequence() });
 
         return ex;
@@ -323,14 +342,14 @@ public class ProcessModel
 
     public string PurityInfo()
     {
-        return "How much of the reclaimed fibre is actually clean glass rather than leftover resin or carbon. Spec is above 95%; it now reads "
+        return "The share of the reclaimed material that is fibre rather than adhered char or resin residue. High grade needs above 90%; it now reads "
              + FiberPurityPct.ToString("0.0") + "%. "
              + (DevParticle >= 0.15f ? "Coarse feed hurts it most, because undecomposed cores leave residue on the fibre." : "Temperature and retention are the two things that move it.");
     }
 
     public string TensileInfo()
     {
-        return "How much of its original strength the recovered fibre keeps. 100% means undamaged; it now reads "
-             + TensileRetentionPct.ToString("0") + "%. Heat damage is the cause — too hot, or too long in the kiln, and the glass embrittles.";
+        return "How much of its original strength the recovered fibre keeps. Thermal recovery always costs some strength — around 90% is best-in-class, and it now reads "
+             + TensileRetentionPct.ToString("0") + "%. Coarse feed does the most damage, because undecomposed cores leave residue that has to be burned off harder.";
     }
 }
