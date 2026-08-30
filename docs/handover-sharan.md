@@ -2,6 +2,14 @@
 
 **Read `docs/BLADELOOP-PRODUCT-VISION.md` first.** This file is the build detail for your tasks.
 
+> 🔴 **`docs/interface-contract.md` answers S1, S2, S3, S4 and S5.** It fixes the exact signatures
+> for `OrderContext`, `OrderSolver` and `TourRunner`, states who owns which number, gives the
+> canonical verification table, and defines the tour → Outcome Report handoff.
+>
+> **You do not have to wait for Tuesday.** Build Task 3 and Task 4 against those signatures now.
+> The code won't compile until Akshat merges — that's expected. Get the layout and logic done, then
+> pull on Tuesday and fix up. That should take minutes, not a rebuild.
+
 Branch off current `main`: `feature/order-dashboard`
 Custom Order screen by **Fri 5 Sep** · feature freeze **Tue 9 Sep**
 

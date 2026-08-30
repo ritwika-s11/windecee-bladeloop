@@ -2,6 +2,10 @@
 
 **Read `docs/BLADELOOP-PRODUCT-VISION.md` first.** This file is the build detail for your tasks.
 
+> 🔴 **`docs/interface-contract.md` is binding.** Sharan is building his screens against those exact
+> signatures right now, before your code exists. Implement to them precisely. If a signature there is
+> wrong or awkward, **say so before Tuesday** — changing it after he has built against it costs a day.
+
 Branch off current `main`: `feature/order-spine`
 Task 1 due **Tue 2 Sep** · everything else by **Tue 9 Sep** (feature freeze)
 
@@ -68,13 +72,16 @@ public static class OrderContext
 }
 ```
 
-Grade thresholds as named constants, so there is exactly one place to change them when the CEE
-team returns sourced numbers:
+Grade thresholds as **public** named constants — `OrderContext` is the single source of truth for
+these and nobody hardcodes them anywhere else. Updated 30 Aug from the CEE review:
 
 ```csharp
-const float HighPurity = 95f, HighTensile = 95f;
-const float MidPurity  = 85f, MidTensile  = 80f;
+public const float HighPurity = 90f, HighTensile = 85f;
+public const float MidPurity  = 78f, MidTensile  = 70f;
 ```
+
+⚠️ These **must** stay below the metric ceilings in `ProcessModel` (93 % purity / 90 % tensile) or
+the high-grade state becomes unreachable. See `docs/interface-contract.md` §2 for the full surface.
 
 **Also put the three presets here** as static readonly data, so Ritwika's homepage and Sharan's
 dashboard read the same definitions:
