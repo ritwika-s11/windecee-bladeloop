@@ -193,12 +193,13 @@ With the constraint applied, the frontier becomes real:
 
 ```
    particle    max feed     fibre out    purity
-    1 mm        5,738        3,899        92.2      finer costs you
+    1 mm        5,733        3,896        92.2      finer costs you
     2 mm        6,500        4,482        93.0
-    4 mm        7,262        4,752        89.5
-    6 mm        7,708        4,806        86.3   ◄── PEAK, and it's mid grade
-    8 mm        8,025        4,770        83.2
-   16 mm        8,787        4,274        71.5
+    4 mm        7,267        4,755        89.5
+    6 mm        7,715        4,810        86.2   ◄── PEAK, and it's mid grade
+    8 mm        8,033        4,774        83.2
+   16 mm        8,800        4,278        71.5
+   20 mm        9,000        3,921        65.8
 ```
 
 **Rise, then fall.** Mid grade genuinely out-produces high grade, low grade loses to both, and no
@@ -209,8 +210,8 @@ feed at 5,738 kg/h.
 > the additive-only rule in §8 still holds. It does mean the feed slider on the Custom Order screen
 > must be bounded by the particle-size slider.
 
-One consequence to be aware of: the solver's best mid-grade answer is 6 mm / 7,708 kg/h (4,806),
-marginally better than our 8 mm mid preset (4,770). The presets stay as they are — they are
+One consequence to be aware of: the solver's best mid-grade answer is 6 mm / 7,715 kg/h (4,810),
+marginally better than our 8 mm mid preset (4,774 at that cap, 4,691 as configured). The presets stay as they are — they are
 illustrative customer orders, not solver output — so a user who runs the preset and then opens
 Custom Order will be told they could do slightly better. That reads as the tool being useful.
 
@@ -219,8 +220,8 @@ Custom Order will be told they could do slightly better. That reads as the tool 
 | Target | Best settings | Fibre out | Achieved |
 |---|---|---|---|
 | High | 600 °C · 35 min · 7,150 kg/h · 3.6 mm | 4,725 kg/h | 90.1 % / 86.8 % |
-| Mid | 600 °C · 35 min · 7,750 kg/h · 6.2 mm | **4,808 kg/h** | 85.9 % / 81.6 % |
-| Low | *same as mid* | 4,808 kg/h | 85.9 % / 81.6 % |
+| Mid | 600 °C · 35 min · 7,715 kg/h · 6.0 mm | **4,810 kg/h** | 86.2 % / 82.0 % |
+| Low | *same as mid* | 4,810 kg/h | 86.2 % / 82.0 % |
 
 Mid beats high on throughput — the thesis holds, causally. But note the third row: **asked for low
 grade, the solver still recommends the mid-grade settings**, because running coarser than ~6 mm
@@ -444,6 +445,9 @@ Each person also has a technical brief in `docs/` to give their Claude.
 
 ### Ritwika — homepage, narration, subtitles, integration
 
+0. ✅ **`OrderContext.cs` + `OrderSolver.cs`** — written and merged 31 Aug, taken off Akshat so
+   Anirban and Sharan weren't queued behind him. Plus `OrderSelfTest.cs`
+   (**BladeLoop → Verify Order Model**).
 1. Rebuild `MainMenu.unity` as the order homepage (§5.1)
 2. Rewrite the narration scripts for all four stages — removing every hard number, since
    parameters now vary per order
@@ -457,12 +461,10 @@ Each person also has a technical brief in `docs/` to give their Claude.
 
 ### Akshat — the shared spine (`docs/handover-akshat.md`)
 
-0. 🔴 **Today: merge the `OrderContext` skeleton** — real signatures from
-   `docs/interface-contract.md`, stub bodies, `HasOrder` returning false. Anirban and Sharan are
-   both blocked on it existing, not on it working.
-1. `OrderContext.cs` — the shared state every other person reads from, complete by Tue 1 Sep
-2. `OrderSolver.cs` — runs the process model backwards, **including the shredder capacity
-   constraint** (§4). Without that constraint the solver disproves our own pitch.
+> ✅ **`OrderContext.cs` and `OrderSolver.cs` are done and on `main`** — Ritwika took them on 31 Aug
+> so the Unity-side work wasn't queued behind them. Both are pure C# and implemented exactly to
+> `docs/interface-contract.md`. Run **BladeLoop → Verify Order Model** in the editor to see them
+> checked against the canonical numbers. **Nobody is blocked on you any more.**
 3. The dual screen — viewport split plus the persistent order panel across all four stages.
    Includes **FOV compensation**: Unity fixes vertical FOV and derives horizontal, so a 72 %
    viewport silently cuts 28 % of horizontal field from all ~40 shots. One line of code
@@ -545,7 +547,8 @@ Need a change in someone else's scene? Message them. Don't open it.
 |---|---|
 | `ProcessModel.cs` | Sharan — **additive only**, never change an existing formula |
 | `PlantExplorerController.cs` | Sharan |
-| `OrderContext.cs`, `OrderSolver.cs`, `TourSceneSequencer.cs`, `StoryModeController.cs`, `PauseFramePreserver.cs`, `ExploreOrbitCamera.cs`, `ExploreClickRaycaster.cs` | Akshat |
+| `TourSceneSequencer.cs`, `StoryModeController.cs`, `PauseFramePreserver.cs`, `ExploreOrbitCamera.cs`, `ExploreClickRaycaster.cs`, `TourRunner.cs` | Akshat |
+| `OrderContext.cs`, `OrderSolver.cs`, `OrderSelfTest.cs` | Ritwika — **moved from Akshat 31 Aug**, already written and merged |
 | `KilnRotator.cs`, `TemperatureRampAnimator.cs`, `AirlockFlowController.cs`, stage animators | Anirban |
 | `SceneLoader.cs`, `SubtitleTrack.cs` | Ritwika |
 
@@ -588,8 +591,8 @@ Anirban works, and it means a null `OrderContext` can never crash the build.
 | Date | Milestone |
 |---|---|
 | ~~Sun 30 Aug~~ | ✅ CEE numbers delivered. Doc reviews in from Akshat, Sharan, Anirban. |
-| **Mon 31 Aug — today** | 🔴 **Akshat merges the `OrderContext` skeleton** (real signatures per the interface contract, stub bodies, `HasOrder` false). Everyone else starts. |
-| **Tue 1 Sep** | 🔴 `OrderContext` + `OrderSolver` complete and merged. |
+| **Mon 31 Aug — today** | ✅ **`OrderContext` + `OrderSolver` written and merged** (Ritwika, taken off Akshat). Anirban and Sharan unblocked. Akshat starts on the dual screen. |
+| **Tue 1 Sep** | Dual screen and viewport split taking shape. |
 | **Wed 2 Sep** | Akshat's Explore spec to Anirban. FOV compensation merged. Narration scripts drafted. |
 | **Fri 4 Sep** | Dual screen working on one stage. Custom Order screen functional. Homepage laid out. |
 | **Mon 7 Sep** | All four stages responding to parameters. Voiceover re-recorded. |
@@ -601,12 +604,13 @@ Anirban works, and it means a null `OrderContext` can never crash the build.
 
 The 9 September freeze is not negotiable. Not merged by then means it doesn't ship.
 
-### Why the skeleton matters today
+### Why this moved
 
-Anirban's Task 1 and Sharan's Task 3 both read `OrderContext`. Until it exists on `main`, one of
-them is guessing and the other is idle. A skeleton — correct signatures, empty bodies — takes about
-half an hour and buys back a full day across two people. It goes in **before** the real
-implementation, not after.
+Anirban's Task 1 and Sharan's Task 3 both read `OrderContext`, and Akshat had no time on Monday —
+so two people would have lost a day waiting on one file. Both files are pure C# with no Unity
+dependencies and were fully specified in the interface contract, so writing them was implementing a
+spec rather than designing one. Akshat keeps the Unity-side work that genuinely needs him: the dual
+screen, the viewport split, Explore mode and chapter navigation.
 
 ---
 

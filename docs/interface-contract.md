@@ -1,7 +1,13 @@
 # BladeLoop — Interface Contract
 
 **Author:** Ritwika Sen · 31 August 2026
-**Binding on:** Akshat (implements) and Sharan (calls). Anirban reads §2 only.
+**Binding on:** everyone. Anirban reads §2 only.
+
+> ✅ **§2 `OrderContext` and §3 `OrderSolver` are implemented and on `main`** (Ritwika, 31 Aug —
+> moved off Akshat so nobody was queued behind one file). They match this contract exactly. Run
+> **BladeLoop → Verify Order Model** in the editor to confirm against §8.
+>
+> §4 `TourRunner` and §5's handoff are still Akshat's to build.
 
 This file exists so Sharan can build his screens **before** Akshat's code is merged. Both of you
 build against the signatures below. Akshat implements to them; Sharan calls them.
@@ -270,11 +276,15 @@ correct; the old 99.0 / 88.0 / 74.5 is what's stale.
 
 Constrained solver output, for reference:
 
-| Target | Best settings | Fibre out |
-|---|---|---|
-| High | 600 / 35 / 7,150 / 3.6 mm | 4,725 kg/h |
-| Mid | 600 / 35 / 7,750 / 6.2 mm | 4,808 kg/h |
-| Low | *same as mid* | 4,808 kg/h |
+| Target | Best settings | Fibre out | Achieved |
+|---|---|---|---|
+| High | 600 / 35 / 7,150 / 3.6 mm | 4,725 kg/h | 90.1 % / 86.8 % |
+| Mid | 600 / 35 / 7,715 / 6.0 mm | 4,810 kg/h | 86.2 % / 82.0 % |
+| Low | *same as mid* | 4,810 kg/h | 86.2 % / 82.0 % |
+
+These are the values the merged `OrderSolver` actually returns — verified against the implementation,
+not estimated. Mid and Low returning the same answer is correct: running coarser than ~6 mm costs
+more than it gains, so low grade is never something you'd *choose*.
 
 The solver's mid answer slightly beats the mid preset. That's expected — presets are illustrative
 customer orders, not solver output.
@@ -285,15 +295,15 @@ customer orders, not solver output.
 
 | When | Who | What |
 |---|---|---|
-| **Mon 31 Aug (today)** | Akshat | Merge the **`OrderContext` skeleton** — these signatures, stub bodies, `HasOrder` false, `Model` never null. Own small PR, before the real implementation. |
-| Mon 31 Aug | Sharan | Build the screens against these signatures. |
-| Mon 31 Aug | Anirban | Wire Task 1's split flag off the real `HasOrder`, not a local stub. |
-| **Tue 1 Sep** | Akshat | `OrderContext` + `OrderSolver` complete and merged. |
-| Tue 1 Sep | Sharan | Pull, compile, fix up. Minutes, not a rebuild. |
+| ✅ Mon 31 Aug | Ritwika | `OrderContext` + `OrderSolver` + self-test merged to `main`. |
+| Mon 31 Aug | Sharan | Pull. Build the screens against the real API — no waiting, no guessing. |
+| Mon 31 Aug | Anirban | Pull. Wire Task 1's split flag off the real `HasOrder`. |
+| Mon 31 Aug | Akshat | Start at **Task 3, the dual screen** — the new critical path. |
 | **Wed 2 Sep** | Akshat | Explore spec to Anirban; FOV compensation merged (clamped at 65°). |
 
-**Why the skeleton comes first:** two people are blocked on the type existing, not on it working.
-Half an hour today buys back a day across both of them.
+**Run the self-test after any change to `ProcessModel`, `OrderContext` or `OrderSolver`.**
+Several of these numbers are quoted in the vision doc, the briefs and the professor-facing
+narration, so a silent drift is expensive to find later.
 
 If Akshat finds a signature here that's wrong or awkward, **say so before Tuesday** — changing it
 after Sharan has built against it costs a day.

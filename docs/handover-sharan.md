@@ -109,8 +109,10 @@ them on this page. Two facts worth naming, because they turn our tiers into real
 
 ## Task 3 — Custom Order screen 🎯 main task
 
-*Build it today against `docs/interface-contract.md`. The `OrderContext` skeleton lands **today**
-so it compiles; `OrderSolver` follows **Tue 1 Sep**.*
+> ✅ **Not blocked — `OrderContext.cs` and `OrderSolver.cs` are on `main` now.** Pull and build
+> against the real thing, not a guess. `OrderSolver.MaxFeed(particleMm)` is public; bind your feed
+> slider's upper limit to it. Run **BladeLoop → Verify Order Model** in the editor to see the
+> canonical numbers confirmed against the code.
 
 New scene `Assets/Scenes/OrderDashboard.unity` + `Assets/Scripts/OrderDashboardController.cs`,
 built the same way as Plant Explorer: an empty GameObject holding a controller that creates the

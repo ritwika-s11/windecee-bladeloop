@@ -7,8 +7,24 @@
 > wrong or awkward, **say so before Tuesday** — changing it after he has built against it costs a day.
 
 Branch off current `main`: `feature/order-spine`
-Skeleton **today, Mon 31 Aug** · `OrderContext` + solver complete **Tue 1 Sep** · Explore spec and
-FOV fix **Wed 2 Sep** · feature freeze **Wed 9 Sep**
+Explore spec and FOV fix **Wed 2 Sep** · feature freeze **Wed 9 Sep**
+
+> ## ✅ Tasks 0, 1 and 2 are done — Ritwika wrote them on 31 Aug
+>
+> `OrderContext.cs`, `OrderSolver.cs` and `OrderSelfTest.cs` are on `main`. You had no time Monday
+> and two people were blocked behind that one file, so she took it. Both are pure C# and were fully
+> specified in `docs/interface-contract.md`, so it was implementing a spec, not designing one.
+> Ownership moved to her in the Rule 2 table.
+>
+> **Your F1 constraint is in**, with k = 1106.1 as you corrected. `OrderSolver.MaxFeed(particleMm)`
+> is public so Sharan binds his feed slider to it. Run **BladeLoop → Verify Order Model** to see
+> everything checked against the canonical table — including a test that the exploit stays blocked.
+>
+> **Start at Task 3 (the dual screen).** That's the critical path now: Anirban's 14 canvases and
+> Sharan's screens both assume it. Then Task 5, then the FOV fix, then chapter nav last.
+>
+> If anything in those two files is wrong or awkward for you, say so — they're new and untested in
+> anger, and you're the person most likely to spot a problem.
 
 ---
 
@@ -34,20 +50,10 @@ FOV fix **Wed 2 Sep** · feature freeze **Wed 9 Sep**
 
 ---
 
-## Task 0 — Merge the `OrderContext` skeleton TODAY (Mon 31 Aug) 🔴
+## ~~Task 1 — `OrderContext.cs`~~ ✅ DONE (Ritwika, 31 Aug)
 
-Before the real implementation. Real signatures from `docs/interface-contract.md`, stub bodies,
-`HasOrder` returning false, `Model` defaulting to the design case so it is never null.
-
-**Anirban and Sharan are both blocked on the file existing, not on it working.** Anirban's Task 1
-wires the split off `OrderContext.HasOrder`; Sharan can't compile his screens without the type. Half
-an hour of your time buys back a day across two people.
-
-Push it as its own small PR. Then continue with Task 1.
-
----
-
-## Task 1 — `OrderContext.cs` complete 🔴 due Tue 1 Sep
+*Kept below for reference — this is the spec she implemented to, and it's still the description of
+what's on `main`. Skip to Task 3 for your actual work.*
 
 `Assets/Scripts/OrderContext.cs`
 
@@ -339,9 +345,8 @@ Stage 4's 14 lenses; those stay partially compensated and Anirban reviews them b
 
 ## Definition of done
 
-- [ ] `OrderContext` skeleton merged today (Mon 31 Aug) so Anirban and Sharan unblock
+- [x] ~~`OrderContext` + `OrderSolver`~~ — done by Ritwika 31 Aug, verified by the self-test
 - [ ] Explore mode played on current `main` before any code written
-- [ ] `OrderContext` complete by Tue 1 Sep, verified against the preset table
 - [ ] Solver returns a max-throughput answer per grade and reports infeasibility honestly
 - [ ] An order runs all four stages with the panel visible and correct throughout
 - [ ] Camera rect resets cleanly on exit; free play unaffected
