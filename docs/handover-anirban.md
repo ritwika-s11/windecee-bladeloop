@@ -3,7 +3,7 @@
 **Read `docs/BLADELOOP-PRODUCT-VISION.md` first.** This file is the build detail for your tasks.
 
 Branch off current `main`: `feature/parameter-visuals`
-Visuals done by **Sun 7 Sep** · feature freeze **Tue 9 Sep**
+Start **today, Mon 31 Aug** · visuals done **Mon 7 Sep** · feature freeze **Wed 9 Sep**
 
 ---
 
@@ -41,37 +41,72 @@ You own all five stage scenes. Nobody else opens them.
 
 ---
 
-## You are blocked until Tue 2 Sep
+## Schedule
 
-Akshat's `OrderContext.cs` — where you read parameters from — lands on `main` on **Tuesday 2 Sep**.
-Until then, do **Task 1**, which has no dependency.
+Akshat merges an **`OrderContext` skeleton today (Mon 31 Aug)** — real signatures, stub bodies,
+`HasOrder` returning false — so you can wire the flag properly the first time instead of stubbing it
+yourself. The full implementation lands **Tue 1 Sep**.
+
+Start **Task 1** today. It's the largest single item in your list and it's Monday's work regardless.
+
+**Priority if the week runs short:** Task 1 is not cuttable — without it every screenshot of the dual
+screen has overlays smeared across the order panel. After that your proposed order stands:
+**4 → 2 → 3 → 5 → 6 → 7.** Cut from the bottom: Task 7 first, then Task 6, then Task 3's Change 4
+(feed → airlock flow, least visible), then Stage 4's optional cues.
+
+**Your two dependencies:** Akshat's Explore spec and his FOV compensation, both due **Wed 2 Sep**.
 
 ---
 
-## Task 1 — Fix the overlays for the split screen *(start here, no dependency)*
+## Task 1 — Wrap all 14 overlay canvases 🔴 the dual screen depends on this
 
-Akshat is splitting the window: 3D tour in the **left 72 %**, order panel in the **right 28 %**.
+Akshat splits the window from code via `Camera.rect`: 3D tour in the **left 72 %**, order panel in
+the **right 28 %**.
 
-Every UI overlay in the stage scenes is currently anchored to the **full screen**, so they will sit
-on top of the panel.
+> ⚠️ **All 14 canvases are Screen Space – Overlay, and a Screen Space – Overlay canvas ignores
+> `Camera.rect` completely.** It renders straight to the framebuffer, bypassing every camera. So
+> Akshat's split narrows the 3D render and leaves **all 14 overlays covering the full screen, on top
+> of the order panel.** Not one of them moves on its own. This task is what makes the dual screen
+> work — it isn't tidying-up.
 
-| Element | Script | Currently |
-|---|---|---|
-| Subtitle box + Next/Back | `SubtitleTrack.cs` (Ritwika's) | bottom centre, full screen |
-| Back to menu button | `BackToMenuButton.cs` | corner, full screen |
-| Explore hint chip | `ExploreHintChip.cs` | full screen |
-| Pause hint | `StoryModeController.pauseHintUI` | full screen |
-| Part info panel (Stage 3) | `PartInfoPanel.cs` | full screen |
+The 14, verified on `main`:
 
-**How:** put each stage's overlay canvas under a parent `RectTransform` anchored `(0,0)` to
-`(0.72, 1)`. Every child then stays inside the tour viewport automatically — no repositioning each
-element by hand.
+| Scene | Canvases |
+|---|---|
+| `Stage1_StoryMode` | `Stage1_UICanvas`, `ExploreHintCanvas`, `BackToMenuCanvas` |
+| `Transport_StoryMode` | `BackToMenuCanvas` |
+| `Stage2_StoryMode` | `Stage2_UICanvas`, `ExploreHintCanvas`, `BackToMenuCanvas` |
+| `Stage3_StoryMode` | `Stage3_UICanvas`, `ExploreHintCanvas`, `BackToMenuCanvas` |
+| `Stage4_V2` | `Stage4_UICanvas`, `SubtitleCanvas`, `ExploreHintCanvas`, `BackToMenuCanvas` |
 
-**Must not break the non-split case.** With no order the tour is full screen and overlays should
-fill it as today. Make the parent's right anchor switchable off `OrderContext.HasOrder` in `Start()`.
+Components affected: `SubtitleTrack.cs` (Ritwika's), `BackToMenuButton.cs`, `ExploreHintChip.cs`,
+`StoryModeController.pauseHintUI`, `PartInfoPanel.cs` (Stage 3).
 
-⚠️ The Game view runs at roughly **2:1 aspect, not 16:9**, so the canvas is about **1016** reference
-units tall, not 1080. Elements near y = ±540 will clip. This has bitten us before.
+**How:** put each canvas's content under a parent `RectTransform` anchored `(0,0)` to `(0.72, 1)`.
+Every child then stays inside the tour viewport automatically — no repositioning by hand.
+
+**Must not break the non-split case.** With no order the tour is full screen and overlays fill it as
+today. Switch the parent's right anchor off `OrderContext.HasOrder` in `Start()` — the skeleton is on
+`main` today, so wire it properly rather than stubbing.
+
+### Three things to fold into the same pass
+
+**1. Add `SubtitleCanvas` + `SubtitleTrack` to Stages 1, 2 and 3.** On `main` today, subtitles exist
+in `Stage4_V2` only (one canvas, one component, one cue file). Ritwika owns `SubtitleTrack.cs`, the
+cue files and the timings; **the scene-side wiring is yours**, because they're your scenes under
+Rule 1. You're rebuilding every overlay canvas in those scenes this week anyway — cheap in one pass,
+merge-conflict-prone in two.
+
+**2. Normalise `Stage2_UICanvas`.** It has `m_MatchWidthOrHeight: 0`; the other 13 are `0.5`. At ~2:1
+that's a 58-unit difference in canvas height (960 vs 1018), which is why Stage 2's overlays have
+needed hand-nudging. Set it to 0.5 and re-check Stage 2's positions.
+
+**3. Transport is a pass-through.** Panel stays docked, viewport split applies, but **no chapter
+chip** — it's a 13-second transition, not a stage. One canvas to wrap.
+
+⚠️ The Game view runs at roughly **2:1 aspect, not 16:9**, so at match 0.5 the canvas is about
+**1018** reference units tall, not 1080 — half-height is ~509 and anything at y = ±540 is off-screen.
+That's the Stage 3 kiln-heading bug.
 
 ---
 
@@ -188,13 +223,21 @@ Outstanding professor feedback, previously unassigned: *"when stopping the tutor
 kiln, you can only rotate the screen once, then it totally gets stuck. Also, it is not possible to
 click any part."*
 
-The *pause/orbit* half is Akshat's (he owns `PauseFramePreserver.cs` and `ExploreOrbitCamera.cs`).
-**The scene half is yours**, because it's scene edits. Verified on current `main`:
+The *pause/orbit* half is Akshat's (he owns `PauseFramePreserver.cs` and `ExploreOrbitCamera.cs`) —
+and he's been told to **play it on current `main` before writing code**, since your PR already
+addressed both root causes in his original diagnosis. If it still sticks he'll send you the repro.
+
+**The scene half is yours.** Verified on current `main`:
 
 ```
-Stage3_StoryMode   22 ClickableParts — all inside the cutaway, so 0 are active while paused
+Stage3_StoryMode   22 ClickableParts — every one has an INACTIVE ANCESTOR, so 0 reachable at runtime
 Stage4_V2          ClickablePart 0   PartInfoPanel 0   ExploreClickRaycaster 0
 ```
+
+Ten of Stage 3's sit under `S3_GasBurners`, the rest under `Tower_TopHopper`,
+`S3_StationaryShroud`, `S3_StationaryInletHood` and six other disabled parents. **Checking
+`m_IsActive` on each component's own GameObject reports 18 "active" and hides the problem
+completely — you have to walk the parent chain.** Worth remembering when you verify the fix.
 
 **Stage 4 has nothing clickable at all** — and Stage 4 is the stage the whole product builds toward.
 
@@ -213,12 +256,21 @@ moving the 22 that already exist.
 ⚠️ **Wait for Akshat before touching a single shot.**
 
 Unity holds *vertical* FOV fixed and derives horizontal from aspect, so narrowing the viewport to
-72 % cuts 28 % of horizontal field from **every** shot — roughly 40 of them — not just badly-framed
-ones. Akshat is compensating in code with one line
-(`newVFov = 2·atan(tan(vFov/2)/0.72)`), which restores the original horizontal framing for all of
-them at once.
+72 % cuts 28 % of horizontal field from **every** shot — 37 of them — not just badly-framed ones.
+Akshat compensates in code with `newVFov = 2·atan(tan(vFov/2)/0.72)`, restoring the original
+horizontal framing for all of them at once. Due **Wed 2 Sep**.
 
-Once that lands, play each stage in split view and fix only the handful that still look wrong.
+**Your clamp request is accepted:** the compensated value is capped at **65° vertical**, so nothing
+inflates into visible perspective stretch or exposes the hill ring and ground plane you built to sit
+just outside frame.
+
+⚠️ **One correction to your estimate.** Work the clamp backwards: it bites on any shot whose original
+vertical FOV exceeds **~49°**. Your ranges are Stage 3 at 36–55° and Stage 4 at 42–66°, so a good
+share of Stage 4's 14 lenses and some of Stage 3's 12 will be only *partially* compensated — more
+than the 3–4 you estimated. Not all will look wrong, but budget a review pass across both stages
+rather than four fixes.
+
+Once the compensation lands, play each stage in split view and fix what still looks wrong.
 
 **Do not restructure the timelines** — framing only.
 

@@ -162,9 +162,23 @@ public static class TourRunner
 
     // Jumps to a stage (0 = Farm, 1 = Shred, 2 = Kiln, 3 = Separate)
     // and continues the chain from there.
+    // Transport_StoryMode is a pass-through: it plays in the chain with the
+    // panel docked, but has no chapter index of its own.
     public static void JumpToChapter(int index);
+
+    // Vertical FOV to use while the split is active, clamped at 65 degrees.
+    // Anirban's scenes rely on the clamp — above it, the extra vertical view
+    // exposes scenery built to sit just outside frame.
+    public static float SplitVFov(float originalVFov);
 }
 ```
+
+### The split does not move the UI
+
+`Camera.rect` narrows the 3D render only. **All 14 stage canvases are Screen Space – Overlay, which
+ignores `Camera.rect` entirely** — they render straight to the framebuffer. Anirban wraps all 14 so
+they stay inside the left 72 %. Akshat's panel must therefore not assume the tour's UI has moved on
+its own.
 
 **Sharan's "Watch this run →" button is exactly:**
 
@@ -271,10 +285,15 @@ customer orders, not solver output.
 
 | When | Who | What |
 |---|---|---|
-| Now | Sharan | Build the screens against these signatures. They won't compile until Tuesday — that's fine, get the layout and logic done. |
-| Now | Akshat | Implement to these signatures exactly. |
-| Tue 2 Sep | Akshat | `OrderContext` + `OrderSolver` merged to `main`. |
-| Tue 2 Sep | Sharan | Pull, compile, fix up. Should be minutes, not a rebuild. |
+| **Mon 31 Aug (today)** | Akshat | Merge the **`OrderContext` skeleton** — these signatures, stub bodies, `HasOrder` false, `Model` never null. Own small PR, before the real implementation. |
+| Mon 31 Aug | Sharan | Build the screens against these signatures. |
+| Mon 31 Aug | Anirban | Wire Task 1's split flag off the real `HasOrder`, not a local stub. |
+| **Tue 1 Sep** | Akshat | `OrderContext` + `OrderSolver` complete and merged. |
+| Tue 1 Sep | Sharan | Pull, compile, fix up. Minutes, not a rebuild. |
+| **Wed 2 Sep** | Akshat | Explore spec to Anirban; FOV compensation merged (clamped at 65°). |
+
+**Why the skeleton comes first:** two people are blocked on the type existing, not on it working.
+Half an hour today buys back a day across both of them.
 
 If Akshat finds a signature here that's wrong or awkward, **say so before Tuesday** — changing it
 after Sharan has built against it costs a day.

@@ -11,7 +11,7 @@
 > pull on Tuesday and fix up. That should take minutes, not a rebuild.
 
 Branch off current `main`: `feature/order-dashboard`
-Custom Order screen by **Fri 5 Sep** · feature freeze **Tue 9 Sep**
+Start **today, Mon 31 Aug** · Custom Order screen **Fri 4 Sep** · feature freeze **Wed 9 Sep**
 
 ---
 
@@ -109,7 +109,8 @@ them on this page. Two facts worth naming, because they turn our tiers into real
 
 ## Task 3 — Custom Order screen 🎯 main task
 
-*Blocked until Akshat merges `OrderContext.cs` and `OrderSolver.cs` on **Tue 2 Sep**.*
+*Build it today against `docs/interface-contract.md`. The `OrderContext` skeleton lands **today**
+so it compiles; `OrderSolver` follows **Tue 1 Sep**.*
 
 New scene `Assets/Scenes/OrderDashboard.unity` + `Assets/Scripts/OrderDashboardController.cs`,
 built the same way as Plant Explorer: an empty GameObject holding a controller that creates the

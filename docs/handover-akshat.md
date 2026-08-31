@@ -7,7 +7,8 @@
 > wrong or awkward, **say so before Tuesday** — changing it after he has built against it costs a day.
 
 Branch off current `main`: `feature/order-spine`
-Task 1 due **Tue 2 Sep** · everything else by **Tue 9 Sep** (feature freeze)
+Skeleton **today, Mon 31 Aug** · `OrderContext` + solver complete **Tue 1 Sep** · Explore spec and
+FOV fix **Wed 2 Sep** · feature freeze **Wed 9 Sep**
 
 ---
 
@@ -33,7 +34,20 @@ Task 1 due **Tue 2 Sep** · everything else by **Tue 9 Sep** (feature freeze)
 
 ---
 
-## Task 1 — `OrderContext.cs` 🔴 BLOCKING, due Tue 2 Sep
+## Task 0 — Merge the `OrderContext` skeleton TODAY (Mon 31 Aug) 🔴
+
+Before the real implementation. Real signatures from `docs/interface-contract.md`, stub bodies,
+`HasOrder` returning false, `Model` defaulting to the design case so it is never null.
+
+**Anirban and Sharan are both blocked on the file existing, not on it working.** Anirban's Task 1
+wires the split off `OrderContext.HasOrder`; Sharan can't compile his screens without the type. Half
+an hour of your time buys back a day across two people.
+
+Push it as its own small PR. Then continue with Task 1.
+
+---
+
+## Task 1 — `OrderContext.cs` complete 🔴 due Tue 1 Sep
 
 `Assets/Scripts/OrderContext.cs`
 
@@ -255,10 +269,22 @@ The outstanding note was: *"when stopping the tutorial in the rotary kiln, you c
 screen once, then it totally gets stuck. Also, it is not possible to click any part."*
 
 **You own `PauseFramePreserver.cs`, `ExploreOrbitCamera.cs` and `ExploreClickRaycaster.cs`** — added
-to the Rule 2 table for this. You had this working on `feature/prof-feedback-akshat` @ `d412afc`
-(root cause: the pause pivot ray hit the floor 26.41 m away instead of the kiln, and pitch limits
-widened by only ±5°, leaving 8.9° of travel — that clamp is what reads as "totally gets stuck").
-Redo it from current `main`.
+to the Rule 2 table for this.
+
+> 🔴 **Play it on current `main` before you write a line.** Your diagnosis was verified against
+> `5bace06`, but **Anirban's PR merged after that** and changed exactly these files. On `main` today:
+>
+> ```
+> ExploreOrbitCamera.cs   minPitch = 5f, maxPitch = 75f   → 70° of travel, not 8.9°
+>                         rotationDamping, zoomDamping, spinInertia all present
+> PauseFramePreserver.cs  exists, and is in all four stage scenes
+> ```
+>
+> `PauseFramePreserver` is the fix for the other half of your diagnosis — it seeds the orbit pivot
+> along the camera's forward axis at true distance, so the frame doesn't jump on pause and the ray
+> no longer lands on the floor. **Both root causes you identified appear to be addressed already.**
+> If it still sticks, send Anirban the repro — he wrote the current versions. If it doesn't, that's a
+> day back for the spec you owe him.
 
 **The two scene-side changes are Anirban's**, under Rule 1. Confirmed on current `main`:
 
@@ -267,9 +293,13 @@ Stage3_StoryMode   22 ClickableParts, all inside the cutaway → 0 active while 
 Stage4_V2          ClickablePart 0   PartInfoPanel 0   ExploreClickRaycaster 0
 ```
 
-Stage 4 — the money shot — has nothing clickable at all. **Write Anirban a short spec** naming which
-objects need `ClickablePart`, what titles and descriptions they carry, and where `PartInfoPanel` and
-`ExploreClickRaycaster` go. He applies it in the scenes. Don't open the scenes yourself.
+Stage 4 — the money shot — has nothing clickable at all. And Anirban confirmed why Stage 3's 22 are
+dead: **every one has an inactive ancestor.** Checking `m_IsActive` on the components' own
+GameObjects reports 18 "active" and hides it — you have to walk the parent chain.
+
+**Write Anirban a short spec by Wed 2 Sep** naming which objects need `ClickablePart`, what titles
+and descriptions they carry, and where `PartInfoPanel` and `ExploreClickRaycaster` go. He applies it
+in the scenes; his Task 5 is idle until it arrives. Don't open the scenes yourself.
 
 Also verify Explore mode works **inside the 72 % split viewport** — `Camera.ScreenPointToRay` should
 respect the viewport rect, but it needs testing rather than assuming.
@@ -282,11 +312,17 @@ Agreed from your F4. Unity holds vertical FOV fixed and derives horizontal from 
 viewport cuts 28 % of horizontal field from all ~40 shots, not just badly-framed ones:
 
 ```csharp
-newVFov = 2f * Mathf.Atan(Mathf.Tan(vFov * 0.5f * Mathf.Deg2Rad) / 0.72f) * Mathf.Rad2Deg;
+// Clamp at 65°: above that you get visible perspective stretch, and 30% more
+// vertical view exposes the hill ring and ground plane that Anirban built to
+// sit just outside frame. Stage 4's widest lens (66°) would otherwise land at 84°.
+newVFov = Mathf.Min(
+    2f * Mathf.Atan(Mathf.Tan(vFov * 0.5f * Mathf.Deg2Rad) / 0.72f) * Mathf.Rad2Deg,
+    65f);
 ```
 
-Apply when the split is active, restore on exit. Anirban has been told to wait for this and only fix
-the handful that still look wrong afterwards.
+Apply when the split is active, restore on exit. **Due Wed 2 Sep** — Anirban's Task 6 is idle without
+it. The clamp bites on any shot originally above ~49°, which covers a fair number of Stage 3's 12 and
+Stage 4's 14 lenses; those stay partially compensated and Anirban reviews them by hand.
 
 ---
 
@@ -303,7 +339,9 @@ the handful that still look wrong afterwards.
 
 ## Definition of done
 
-- [ ] `OrderContext` merged to `main` by Tue 2 Sep, verified against the preset table
+- [ ] `OrderContext` skeleton merged today (Mon 31 Aug) so Anirban and Sharan unblock
+- [ ] Explore mode played on current `main` before any code written
+- [ ] `OrderContext` complete by Tue 1 Sep, verified against the preset table
 - [ ] Solver returns a max-throughput answer per grade and reports infeasibility honestly
 - [ ] An order runs all four stages with the panel visible and correct throughout
 - [ ] Camera rect resets cleanly on exit; free play unaffected

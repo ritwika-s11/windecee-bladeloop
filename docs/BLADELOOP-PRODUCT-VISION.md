@@ -400,6 +400,10 @@ every stage**, and Stage 2 holds the most influential setting in the entire mode
         This is where the biggest decision is made.
 ```
 
+**Transport is a pass-through.** `Transport_StoryMode` sits between Stages 1 and 2 and stays in the
+chain — the order panel remains docked and the viewport split applies, but it gets **no chapter chip**.
+It's a 13-second transition, not a stage.
+
 | Stage | The order makes it answer | What visibly changes |
 |---|---|---|
 | **1 — Wind farm** | How much blade material this order needs | (opening beat) |
@@ -444,13 +448,19 @@ Each person also has a technical brief in `docs/` to give their Claude.
 2. Rewrite the narration scripts for all four stages — removing every hard number, since
    parameters now vary per order
 3. Re-record the voiceover
-4. Subtitles: cue files and wiring across all four stages
+4. Subtitles: `SubtitleTrack.cs`, the cue files and the timings. **Anirban adds the `SubtitleCanvas`
+   and component to Stages 1–3** — they're his scenes under Rule 1, and he's rebuilding every overlay
+   canvas in them during his Task 1 anyway. One pass instead of two, and no merge conflict.
+   (On `main` today, subtitles exist in `Stage4_V2` only, with one cue file.)
 5. Review and merge every PR; keep `main` green
 6. Produce the WebGL build for the review
 
 ### Akshat — the shared spine (`docs/handover-akshat.md`)
 
-1. `OrderContext.cs` — the shared state every other person reads from 🔴 **blocks everyone**
+0. 🔴 **Today: merge the `OrderContext` skeleton** — real signatures from
+   `docs/interface-contract.md`, stub bodies, `HasOrder` returning false. Anirban and Sharan are
+   both blocked on it existing, not on it working.
+1. `OrderContext.cs` — the shared state every other person reads from, complete by Tue 1 Sep
 2. `OrderSolver.cs` — runs the process model backwards, **including the shredder capacity
    constraint** (§4). Without that constraint the solver disproves our own pitch.
 3. The dual screen — viewport split plus the persistent order panel across all four stages.
@@ -459,9 +469,15 @@ Each person also has a technical brief in `docs/` to give their Claude.
    (`newVFov = 2·atan(tan(vFov/2)/0.72)`) restores the framing — do this **before** anyone
    re-frames a shot by hand.
 4. Chapter navigation and *Skip to results*
-5. **Fix Explore mode getting stuck** (professor feedback, previously unassigned). Owns
-   `PauseFramePreserver.cs`, `ExploreOrbitCamera.cs`, `ExploreClickRaycaster.cs`. Writes a short
-   spec for the two scene-side changes and hands it to Anirban.
+5. **Fix Explore mode getting stuck** (professor feedback). Owns `PauseFramePreserver.cs`,
+   `ExploreOrbitCamera.cs`, `ExploreClickRaycaster.cs`. Writes the scene-side spec for Anirban by
+   **Wed 2 Sep**.
+
+   ⚠️ **Play it on current `main` before writing any code.** Both root causes in the original
+   diagnosis — the pause pivot hitting the floor, and pitch clamped to ~9° of travel — were fixed by
+   Anirban's PR, which merged *after* that review. Current `main` has `minPitch 5 / maxPitch 75`
+   (70° of travel), damping and spin inertia, and `PauseFramePreserver` in all four stage scenes. If
+   it still sticks, send Anirban the repro; he wrote those versions.
 
 *Code only, no scenes — so he never blocks anyone on a file lock. The order panel is a
 `DontDestroyOnLoad` canvas built at runtime in C#, the same pattern the dashboard already uses.
@@ -469,7 +485,11 @@ There is no prefab to position in the Scene view, and `Camera.rect` is set from 
 
 ### Anirban — making parameters visible (`docs/handover-anirban.md`)
 
-1. Reposition the UI overlays so they stay inside the tour viewport when the screen splits
+1. 🔴 **Wrap all 14 overlay canvases** so they stay inside the tour viewport when the screen splits.
+   Not five — fourteen, and **every one is Screen Space – Overlay, which ignores `Camera.rect`
+   entirely.** Akshat's split narrows the 3D render and leaves all of them covering the full screen
+   on top of the order panel. This task is what makes the dual screen work, not tidying-up.
+   Also adds `SubtitleCanvas` + component to Stages 1–3 in the same pass (see Ritwika's item 4).
 2. Stage 2 — granule size responds to particle size
 3. Stage 3 — kiln glow and rotation respond to temperature and retention
 4. Stage 4 — fibre and char streams respond to the output split
@@ -479,9 +499,14 @@ There is no prefab to position in the Scene view, and `Camera.rect` is set from 
    22 clickable parts are all inside the cutaway, so none are active while paused. Akshat gives you
    a spec for both.
 6. Fix any camera shots that still crop badly at 72 % width — **after** Akshat's FOV compensation
-   lands, which should fix most of them automatically
+   lands (Wed 2 Sep), which fixes most of them automatically
 
 *Owns all five stage scenes. Nobody else opens them.*
+
+**Priority, if the week runs short.** Task 1 happens Monday by necessity and is not cuttable — without
+it every screenshot of the dual screen has overlays smeared across the panel. After that:
+**4 → 2 → 3 → 5 → 6 → 7.** Cut from the bottom: Task 7 first, then Task 6, then Task 3's Change 4
+(feed → airlock flow, the least visible), then Stage 4's optional cues.
 
 ### Sharan — the settings and results screens (`docs/handover-sharan.md`)
 
@@ -492,8 +517,9 @@ There is no prefab to position in the Scene view, and `Camera.rect` is set from 
 
 ### Anjani & Hari — the numbers behind the claims (`docs/handover-cee-orders.md`)
 
-No Unity. Three deliverables by **Wednesday 3 September**: grade thresholds with sources, an
-average blade mass figure, and what each grade is actually used for.
+No Unity. ✅ **Delivered 30 August** — see `docs/CEE-deliverable.md` and
+`docs/grade-threshold-reasoning.md`. Their sourcing is what drove the model re-anchor in §3 and §4.
+Nothing outstanding from them.
 
 ---
 
@@ -557,21 +583,30 @@ Anirban works, and it means a null `OrderContext` can never crash the build.
 
 ## 9. Timeline
 
+*Day names corrected 31 Aug — the previous version had them all a day out.*
+
 | Date | Milestone |
 |---|---|
-| **Sun 31 Aug** | Everyone has read this doc and given feedback. Doc finalised. Branches created. |
-| **Mon 1 Sep** | Work starts. |
-| **Tue 2 Sep** | 🔴 `OrderContext.cs` merged to `main`. Everything else unblocks. |
-| **Wed 3 Sep** | CEE numbers delivered. Narration scripts drafted. |
-| **Fri 5 Sep** | Dual screen works on one stage. Custom Order screen functional. Homepage laid out. |
-| **Sun 7 Sep** | All four stages responding to parameters. Voiceover re-recorded. |
-| **Tue 9 Sep** | 🔴 **Feature freeze.** All branches merged. Bug fixes only after this. |
-| **Wed 10 Sep** | WebGL build. Full run-through. Rehearse the demo. |
-| **Thu 11 Sep** | **Sprint review.** |
+| ~~Sun 30 Aug~~ | ✅ CEE numbers delivered. Doc reviews in from Akshat, Sharan, Anirban. |
+| **Mon 31 Aug — today** | 🔴 **Akshat merges the `OrderContext` skeleton** (real signatures per the interface contract, stub bodies, `HasOrder` false). Everyone else starts. |
+| **Tue 1 Sep** | 🔴 `OrderContext` + `OrderSolver` complete and merged. |
+| **Wed 2 Sep** | Akshat's Explore spec to Anirban. FOV compensation merged. Narration scripts drafted. |
+| **Fri 4 Sep** | Dual screen working on one stage. Custom Order screen functional. Homepage laid out. |
+| **Mon 7 Sep** | All four stages responding to parameters. Voiceover re-recorded. |
+| **Wed 9 Sep** | 🔴 **Feature freeze.** All branches merged. Bug fixes only after this. |
+| **Thu 10 Sep** | WebGL build. Full run-through. Rehearse the demo. |
+| **Fri 11 Sep** | **Sprint review.** |
 | 12–24 Sep | Report, plus anything the review asks for. |
-| **Thu 25 Sep** | **Submission.** |
+| **Fri 25 Sep** | **Submission.** |
 
 The 9 September freeze is not negotiable. Not merged by then means it doesn't ship.
+
+### Why the skeleton matters today
+
+Anirban's Task 1 and Sharan's Task 3 both read `OrderContext`. Until it exists on `main`, one of
+them is guessing and the other is idle. A skeleton — correct signatures, empty bodies — takes about
+half an hour and buys back a full day across two people. It goes in **before** the real
+implementation, not after.
 
 ---
 
