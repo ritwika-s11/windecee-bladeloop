@@ -305,5 +305,43 @@ customer orders, not solver output.
 Several of these numbers are quoted in the vision doc, the briefs and the professor-facing
 narration, so a silent drift is expensive to find later.
 
+---
+
+## 10. Verified in the editor — 31 Aug 2026
+
+Not predicted, **run**. Compiles with zero errors and zero warnings; this is the actual output:
+
+```
+PRESET High 4800t | pur 93.0 ten 90.0 fibre 4482 | cap@2.0mm  6500.0 feed 6500
+PRESET Mid  4100t | pur 82.5 ten 76.5 fibre 4691 | cap@8.0mm  8033.4 feed 8000
+PRESET Low  3250t | pur 69.8 ten 58.3 fibre 4091 | cap@16.0mm 8800.1 feed 8800
+
+DESIGN  grade=High (93.0/90.0)          <- High tier is reachable
+EXPLOIT cap@0.5mm = 4967, not 9000      <- the 5,911 kg/h exploit is dead
+
+SOLVE High -> 600C/35min/7150kgh/3.6mm = 4725 kg/h (pur 90.1 ten 86.8)
+SOLVE Mid  -> 600C/35min/7715kgh/6.0mm = 4810 kg/h (pur 86.2 ten 82.0)
+SOLVE Low  -> 600C/35min/7715kgh/6.0mm = 4810 kg/h (pur 86.2 ten 82.0)
+SOLVE TIME 3x = 827 ms
+
+CAMPAIGN High feed 6962t blades 616 turbines 205 days 44.6  achieved=High meets=True
+CAMPAIGN Mid  feed 6992t blades 619 turbines 206 days 36.4  achieved=Mid  meets=True
+CAMPAIGN Low  feed 6991t blades 619 turbines 206 days 33.1  achieved=Low  meets=True
+
+NOORDER has=False modelNull=False hours=0 blades=0
+```
+
+Two things worth reading off that:
+
+- **All three presets hit their own target grade** (`meets=True`). Not a given — the low preset had
+  to land in Low rather than accidentally in Mid. It confirms the preset settings and the tier
+  thresholds agree.
+- **205, 206, 206 turbines.** The "one wind farm, three customers" claim in §4 of the vision doc,
+  confirmed by the implementation rather than by hand arithmetic.
+
+**Performance note for Sharan:** a single `Solve()` takes roughly **275 ms**. Fast enough, but long
+enough that a button with no feedback feels broken — disable the SOLVE button and change its label
+while it runs.
+
 If Akshat finds a signature here that's wrong or awkward, **say so before Tuesday** — changing it
 after Sharan has built against it costs a day.

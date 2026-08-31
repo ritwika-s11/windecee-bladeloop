@@ -132,7 +132,11 @@ Layout is sketched in **§5.3 of the vision doc**. In order down the screen:
 *(The three presets sit at 4,800 / 4,100 / 3,250 t, so this range brackets them with room either
 side. A wider range makes the slider unusable.)*
 
-**A big `[ SOLVE ]` button.** On press:
+**A big `[ SOLVE ]` button.** ⚠️ A solve takes about **275 ms** (measured, not estimated) — fast, but
+long enough that a button with no feedback feels broken. Disable it and change the label to
+"Solving…" while it runs.
+
+On press:
 
 ```csharp
 var result = OrderSolver.Solve(selectedGrade);
