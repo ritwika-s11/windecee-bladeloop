@@ -1,7 +1,13 @@
 # BladeLoop — Interface Contract
 
 **Author:** Ritwika Sen · 31 August 2026
-**Binding on:** Akshat (implements) and Sharan (calls). Anirban reads §2 only.
+**Binding on:** everyone. Anirban reads §2 only.
+
+> ✅ **§2 `OrderContext` and §3 `OrderSolver` are implemented and on `main`** (Ritwika, 31 Aug —
+> moved off Akshat so nobody was queued behind one file). They match this contract exactly. Run
+> **BladeLoop → Verify Order Model** in the editor to confirm against §8.
+>
+> §4 `TourRunner` and §5's handoff are still Akshat's to build.
 
 This file exists so Sharan can build his screens **before** Akshat's code is merged. Both of you
 build against the signatures below. Akshat implements to them; Sharan calls them.
@@ -270,11 +276,15 @@ correct; the old 99.0 / 88.0 / 74.5 is what's stale.
 
 Constrained solver output, for reference:
 
-| Target | Best settings | Fibre out |
-|---|---|---|
-| High | 600 / 35 / 7,150 / 3.6 mm | 4,725 kg/h |
-| Mid | 600 / 35 / 7,750 / 6.2 mm | 4,808 kg/h |
-| Low | *same as mid* | 4,808 kg/h |
+| Target | Best settings | Fibre out | Achieved |
+|---|---|---|---|
+| High | 600 / 35 / 7,150 / 3.6 mm | 4,725 kg/h | 90.1 % / 86.8 % |
+| Mid | 600 / 35 / 7,715 / 6.0 mm | 4,810 kg/h | 86.2 % / 82.0 % |
+| Low | *same as mid* | 4,810 kg/h | 86.2 % / 82.0 % |
+
+These are the values the merged `OrderSolver` actually returns — verified against the implementation,
+not estimated. Mid and Low returning the same answer is correct: running coarser than ~6 mm costs
+more than it gains, so low grade is never something you'd *choose*.
 
 The solver's mid answer slightly beats the mid preset. That's expected — presets are illustrative
 customer orders, not solver output.
@@ -285,15 +295,53 @@ customer orders, not solver output.
 
 | When | Who | What |
 |---|---|---|
-| **Mon 31 Aug (today)** | Akshat | Merge the **`OrderContext` skeleton** — these signatures, stub bodies, `HasOrder` false, `Model` never null. Own small PR, before the real implementation. |
-| Mon 31 Aug | Sharan | Build the screens against these signatures. |
-| Mon 31 Aug | Anirban | Wire Task 1's split flag off the real `HasOrder`, not a local stub. |
-| **Tue 1 Sep** | Akshat | `OrderContext` + `OrderSolver` complete and merged. |
-| Tue 1 Sep | Sharan | Pull, compile, fix up. Minutes, not a rebuild. |
+| ✅ Mon 31 Aug | Ritwika | `OrderContext` + `OrderSolver` + self-test merged to `main`. |
+| Mon 31 Aug | Sharan | Pull. Build the screens against the real API — no waiting, no guessing. |
+| Mon 31 Aug | Anirban | Pull. Wire Task 1's split flag off the real `HasOrder`. |
+| Mon 31 Aug | Akshat | Start at **Task 3, the dual screen** — the new critical path. |
 | **Wed 2 Sep** | Akshat | Explore spec to Anirban; FOV compensation merged (clamped at 65°). |
 
-**Why the skeleton comes first:** two people are blocked on the type existing, not on it working.
-Half an hour today buys back a day across both of them.
+**Run the self-test after any change to `ProcessModel`, `OrderContext` or `OrderSolver`.**
+Several of these numbers are quoted in the vision doc, the briefs and the professor-facing
+narration, so a silent drift is expensive to find later.
+
+---
+
+## 10. Verified in the editor — 31 Aug 2026
+
+Not predicted, **run**. Compiles with zero errors and zero warnings; this is the actual output:
+
+```
+PRESET High 4800t | pur 93.0 ten 90.0 fibre 4482 | cap@2.0mm  6500.0 feed 6500
+PRESET Mid  4100t | pur 82.5 ten 76.5 fibre 4691 | cap@8.0mm  8033.4 feed 8000
+PRESET Low  3250t | pur 69.8 ten 58.3 fibre 4091 | cap@16.0mm 8800.1 feed 8800
+
+DESIGN  grade=High (93.0/90.0)          <- High tier is reachable
+EXPLOIT cap@0.5mm = 4967, not 9000      <- the 5,911 kg/h exploit is dead
+
+SOLVE High -> 600C/35min/7150kgh/3.6mm = 4725 kg/h (pur 90.1 ten 86.8)
+SOLVE Mid  -> 600C/35min/7715kgh/6.0mm = 4810 kg/h (pur 86.2 ten 82.0)
+SOLVE Low  -> 600C/35min/7715kgh/6.0mm = 4810 kg/h (pur 86.2 ten 82.0)
+SOLVE TIME 3x = 827 ms
+
+CAMPAIGN High feed 6962t blades 616 turbines 205 days 44.6  achieved=High meets=True
+CAMPAIGN Mid  feed 6992t blades 619 turbines 206 days 36.4  achieved=Mid  meets=True
+CAMPAIGN Low  feed 6991t blades 619 turbines 206 days 33.1  achieved=Low  meets=True
+
+NOORDER has=False modelNull=False hours=0 blades=0
+```
+
+Two things worth reading off that:
+
+- **All three presets hit their own target grade** (`meets=True`). Not a given — the low preset had
+  to land in Low rather than accidentally in Mid. It confirms the preset settings and the tier
+  thresholds agree.
+- **205, 206, 206 turbines.** The "one wind farm, three customers" claim in §4 of the vision doc,
+  confirmed by the implementation rather than by hand arithmetic.
+
+**Performance note for Sharan:** a single `Solve()` takes roughly **275 ms**. Fast enough, but long
+enough that a button with no feedback feels broken — disable the SOLVE button and change its label
+while it runs.
 
 If Akshat finds a signature here that's wrong or awkward, **say so before Tuesday** — changing it
 after Sharan has built against it costs a day.

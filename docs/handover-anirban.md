@@ -43,9 +43,8 @@ You own all five stage scenes. Nobody else opens them.
 
 ## Schedule
 
-Akshat merges an **`OrderContext` skeleton today (Mon 31 Aug)** — real signatures, stub bodies,
-`HasOrder` returning false — so you can wire the flag properly the first time instead of stubbing it
-yourself. The full implementation lands **Tue 1 Sep**.
+✅ **`OrderContext.cs` is on `main` now** — complete, not a stub. Ritwika wrote it so you weren't
+queued behind Akshat. Pull and wire `OrderContext.HasOrder` and `OrderContext.Model` directly.
 
 Start **Task 1** today. It's the largest single item in your list and it's Monday's work regardless.
 
@@ -86,8 +85,8 @@ Components affected: `SubtitleTrack.cs` (Ritwika's), `BackToMenuButton.cs`, `Exp
 Every child then stays inside the tour viewport automatically — no repositioning by hand.
 
 **Must not break the non-split case.** With no order the tour is full screen and overlays fill it as
-today. Switch the parent's right anchor off `OrderContext.HasOrder` in `Start()` — the skeleton is on
-`main` today, so wire it properly rather than stubbing.
+today. Switch the parent's right anchor off `OrderContext.HasOrder` in `Start()` — the real
+`OrderContext` is on `main` now, so wire it directly rather than stubbing.
 
 ### Three things to fold into the same pass
 

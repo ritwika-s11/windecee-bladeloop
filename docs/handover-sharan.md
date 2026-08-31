@@ -109,8 +109,10 @@ them on this page. Two facts worth naming, because they turn our tiers into real
 
 ## Task 3 — Custom Order screen 🎯 main task
 
-*Build it today against `docs/interface-contract.md`. The `OrderContext` skeleton lands **today**
-so it compiles; `OrderSolver` follows **Tue 1 Sep**.*
+> ✅ **Not blocked — `OrderContext.cs` and `OrderSolver.cs` are on `main` now.** Pull and build
+> against the real thing, not a guess. `OrderSolver.MaxFeed(particleMm)` is public; bind your feed
+> slider's upper limit to it. Run **BladeLoop → Verify Order Model** in the editor to see the
+> canonical numbers confirmed against the code.
 
 New scene `Assets/Scenes/OrderDashboard.unity` + `Assets/Scripts/OrderDashboardController.cs`,
 built the same way as Plant Explorer: an empty GameObject holding a controller that creates the
@@ -130,7 +132,11 @@ Layout is sketched in **§5.3 of the vision doc**. In order down the screen:
 *(The three presets sit at 4,800 / 4,100 / 3,250 t, so this range brackets them with room either
 side. A wider range makes the slider unusable.)*
 
-**A big `[ SOLVE ]` button.** On press:
+**A big `[ SOLVE ]` button.** ⚠️ A solve takes about **275 ms** (measured, not estimated) — fast, but
+long enough that a button with no feedback feels broken. Disable it and change the label to
+"Solving…" while it runs.
+
+On press:
 
 ```csharp
 var result = OrderSolver.Solve(selectedGrade);
