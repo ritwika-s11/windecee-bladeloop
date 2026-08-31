@@ -20,7 +20,7 @@ public enum Grade { High = 0, Mid = 1, Low = 2 }
 [System.Serializable]
 public class Order
 {
-    public string customerName;     // "Nordkomposit GmbH"
+    public string customerName;     // user-typed on the Custom Order screen; EMPTY for presets
     public string customerType;     // "Composite manufacturer"
     public Grade  targetGrade;
     public float  targetTonnes;     // tonnes of recovered fibre requested
@@ -98,13 +98,19 @@ public static class OrderContext
     /// means a numerically smaller or equal value.</summary>
     public static bool MeetsTarget => HasOrder && AchievedGrade <= Active.targetGrade;
 
+    /// <summary>The product's argument, in one line. Sits above the order cards on
+    /// the home page, so the obvious challenge - "why would anyone run the plant
+    /// badly?" - is answered before it gets asked.</summary>
+    public const string Thesis = "There is no wrong setting - only a different buyer.";
+
     /// <summary>Who buys output of this grade. Used by the outcome report, which
-    /// never says "fail" - a run below target is a different customer, not an error.</summary>
+    /// never says "fail" - a run below target is a different customer, not an error.
+    /// Every claim here is sourced; see docs/CEE-deliverable.md section 3.</summary>
     public static string EndUseFor(Grade g) => g switch
     {
-        Grade.High => "Composite manufacturing - reinforcement in new panels and structural parts",
-        Grade.Mid  => "Precast concrete and casting - reinforcing filler for slabs, pavement and panels",
-        _          => "Cement works - co-processed, the glass replacing raw silica and the resin replacing fuel"
+        Grade.High => "Clean and strong enough to go back into new composite parts, standing in for virgin glass fibre.",
+        Grade.Mid  => "Not clean enough for structural reuse, but sold today as reinforcing filler for precast slabs, pavement and panels.",
+        _          => "Co-processed in a cement kiln: the glass replaces raw sand, the resin replaces coal. The most commercially mature route at scale - there is always a buyer."
     };
 
     public static string GradeLabel(Grade g) => g switch
@@ -188,26 +194,36 @@ public static class OrderContext
     {
         new Preset
         {
-            order = new Order("Nordkomposit GmbH", "Composite manufacturer", Grade.High, 4800f),
+            order = new Order("", "Composite manufacturer", Grade.High, 4800f),
             model = new ProcessModel { TempC = 600f, RetentionMin = 35f, FeedKgH = 6500f, ParticleSizeMm = 2f },
-            endUse = "New composite parts - panels and structural laminates"
+            endUse = "Clean enough to go back into new structural parts."
         },
         new Preset
         {
-            order = new Order("Elbe Fertigteile GmbH", "Precast concrete producer", Grade.Mid, 4100f),
+            order = new Order("", "Precast concrete producer", Grade.Mid, 4100f),
             model = new ProcessModel { TempC = 580f, RetentionMin = 35f, FeedKgH = 8000f, ParticleSizeMm = 8f },
-            endUse = "Reinforcing filler for precast slabs, pavement and panels"
+            endUse = "Not structural, but sold today as reinforcing filler."
         },
         new Preset
         {
-            order = new Order("Zementwerk Harz", "Cement works", Grade.Low, 3250f),
+            order = new Order("", "Cement works", Grade.Low, 3250f),
             model = new ProcessModel { TempC = 550f, RetentionMin = 35f, FeedKgH = 8800f, ParticleSizeMm = 16f },
-            endUse = "Co-processed in the kiln - glass replaces silica, resin replaces fuel"
+            endUse = "Glass replaces sand, resin replaces coal. There is always a buyer."
         }
     };
 
-    // Customer names above are FICTIONAL and illustrative. Ritwika to confirm or
-    // replace; the How It Works page should say they are illustrative.
+    // DELIBERATELY NO COMPANY NAMES. An earlier draft invented three German firms.
+    // They added nothing the customerType didn't already say, needed a "these are
+    // fictional" disclaimer, and two of the first candidates turned out to be real
+    // companies anyway. The buyer TYPE is what makes each grade legitimate; a name
+    // was decoration with a maintenance cost.
+    //
+    // What replaced it is better: each card carries a true, sourced line about who
+    // actually buys that grade (endUse above, EndUseFor below). That states the
+    // product's argument on the home page instead of implying it.
+    //
+    // customerName stays on Order because the Custom Order screen lets the user
+    // type one. For presets it is empty and the UI falls back to customerType.
 
     public static void ApplyPreset(int index)
     {
