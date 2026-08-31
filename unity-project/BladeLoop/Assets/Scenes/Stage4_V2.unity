@@ -66519,6 +66519,7 @@ GameObject:
   - component: {fileID: 783795422}
   - component: {fileID: 783795421}
   - component: {fileID: 783795420}
+  - component: {fileID: 783795424}
   m_Layer: 0
   m_Name: BackToMenuCanvas
   m_TagString: Untagged
@@ -66610,6 +66611,20 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
+--- !u!114 &783795424
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 783795419}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 32b94c1e95789fb40bbe68b080203702, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TourViewportFrame
+  splitWidth: 0.72
+  previewSplit: 0
 --- !u!1 &785334296
 GameObject:
   m_ObjectHideFlags: 0
@@ -223359,6 +223374,7 @@ GameObject:
   - component: {fileID: 1793180251}
   - component: {fileID: 1793180250}
   - component: {fileID: 1793180249}
+  - component: {fileID: 1793180253}
   m_Layer: 0
   m_Name: SubtitleCanvas
   m_TagString: Untagged
@@ -223450,6 +223466,20 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
+--- !u!114 &1793180253
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1793180248}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 32b94c1e95789fb40bbe68b080203702, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TourViewportFrame
+  splitWidth: 0.72
+  previewSplit: 0
 --- !u!1 &1795594429
 GameObject:
   m_ObjectHideFlags: 0
@@ -230793,6 +230823,7 @@ GameObject:
   - component: {fileID: 1853787570}
   - component: {fileID: 1853787569}
   - component: {fileID: 1853787568}
+  - component: {fileID: 1853787572}
   m_Layer: 0
   m_Name: Stage4_UICanvas
   m_TagString: Untagged
@@ -230884,6 +230915,20 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
+--- !u!114 &1853787572
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1853787567}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 32b94c1e95789fb40bbe68b080203702, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TourViewportFrame
+  splitWidth: 0.72
+  previewSplit: 0
 --- !u!1 &1854105279
 GameObject:
   m_ObjectHideFlags: 0
@@ -260931,6 +260976,7 @@ GameObject:
   - component: {fileID: 2078652744}
   - component: {fileID: 2078652743}
   - component: {fileID: 2078652742}
+  - component: {fileID: 2078652746}
   m_Layer: 0
   m_Name: ExploreHintCanvas
   m_TagString: Untagged
@@ -261022,6 +261068,20 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
+--- !u!114 &2078652746
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2078652741}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 32b94c1e95789fb40bbe68b080203702, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TourViewportFrame
+  splitWidth: 0.72
+  previewSplit: 0
 --- !u!1 &2078883221
 GameObject:
   m_ObjectHideFlags: 0
