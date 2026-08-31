@@ -96,7 +96,13 @@ public static class OrderContext
 | Mid | Precast concrete producer | 4,100 t | 580 °C | 35 min | 8,000 kg/h | 8 mm |
 | Low | Cement works | 3,250 t | 550 °C | 35 min | 8,800 kg/h | 16 mm |
 
-Customer *names* are Ritwika's — use placeholders until she supplies them.
+**Settled 31 Aug: presets carry no company name.** `customerName` is empty for all three; the card
+shows `customerType` plus the `endUse` line. Invented firm names added nothing the type didn't
+already say and would have needed a fictional-customers disclaimer. `customerName` stays on `Order`
+because the Custom Order screen lets the user type one — fall back to `customerType` when it's empty.
+
+`OrderContext.Thesis` holds the home-page line: *"There is no wrong setting — only a different
+buyer."*
 
 ---
 

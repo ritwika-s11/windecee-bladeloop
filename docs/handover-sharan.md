@@ -101,6 +101,10 @@ them on this page. Two facts worth naming, because they turn our tiers into real
 > 1. **The threshold numbers are project assumptions.** No published grading standard for recovered
 >    composite glass fibre exists (PAS 101 covers container cullet glass only). Say so. The words
 >    "industry standard" must not appear anywhere.
+> 1b. **Order quantities are illustrative.** One line: *"Order quantities are illustrative; the
+>    plant and the orders are not real."* (There are no invented company names to disclaim — the
+>    presets name buyer *types*, and every end-use claim on the cards is sourced from the CEE
+>    deliverable.)
 > 2. **Define "purity" explicitly**, because the literature doesn't use it — it reports tensile and
 >    modulus retention. Our definition: *the mass fraction of recovered material that is fibre,
 >    rather than adhered char and resin residue.* State it in those words.

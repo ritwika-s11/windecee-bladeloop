@@ -252,12 +252,18 @@ The current menu (stage buttons, Full Plant Tour, Plant Explorer) **goes away**.
 ║              Recovering glass fibre from wind turbine blades      ║
 ╠═══════════════════════════════════════════════════════════════════╣
 ║                                                                   ║
+║        There is no wrong setting — only a different buyer.        ║
+║                                                                   ║
 ║   ┌─────────────────┐ ┌─────────────────┐ ┌─────────────────┐    ║
 ║   │   HIGH GRADE    │ │   MID GRADE     │ │   LOW GRADE     │    ║
+║   │  Composite      │ │  Precast        │ │  Cement         │    ║
+║   │  manufacturer   │ │  concrete       │ │  works          │    ║
 ║   │                 │ │                 │ │                 │    ║
-║   │   Composite     │ │   Precast       │ │   Cement        │    ║
-║   │   manufacturer  │ │   concrete      │ │   works         │    ║
-║   │                 │ │                 │ │                 │    ║
+║   │ Clean enough to │ │ Not structural, │ │ Glass replaces  │    ║
+║   │ go back into    │ │ but sold today  │ │ sand, resin     │    ║
+║   │ new structural  │ │ as reinforcing  │ │ replaces coal.  │    ║
+║   │ parts.          │ │ filler.         │ │ There is always │    ║
+║   │                 │ │                 │ │ a buyer.        │    ║
 ║   │    4,800 t      │ │    4,100 t      │ │    3,250 t      │    ║
 ║   │  ≥90% purity    │ │  ≥78% purity    │ │  any grade      │    ║
 ║   │                 │ │                 │ │                 │    ║
@@ -277,6 +283,16 @@ The current menu (stage buttons, Full Plant Tour, Plant Explorer) **goes away**.
 
 The three cards deliberately show **the same turbine count**. That is the point: one decommissioned
 wind farm, three customers, three very different outcomes.
+
+**No invented company names.** An earlier draft gave each card a fictional German firm; the buyer
+*type* already carries the argument, and a name needed a "these are fictional" disclaimer while
+adding nothing. What each card carries instead is a **true, sourced line about who actually buys
+that grade** — precast concrete really does take shredded blade fibre today, and cement
+co-processing really is the most commercially mature route at scale (both from
+`docs/CEE-deliverable.md` §3).
+
+That change also puts the thesis on the landing page. The obvious challenge — *"why would anyone
+run the plant badly?"* — is answered before anyone asks it.
 
 **Three things, one of them clearly primary.** No stage buttons. No standalone "Full Plant Tour"
 button — the tour is what an order *plays*. No separate "Plant Explorer" button — its sliders and
