@@ -34,8 +34,6 @@ public class PlantExplorerController : MonoBehaviour
     TMP_Text pctGlass, pctOil, pctSyngas, pctChar, pctLoss, rateGlass, rateOil, rateSyngas, rateChar, rateLoss;
     TMP_Text purityVal, tensileVal;
 
-    KilnVisualizer kilnViz;
-
     // Sliders paired with their optimum value, for the Reset-to-optimum button.
     readonly List<(Slider slider, float optimum)> resetTargets = new List<(Slider, float)>();
 
@@ -55,7 +53,6 @@ public class PlantExplorerController : MonoBehaviour
         EnsureEventSystem();
         var canvas = BuildCanvas();
         BuildUI(canvas.transform);
-        kilnViz = Object.FindFirstObjectByType<KilnVisualizer>();
         Recompute();
     }
 
@@ -71,9 +68,10 @@ public class PlantExplorerController : MonoBehaviour
 
     void BuildUI(Transform root)
     {
-        // Wider left panel (~55%) holding two columns; kiln shows on the right.
+        // Full-width panel now the reactive kiln is gone (Task 1). Two content columns
+        // spread across the whole width so the tanks and quality metrics can breathe.
         var panel = MakeImage(root, "Panel", PanelBg); panel.raycastTarget = true;
-        panel.rectTransform.anchorMin = new Vector2(0, 0); panel.rectTransform.anchorMax = new Vector2(0.72f, 1);
+        panel.rectTransform.anchorMin = new Vector2(0, 0); panel.rectTransform.anchorMax = new Vector2(1, 1);
         panel.rectTransform.offsetMin = Vector2.zero; panel.rectTransform.offsetMax = Vector2.zero;
 
         BuildBackButtons(root);
@@ -99,16 +97,16 @@ public class PlantExplorerController : MonoBehaviour
         statusVal = MakeText(sb.rectTransform, "v", "OPTIMAL", 18, Ok, TextAlignmentOptions.TopLeft);
         statusVal.fontStyle = FontStyles.Bold; Anchor(statusVal.rectTransform, 0.2f, 0.08f, 1, 0.52f);
 
-        // ---- two content columns inside the panel ----
+        // ---- two content columns across the full width ----
         var left = new GameObject("LeftCol", typeof(RectTransform)).GetComponent<RectTransform>();
         left.SetParent(panel.transform, false);
-        left.anchorMin = new Vector2(0, 0); left.anchorMax = new Vector2(0.52f, 1);
-        left.offsetMin = new Vector2(28, 28); left.offsetMax = new Vector2(-8, -210);
+        left.anchorMin = new Vector2(0, 0); left.anchorMax = new Vector2(0.42f, 1);
+        left.offsetMin = new Vector2(40, 28); left.offsetMax = new Vector2(-12, -210);
 
         var right = new GameObject("RightCol", typeof(RectTransform)).GetComponent<RectTransform>();
         right.SetParent(panel.transform, false);
-        right.anchorMin = new Vector2(0.52f, 0); right.anchorMax = new Vector2(1, 1);
-        right.offsetMin = new Vector2(8, 28); right.offsetMax = new Vector2(-28, -210);
+        right.anchorMin = new Vector2(0.42f, 0); right.anchorMax = new Vector2(1, 1);
+        right.offsetMin = new Vector2(12, 28); right.offsetMax = new Vector2(-40, -210);
 
         BuildInputsColumn(left);
         BuildOutputsColumn(right);
@@ -384,8 +382,6 @@ public class PlantExplorerController : MonoBehaviour
             infoPopupTitle.color = s2 == ProcessModel.Status.Optimal ? Ok : (s2 == ProcessModel.Status.Caution ? Warn : Crit);
         }
 
-        if (kilnViz != null) { kilnViz.SetHeat(model.TempC); kilnViz.SetRotation(model.RetentionMin); }
-
         UpdateExplainCard();   // additive: refresh the live explanation card
     }
 
@@ -609,9 +605,8 @@ public class PlantExplorerController : MonoBehaviour
         MakeNavButton(root, "BackButton", "\u2190  Menu", new Vector2(30, -30),
                       TileBg, TextMain, () => SceneManager.LoadScene("MainMenu"));
 
-        // Stage navigation lives on the kiln itself: markers trace the material's
-        // path inlet -> body -> outlet (Shredder -> Reactor -> Separation).
-        BuildKilnStageMarkers(root);
+        // (Kiln stage-nav markers removed with the reactive kiln — Task 1. Stage navigation
+        // now goes through the order -> tour flow, not per-stage markers on the dashboard.)
     }
 
     // Shared nav-button factory: keeps Menu + stage buttons on one spec (150x46, label 18 bold).
