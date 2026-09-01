@@ -296,7 +296,14 @@ starting** — the blade-mass figure is still coming from the CEE team.
 
 ## Definition of done
 
-- [ ] Overlays stay inside the tour viewport when split, fill the screen when not
+- [x] Overlays stay inside the tour viewport when split, fill the screen when not
+      *(Task 1 done — `TourViewportFrame.cs` on all 17 canvases across the 5 scenes; verified in
+      play mode: frame width ratio 1.000 with no order, 0.720 with a preset applied, and back to
+      1.000 on `OrderContext.Clear()`. Subtitle canvases added to Stages 1–3 — cue files still
+      Ritwika's; their `CanvasGroup` alpha is set to 0 because `SubtitleTrack.Update()` returns
+      early while `cues.Count == 0` and so never drives alpha, which would otherwise leave an empty
+      bar on screen. It self-corrects the moment a cue file is assigned. `Stage2_UICanvas` match
+      normalised 0 → 0.5.)*
 - [ ] Stage 2 granules visibly differ at 2 / 8 / 16 mm
 - [ ] Stage 3 kiln visibly differs at 550 / 580 / 600 °C; rotation follows retention
 - [ ] Stage 4 fibre and char streams visibly reflect the output split
