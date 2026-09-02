@@ -50,6 +50,18 @@ prefabs, no Scene view layout.**
 
 ---
 
+> ⚠️ **Plant Explorer is transitional — don't polish it.** It stays while integration is in
+> progress so nothing gets lost, but it goes away in the final version: once every run ends in an
+> outcome report with statistics, and Custom Order shows those same statistics for your order, a
+> separate free-play dashboard has no job left. Its components aren't wasted — the sliders, tanks
+> and quality metrics are exactly what Custom Order needs. It's being promoted, not deleted.
+>
+> **So build Custom Order and the Outcome Report in the home page's palette from the start**, not
+> Plant Explorer's blue-on-light. The homepage now uses bone `#EDE8DF`, oxide `#C2603A`, warm
+> charcoal `#12100D`, with material-true output streams (fibre off-white `#E4DCCD`, oil amber
+> `#C99A3E`, syngas `#6B8F62`, char near-black `#2E2823`, loss grey `#5A524A`) and IBM Plex
+> Sans/Mono. Copy those constants from `MainMenuController` rather than inventing a third palette.
+
 ## Task 1 — Remove the miniature 3D kiln *(start here, no dependency)*
 
 The small reactive kiln next to the dashboard is not part of the product any more.

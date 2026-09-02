@@ -34,7 +34,16 @@ public class HomeStageDrift : MonoBehaviour
     Vector3 basePos;
     Vector3 baseEuler;
 
-    void Start()
+    void Start() => CaptureBase();
+
+    /// <summary>Re-reads the current transform as the pose to drift around.
+    ///
+    /// Must be called by anything that MOVES the camera after this component exists.
+    /// Script execution order between two MonoBehaviours is undefined, so if this
+    /// component's Start runs first it captures whatever pose the scene happened to be
+    /// saved with, and then quietly drags the camera back there every frame - which
+    /// looks exactly like "my camera settings didn't apply".</summary>
+    public void CaptureBase()
     {
         basePos = transform.position;
         baseEuler = transform.eulerAngles;

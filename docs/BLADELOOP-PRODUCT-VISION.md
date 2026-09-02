@@ -357,6 +357,25 @@ persists across all four stages.
 **Skip to results** button. Someone who wants the story watches it. Someone who wants the answer
 clicks twice. Even at 20 seconds in, the panel already tells you what's happening.
 
+### Plant Explorer is transitional — do not invest in it
+
+**It stays for now.** Integration is in progress and nothing should get lost while the pieces are
+being connected. It is on the home page and in Build Settings, and it works.
+
+**It goes away in the final version**, and the reason is worth understanding: once every run ends
+in an outcome report showing statistics alongside what you watched, and Custom Order shows those
+same statistics tailored to your order, a separate free-play dashboard has nothing left to do. Its
+job — "move sliders, watch numbers respond" — is absorbed by the two screens that have a reason for
+the numbers to exist.
+
+**What this means in practice:**
+
+- **Sharan:** don't spend time polishing Plant Explorer. Build Custom Order and the Outcome Report
+  in the home page's palette from the start, so they don't need restyling later.
+- **Nobody deletes it** until both replacement screens are working end to end.
+- Its components are not wasted — the sliders, tanks and quality metrics are exactly what Custom
+  Order needs. It is being promoted, not thrown away.
+
 ### 5.3 Custom order — this is what Plant Explorer becomes
 
 Plant Explorer's sliders, tanks and quality metrics don't disappear. They **become** this screen,
