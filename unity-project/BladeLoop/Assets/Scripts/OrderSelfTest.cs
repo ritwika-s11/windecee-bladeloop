@@ -122,5 +122,52 @@ public static class OrderSelfTest
     }
 
     static bool Near(float a, float b, float tol) => Mathf.Abs(a - b) <= tol;
+
+    // ---------------------------------------------------------------------------
+    //  Tour smoke test helpers. Editor only - none of this ships.
+    // ---------------------------------------------------------------------------
+
+    const float FastSpeed = 8f;
+
+    /// <summary>Runs the whole five-scene tour at 8x, so a smoke test costs about 35
+    /// seconds instead of four and a half minutes. Audio pitches up and the stage
+    /// animations run fast - that is fine, you are checking that the chain ADVANCES,
+    /// not how it looks.
+    ///
+    /// Toggle it off before judging anything visual.</summary>
+    [MenuItem("BladeLoop/Debug/Toggle fast tour (8x) %#f")]
+    public static void ToggleFastTour()
+    {
+        if (!Application.isPlaying)
+        {
+            Debug.LogWarning("Fast tour only does anything in play mode. Press Play first.");
+            return;
+        }
+        bool goingFast = Mathf.Approximately(Time.timeScale, 1f);
+        Time.timeScale = goingFast ? FastSpeed : 1f;
+        Debug.Log($"Tour speed: {Time.timeScale}x" +
+                  (goingFast ? "  — the full tour now takes about 35 seconds." : "  — back to normal."));
+    }
+
+    /// <summary>Where am I, is the order still alive, did the camera rect reset.
+    /// Run this at any point during a tour instead of squinting at the screen.</summary>
+    [MenuItem("BladeLoop/Debug/Where am I?")]
+    public static void WhereAmI()
+    {
+        var scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+        var cam = Camera.main;
+        var frames = Object.FindObjectsByType<TourViewportFrame>(FindObjectsSortMode.None);
+        int disagree = 0;
+        foreach (var f in frames)
+            if (Mathf.Abs(f.splitWidth - OrderContext.TourSplitWidth) > 0.001f) disagree++;
+
+        Debug.Log(
+            $"scene            : {scene}\n" +
+            $"time scale       : {Time.timeScale}x\n" +
+            $"order            : {(OrderContext.HasOrder ? OrderContext.Active.targetGrade + " / " + OrderContext.Active.customerType : "none")}\n" +
+            $"camera rect      : {(cam != null ? cam.rect.ToString() : "no camera")}   (want 0,0,1,1 on the menu)\n" +
+            $"viewport frames  : {frames.Length}, disagreeing with TourSplitWidth: {disagree}\n" +
+            $"sequencer alive  : {Object.FindFirstObjectByType<TourSceneSequencer>() != null}");
+    }
 }
 #endif

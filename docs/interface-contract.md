@@ -161,6 +161,16 @@ accept mid grade."* Sharan displays `note` verbatim.
 
 ## 4. Starting a run — owner: Akshat *(answers S4)*
 
+> **`TourRunner.cs` exists on `main` as a stub** (Ritwika, 1 Sep) so the home page had
+> something real to call. Already working: `StartRun()` loads `FullPlantTour`, and
+> `SplitVFov()` is fully implemented with the 65° clamp. Still TODO and clearly marked in the
+> file: `Camera.rect`, the order panel, `SkipToResults()`, `JumpToChapter()`.
+>
+> **The split width is now `OrderContext.TourSplitWidth` (0.72).** Read it; never type the
+> literal. Anirban's `TourViewportFrame.splitWidth` is a serialised field carrying the same
+> value across 14 canvases — if the two ever disagree, overlays sit off the edge of the 3D view
+> and the cause is invisible.
+
 ```csharp
 public static class TourRunner
 {
@@ -302,6 +312,7 @@ customer orders, not solver output.
 | When | Who | What |
 |---|---|---|
 | ✅ Mon 31 Aug | Ritwika | `OrderContext` + `OrderSolver` + self-test merged to `main`. |
+| ✅ Tue 1 Sep | Ritwika | Home page rebuilt; `TourRunner.cs` stub, `OrderContext.TourSplitWidth`, IBM Plex fonts. **The order cards call `TourRunner.StartRun()` — it has a live caller now.** |
 | Mon 31 Aug | Sharan | Pull. Build the screens against the real API — no waiting, no guessing. |
 | Mon 31 Aug | Anirban | Pull. Wire Task 1's split flag off the real `HasOrder`. |
 | Mon 31 Aug | Akshat | Start at **Task 3, the dual screen** — the new critical path. |
