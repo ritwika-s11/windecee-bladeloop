@@ -359,14 +359,70 @@ Stage 4's 14 lenses; those stay partially compensated and Anirban reviews them b
 
 - [x] ~~`OrderContext` + `OrderSolver`~~ — done by Ritwika 31 Aug, verified by the self-test
 - [ ] Explore mode played on current `main` before any code written
-- [ ] Solver returns a max-throughput answer per grade and reports infeasibility honestly
-- [ ] An order runs all four stages with the panel visible and correct throughout
-- [ ] Camera rect resets cleanly on exit; free play unaffected
+- [x] ~~Solver returns a max-throughput answer per grade~~ — Ritwika, 31 Aug
+- [x] **An order runs all four stages with the panel visible and correct throughout** — 3 Sep
+- [x] **Camera rect resets cleanly on exit; free play unaffected** — 3 Sep
 - [ ] Chapter skip and *Skip to results* both work
 - [ ] Explore mode orbits freely (not stuck after one drag) and clicking works, in split viewport
 - [ ] Spec for the Stage 3 / Stage 4 clickable-part changes handed to Anirban
-- [ ] FOV compensation in before Anirban starts re-framing
-- [ ] Unity console: zero errors
+- [x] **FOV compensation in before Anirban starts re-framing** — 3 Sep
+- [x] Unity console: zero errors, and zero new warnings
+
+---
+
+## Task 3 — delivered 3 Sep
+
+`OrderPanel.cs` (new) · `BladeLoopTheme.cs` (new) · `TourRunner.cs` (filled in).
+**No `.unity` file touched**, so nothing collides with Anirban.
+
+`OrderPanel` creates itself, marks itself `DontDestroyOnLoad` and rides
+`SceneManager.sceneLoaded` through all five scenes. It sets `Camera.rect` from
+`OrderContext.TourSplitWidth`, applies `TourRunner.SplitVFov`, and draws the panel into
+the remaining 28 %.
+
+**What the panel shows, per stage.** Settings appear only once a stage has decided
+something — a temperature listed over a field of turbines is noise. Output appears only at
+Separation, because before the plant has run there is no result to report.
+
+| Stage | Settings shown | Lit | Output |
+|---|---|---|---|
+| Wind farm | — | — | no |
+| In transit | — | — | no |
+| Shredding | Particle | Particle | no |
+| Rotary kiln | Particle, Temperature, Retention | Temperature, Retention | no |
+| Separation | all four | Feed rate | **yes**, plus purity/tensile |
+
+Panel copy comes from `ProcessModel` (`ParticleInfo()`, `TempInfo()`, `RetentionInfo()`) and
+`OrderContext.EndUseFor()` — never written in `OrderPanel`. When the narration is rewritten
+per grade, the panel follows for free. **Confirmed with Ritwika 3 Sep: the line changes once
+per stage, not per narration beat** — more movement than that competes with the voiceover.
+
+### Three things worth knowing
+
+1. **FOV is read from the Brain, never from `Camera.fieldOfView`.** Reading the camera
+   compounds — frame two compensates frame one's compensated value and the lens opens until
+   it hits the 65° clamp. It reads `brain.ActiveVirtualCamera.State.Lens.FieldOfView`, the
+   authored blended value, so compensation is applied exactly once. While paused the Brain is
+   *disabled* (`StoryModeController` does this for `ExploreOrbitCamera`), so there is no
+   authored lens to read and the FOV is left alone.
+
+2. **The panel self-heals on exit.** `StoryModeController.BackToMenu()` — the Escape key —
+   loads `MainMenu` directly, without restoring `Camera.rect` or knowing the panel exists.
+   Rather than patch each exit and miss one, the panel watches what scene loaded: anything
+   outside the tour chain restores the camera and destroys it.
+
+3. **`Clear()` ordering.** `ReturnToMenu()` calls it — that is what feeds the home page's
+   last-run line. `SkipToResults()` deliberately does **not**: `OutcomeReportController.Start()`
+   reads `Active` and `Model`, and clearing first renders an empty report that looks like
+   Sharan's bug.
+
+### Open, and needs a decision
+
+**`BladeLoopTheme.cs` duplicates the home page palette.** `MainMenuController`'s colours are
+`private static`, and `handover-sharan.md` tells Sharan to hand-copy them — the order panel
+is the third surface needing them. The new file is the single source they could all read, but
+until Ritwika and Sharan adopt it there are two copies, which is worse than one. **Either
+adopt it or say so and I will inline the values and delete it.**
 
 ---
 
