@@ -103,6 +103,19 @@ public static class OrderContext
     /// badly?" - is answered before it gets asked.</summary>
     public const string Thesis = "There is no wrong setting - only a different buyer.";
 
+    /// <summary>Fraction of the window width the 3D tour occupies while an order is
+    /// running. The order panel takes the rest.
+    ///
+    /// THE ONE PLACE THIS NUMBER LIVES. Two separate systems have to agree on it and
+    /// they are owned by different people:
+    ///   - TourViewportFrame (Anirban) confines each Screen Space - Overlay canvas to
+    ///     the left of this fraction, because an Overlay canvas ignores Camera.rect.
+    ///   - The viewport split (Akshat) sets Camera.rect to this width.
+    /// If the two ever disagree, the subtitles and buttons sit slightly off the edge
+    /// of the 3D view and nobody can work out why. Read this constant; do not type
+    /// 0.72 anywhere.</summary>
+    public const float TourSplitWidth = 0.72f;
+
     /// <summary>Who buys output of this grade. Used by the outcome report, which
     /// never says "fail" - a run below target is a different customer, not an error.
     /// Every claim here is sourced; see docs/CEE-deliverable.md section 3.</summary>

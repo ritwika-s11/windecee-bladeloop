@@ -242,7 +242,32 @@ there's still a buyer"*, not *"a customer who wants worse fibre."*
 
 ## 5. What the user sees
 
-### 5.1 Homepage — completely replaced
+> ## ✅ Built 1 Sep — what's actually on `main`
+>
+> The home page is no longer the wireframe below. It is a **full-bleed dusk wind farm** —
+> real geometry from `Stage1-WindFarm.fbx`, eleven turbines with blades turning, camera
+> drifting on three out-of-phase sine waves, linear fog hiding the terrain edge — with the
+> UI floating over it on a two-band scrim.
+>
+> **Three changes from the plan, all deliberate:**
+>
+> 1. **The tiles show the four settings**, in mono. The presets exist to teach someone what
+>    to type into Custom Order, so the settings are the content — not the tonnage.
+> 2. **Each tile carries a live stacked output bar** from `OutputSplit()`, same five streams
+>    and colours as Plant Explorer. High grade's char block is 5.9 %, low grade's is 26.5 % —
+>    over four times wider. The product's whole argument, readable in half a second.
+> 3. **No invented company names.** Buyer type plus a sourced end-use line (§3).
+>
+> Typography is **IBM Plex Sans + Mono** (SIL OFL). The TMP assets live in
+> `Assets/Resources/Fonts/` *specifically* so `Resources.Load` resolves them in a player
+> build — move them somewhere tidier and the fonts vanish from the Windows executable while
+> still working in the editor. `Assets/Fonts/OFL.txt` must ship with any distribution.
+>
+> **Still to do:** de-template the palette (it is currently generic dark-dashboard blue
+> rather than anything drawn from the materials), and an operational status strip. Both are
+> polish — the tour is the higher priority.
+
+### 5.1 Homepage — the original plan (superseded by the note above)
 
 The current menu (stage buttons, Full Plant Tour, Plant Explorer) **goes away**. In its place:
 
@@ -464,6 +489,8 @@ Each person also has a technical brief in `docs/` to give their Claude.
 0. ✅ **`OrderContext.cs` + `OrderSolver.cs`** — written and merged 31 Aug, taken off Akshat so
    Anirban and Sharan weren't queued behind him. Plus `OrderSelfTest.cs`
    (**BladeLoop → Verify Order Model**).
+0b. ✅ **Home page rebuilt** (1 Sep) — see §5.1. Also shipped: `TourRunner.cs` stub,
+   `OrderContext.TourSplitWidth`, `HomeStageDrift.cs`, and IBM Plex fonts.
 1. Rebuild `MainMenu.unity` as the order homepage (§5.1)
 2. Rewrite the narration scripts for all four stages — removing every hard number, since
    parameters now vary per order

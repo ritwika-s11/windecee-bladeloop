@@ -46,6 +46,31 @@ You own all five stage scenes. Nobody else opens them.
 ✅ **`OrderContext.cs` is on `main` now** — complete, not a stub. Ritwika wrote it so you weren't
 queued behind Akshat. Pull and wire `OrderContext.HasOrder` and `OrderContext.Model` directly.
 
+⚠️ **The split width now lives in one place: `OrderContext.TourSplitWidth` (0.72).** Your
+`TourViewportFrame.splitWidth` is a serialised field, so the 0.72 is baked into all 14 canvases —
+left alone for now rather than editing your file mid-sprint. **Next time you touch
+`TourViewportFrame`, default it from `OrderContext.TourSplitWidth`.** Akshat's `Camera.rect` reads
+the constant; if the two ever drift, your overlays sit slightly off the edge of the 3D view and
+nothing on screen explains why.
+
+⚠️ **Two things in `MainMenu` that touch your world — read before you pull.**
+>
+> The home page now instantiates the wind farm from `Stage1-WindFarm.fbx` as a `HomeStage`
+> object, keeping only `WF_Turbine_*` and `WF_Terrain`. **Your Stage 1 scene is untouched** —
+> nothing was reparented or moved, and the FBX itself is unchanged.
+>
+> The terrain looked like bright daytime grass against a night sky, so it is dimmed — but
+> **at runtime, via a `MaterialPropertyBlock` in `MainMenuController.DimHomeTerrain()`, not by
+> editing the material.** An earlier attempt edited `WF_Mat_Terrain.mat` directly, which was
+> wrong twice: that material is shared with Stage 1 through the FBX, and multiplying a Color
+> scales alpha too, so it also went 42 % transparent. Both were reverted. **If you ever want to
+> tint shared geometry for one scene, use a property block** — it cannot leak into the asset.
+
+✅ **You can finally test your Task 1.** `TourRunner.StartRun()` now exists, so an order can be set
+and a run started — which is what flips `HasOrder` and makes your frames engage. Until Akshat lands
+`Camera.rect`, a run shows overlays confined left with the 3D still full width. **That looks wrong
+and is correct** — it is your 14 frames working.
+
 Start **Task 1** today. It's the largest single item in your list and it's Monday's work regardless.
 
 **Priority if the week runs short:** Task 1 is not cuttable — without it every screenshot of the dual
