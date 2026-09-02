@@ -59,9 +59,35 @@ public static class OrderContext
 
     public static void Clear()
     {
+        // Remember what just ran before throwing the order away, so the home page can
+        // say "last run: mid grade, 4,691 kg/h" when you come back. Software that
+        // remembers what you did feels like software; software that forgets every time
+        // feels like a demo.
+        if (Active != null && Model != null)
+        {
+            HasLastRun     = true;
+            LastRunGrade   = AchievedGrade;
+            LastRunTarget  = Active.targetGrade;
+            LastRunFibreKgH = Model.OutputSplit().GlassKgH;
+            LastRunPurity  = Model.FiberPurityPct;
+            LastRunBuyer   = Active.customerType;
+        }
+
         Active = null;
         Model  = DesignCase();
     }
+
+    // ---- memory of the last completed run ------------------------------------
+    // Static, so it survives scene loads but not an app restart. That is the right
+    // lifetime: it is a convenience within a session, not saved state.
+    public static bool   HasLastRun;
+    public static Grade  LastRunGrade;
+    public static Grade  LastRunTarget;
+    public static float  LastRunFibreKgH;
+    public static float  LastRunPurity;
+    public static string LastRunBuyer;
+
+    public static void ForgetLastRun() { HasLastRun = false; }
 
     /// <summary>600 C / 35 min / 6500 kg/h / 2 mm - every optimum in ProcessModel.</summary>
     public static ProcessModel DesignCase() => new ProcessModel
