@@ -23,6 +23,14 @@ Explore spec and FOV fix **Wed 2 Sep** · feature freeze **Wed 9 Sep**
 > **Start at Task 3 (the dual screen).** That's the critical path now: Anirban's 14 canvases and
 > Sharan's screens both assume it. Then Task 5, then the FOV fix, then chapter nav last.
 >
+> **`TourRunner.cs` is already on `main` as a stub**, and the home page calls it — so you're filling
+> in behaviour, not designing an interface. `StartRun()` loads `FullPlantTour` today; `SplitVFov()`
+> is done including the 65° clamp. The TODOs in the file mark exactly what's left: `Camera.rect`,
+> the order panel, `SkipToResults()`, `JumpToChapter()`.
+>
+> Use **`OrderContext.TourSplitWidth`**, never a literal `0.72` — Anirban's overlay frames read the
+> same constant.
+>
 > **Both compile clean and the self-test passes in the editor** — output recorded in
 > `docs/interface-contract.md` §10, including the check that the 0.5 mm / 9,000 kg/h exploit you
 > found is now capped at 4,967 kg/h.

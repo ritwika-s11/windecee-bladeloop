@@ -59,9 +59,35 @@ public static class OrderContext
 
     public static void Clear()
     {
+        // Remember what just ran before throwing the order away, so the home page can
+        // say "last run: mid grade, 4,691 kg/h" when you come back. Software that
+        // remembers what you did feels like software; software that forgets every time
+        // feels like a demo.
+        if (Active != null && Model != null)
+        {
+            HasLastRun     = true;
+            LastRunGrade   = AchievedGrade;
+            LastRunTarget  = Active.targetGrade;
+            LastRunFibreKgH = Model.OutputSplit().GlassKgH;
+            LastRunPurity  = Model.FiberPurityPct;
+            LastRunBuyer   = Active.customerType;
+        }
+
         Active = null;
         Model  = DesignCase();
     }
+
+    // ---- memory of the last completed run ------------------------------------
+    // Static, so it survives scene loads but not an app restart. That is the right
+    // lifetime: it is a convenience within a session, not saved state.
+    public static bool   HasLastRun;
+    public static Grade  LastRunGrade;
+    public static Grade  LastRunTarget;
+    public static float  LastRunFibreKgH;
+    public static float  LastRunPurity;
+    public static string LastRunBuyer;
+
+    public static void ForgetLastRun() { HasLastRun = false; }
 
     /// <summary>600 C / 35 min / 6500 kg/h / 2 mm - every optimum in ProcessModel.</summary>
     public static ProcessModel DesignCase() => new ProcessModel
@@ -102,6 +128,19 @@ public static class OrderContext
     /// the home page, so the obvious challenge - "why would anyone run the plant
     /// badly?" - is answered before it gets asked.</summary>
     public const string Thesis = "There is no wrong setting - only a different buyer.";
+
+    /// <summary>Fraction of the window width the 3D tour occupies while an order is
+    /// running. The order panel takes the rest.
+    ///
+    /// THE ONE PLACE THIS NUMBER LIVES. Two separate systems have to agree on it and
+    /// they are owned by different people:
+    ///   - TourViewportFrame (Anirban) confines each Screen Space - Overlay canvas to
+    ///     the left of this fraction, because an Overlay canvas ignores Camera.rect.
+    ///   - The viewport split (Akshat) sets Camera.rect to this width.
+    /// If the two ever disagree, the subtitles and buttons sit slightly off the edge
+    /// of the 3D view and nobody can work out why. Read this constant; do not type
+    /// 0.72 anywhere.</summary>
+    public const float TourSplitWidth = 0.72f;
 
     /// <summary>Who buys output of this grade. Used by the outcome report, which
     /// never says "fail" - a run below target is a different customer, not an error.

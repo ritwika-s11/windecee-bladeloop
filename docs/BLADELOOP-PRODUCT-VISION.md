@@ -242,7 +242,32 @@ there's still a buyer"*, not *"a customer who wants worse fibre."*
 
 ## 5. What the user sees
 
-### 5.1 Homepage — completely replaced
+> ## ✅ Built 1 Sep — what's actually on `main`
+>
+> The home page is no longer the wireframe below. It is a **full-bleed dusk wind farm** —
+> real geometry from `Stage1-WindFarm.fbx`, eleven turbines with blades turning, camera
+> drifting on three out-of-phase sine waves, linear fog hiding the terrain edge — with the
+> UI floating over it on a two-band scrim.
+>
+> **Three changes from the plan, all deliberate:**
+>
+> 1. **The tiles show the four settings**, in mono. The presets exist to teach someone what
+>    to type into Custom Order, so the settings are the content — not the tonnage.
+> 2. **Each tile carries a live stacked output bar** from `OutputSplit()`, same five streams
+>    and colours as Plant Explorer. High grade's char block is 5.9 %, low grade's is 26.5 % —
+>    over four times wider. The product's whole argument, readable in half a second.
+> 3. **No invented company names.** Buyer type plus a sourced end-use line (§3).
+>
+> Typography is **IBM Plex Sans + Mono** (SIL OFL). The TMP assets live in
+> `Assets/Resources/Fonts/` *specifically* so `Resources.Load` resolves them in a player
+> build — move them somewhere tidier and the fonts vanish from the Windows executable while
+> still working in the editor. `Assets/Fonts/OFL.txt` must ship with any distribution.
+>
+> **Still to do:** de-template the palette (it is currently generic dark-dashboard blue
+> rather than anything drawn from the materials), and an operational status strip. Both are
+> polish — the tour is the higher priority.
+
+### 5.1 Homepage — the original plan (superseded by the note above)
 
 The current menu (stage buttons, Full Plant Tour, Plant Explorer) **goes away**. In its place:
 
@@ -331,6 +356,25 @@ persists across all four stages.
 **Nobody sits through five minutes.** So: a chapter bar to jump between stages, and a
 **Skip to results** button. Someone who wants the story watches it. Someone who wants the answer
 clicks twice. Even at 20 seconds in, the panel already tells you what's happening.
+
+### Plant Explorer is transitional — do not invest in it
+
+**It stays for now.** Integration is in progress and nothing should get lost while the pieces are
+being connected. It is on the home page and in Build Settings, and it works.
+
+**It goes away in the final version**, and the reason is worth understanding: once every run ends
+in an outcome report showing statistics alongside what you watched, and Custom Order shows those
+same statistics tailored to your order, a separate free-play dashboard has nothing left to do. Its
+job — "move sliders, watch numbers respond" — is absorbed by the two screens that have a reason for
+the numbers to exist.
+
+**What this means in practice:**
+
+- **Sharan:** don't spend time polishing Plant Explorer. Build Custom Order and the Outcome Report
+  in the home page's palette from the start, so they don't need restyling later.
+- **Nobody deletes it** until both replacement screens are working end to end.
+- Its components are not wasted — the sliders, tanks and quality metrics are exactly what Custom
+  Order needs. It is being promoted, not thrown away.
 
 ### 5.3 Custom order — this is what Plant Explorer becomes
 
@@ -464,6 +508,8 @@ Each person also has a technical brief in `docs/` to give their Claude.
 0. ✅ **`OrderContext.cs` + `OrderSolver.cs`** — written and merged 31 Aug, taken off Akshat so
    Anirban and Sharan weren't queued behind him. Plus `OrderSelfTest.cs`
    (**BladeLoop → Verify Order Model**).
+0b. ✅ **Home page rebuilt** (1 Sep) — see §5.1. Also shipped: `TourRunner.cs` stub,
+   `OrderContext.TourSplitWidth`, `HomeStageDrift.cs`, and IBM Plex fonts.
 1. Rebuild `MainMenu.unity` as the order homepage (§5.1)
 2. Rewrite the narration scripts for all four stages — removing every hard number, since
    parameters now vary per order
