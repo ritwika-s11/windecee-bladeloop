@@ -216,6 +216,13 @@ public class OrderDashboardController : MonoBehaviour
         solveLabel.text = "S O L V E";
     }
 
+    Image[] tankFills = new Image[5];
+    TMP_Text[] tankPct = new TMP_Text[5];
+    TMP_Text[] tankRate = new TMP_Text[5];
+    TMP_Text purityVal, tensileVal;
+    Image gradeBadge; TMP_Text gradeBadgeText;
+    static readonly string[] StreamNames = { "Glass", "Oil", "Syngas", "Char", "Losses" };
+
     void EnsureResultsArea()
     {
         if (resultsArea != null) return;
@@ -223,18 +230,48 @@ public class OrderDashboardController : MonoBehaviour
         var card = MakeImage(panel, "ResultsCard", TileBg);
         resultsArea = card.rectTransform;
         resultsArea.anchorMin = new Vector2(0.5f, 1); resultsArea.anchorMax = new Vector2(0.5f, 1); resultsArea.pivot = new Vector2(0.5f, 1);
-        resultsArea.sizeDelta = new Vector2(720, 150); resultsArea.anchoredPosition = new Vector2(0, -545);
+        resultsArea.sizeDelta = new Vector2(880, 430); resultsArea.anchoredPosition = new Vector2(0, -545);
 
         var hdr = MakeText(resultsArea, "hdr", "THESE SETTINGS DELIVER IT", 12, TextSub, TextAlignmentOptions.TopLeft);
-        hdr.characterSpacing = 3; Anchor(hdr.rectTransform, 0, 0.80f, 1, 0.98f); hdr.rectTransform.offsetMin = new Vector2(28, 0);
+        hdr.characterSpacing = 3; Anchor(hdr.rectTransform, 0, 0.90f, 1, 0.99f); hdr.rectTransform.offsetMin = new Vector2(28, 0);
 
         foundSettingsText = MakeText(resultsArea, "found", "", 20, TextMain, TextAlignmentOptions.Left);
         foundSettingsText.fontStyle = FontStyles.Bold;
-        Anchor(foundSettingsText.rectTransform, 0, 0.30f, 1, 0.74f); foundSettingsText.rectTransform.offsetMin = new Vector2(28, 0); foundSettingsText.rectTransform.offsetMax = new Vector2(-28, 0);
+        Anchor(foundSettingsText.rectTransform, 0, 0.80f, 1, 0.90f); foundSettingsText.rectTransform.offsetMin = new Vector2(28, 0); foundSettingsText.rectTransform.offsetMax = new Vector2(-28, 0);
 
         infeasibleText = MakeText(resultsArea, "infeasible", "", 15, Crit, TextAlignmentOptions.Left);
         infeasibleText.enableWordWrapping = true;
-        Anchor(infeasibleText.rectTransform, 0, 0.10f, 1, 0.74f); infeasibleText.rectTransform.offsetMin = new Vector2(28, 0); infeasibleText.rectTransform.offsetMax = new Vector2(-28, 0);
+        Anchor(infeasibleText.rectTransform, 0, 0.40f, 1, 0.90f); infeasibleText.rectTransform.offsetMin = new Vector2(28, 0); infeasibleText.rectTransform.offsetMax = new Vector2(-28, 0);
+
+        var youGet = MakeText(resultsArea, "youget", "YOU WOULD GET", 12, TextSub, TextAlignmentOptions.TopLeft);
+        youGet.characterSpacing = 3; Anchor(youGet.rectTransform, 0, 0.70f, 1, 0.78f); youGet.rectTransform.offsetMin = new Vector2(28, 0);
+        planWidgets.Add(youGet.gameObject);
+
+        var tanksRow = new GameObject("tanks", typeof(RectTransform)).GetComponent<RectTransform>();
+        tanksRow.SetParent(resultsArea, false);
+        Anchor(tanksRow, 0, 0.14f, 0.64f, 0.70f); tanksRow.offsetMin = new Vector2(28, 0); tanksRow.offsetMax = new Vector2(0, 0);
+        planWidgets.Add(tanksRow.gameObject);
+        Color[] cols = { GlassCol, OilCol, GasCol, CharCol, LossCol };
+        float tw = 96f, tgap = 12f;
+        for (int i = 0; i < 5; i++)
+            BuildTank(tanksRow, i, StreamNames[i], cols[i], i * (tw + tgap), tw);
+
+        var qBox = new GameObject("quality", typeof(RectTransform)).GetComponent<RectTransform>();
+        qBox.SetParent(resultsArea, false); Anchor(qBox, 0.66f, 0.14f, 1f, 0.70f); qBox.offsetMax = new Vector2(-28, 0);
+        planWidgets.Add(qBox.gameObject);
+
+        var pl = MakeText(qBox, "pl", "Fibre purity", 13, TextSub, TextAlignmentOptions.Left);
+        Anchor(pl.rectTransform, 0, 0.82f, 0.6f, 0.98f);
+        purityVal = MakeText(qBox, "pv", "", 24, Ok, TextAlignmentOptions.Right); purityVal.fontStyle = FontStyles.Bold;
+        Anchor(purityVal.rectTransform, 0.4f, 0.80f, 1, 1f);
+        var tl = MakeText(qBox, "tl", "Tensile retention", 13, TextSub, TextAlignmentOptions.Left);
+        Anchor(tl.rectTransform, 0, 0.60f, 0.7f, 0.76f);
+        tensileVal = MakeText(qBox, "tv", "", 24, Ok, TextAlignmentOptions.Right); tensileVal.fontStyle = FontStyles.Bold;
+        Anchor(tensileVal.rectTransform, 0.4f, 0.58f, 1, 0.78f);
+
+        gradeBadge = MakeImage(qBox, "badge", Accent);
+        Anchor(gradeBadge.rectTransform, 0, 0.06f, 1, 0.44f);
+        gradeBadgeText = MakeText(gradeBadge.rectTransform, "bt", "", 18, Color.white, TextAlignmentOptions.Center); gradeBadgeText.fontStyle = FontStyles.Bold;
     }
 
     void ShowSolvedPlan(ProcessModel m)
@@ -243,11 +280,36 @@ public class OrderDashboardController : MonoBehaviour
         resultsArea.gameObject.SetActive(true);
         infeasibleText.gameObject.SetActive(false);
         foundSettingsText.gameObject.SetActive(true);
+        foreach (var w in planWidgets) w.SetActive(true);
+
         foundSettingsText.text =
             m.TempC.ToString("0") + " \u00b0C     " +
             m.RetentionMin.ToString("0") + " min     " +
             m.FeedKgH.ToString("N0") + " kg/h     " +
             m.ParticleSizeMm.ToString("0.#") + " mm";
+
+        // Five streams from the model; fill height scales to the largest share so glass
+        // reads as dominant. Percentages are of the feed rate (closed mass balance).
+        var sp = m.OutputSplit();
+        float[] pcts = { sp.GlassPct, sp.OilPct, sp.SyngasPct, sp.CharPct, sp.LossPct };
+        float[] rates = { sp.GlassKgH, sp.OilKgH, sp.SyngasKgH, sp.CharKgH, sp.LossKgH };
+        float maxPct = Mathf.Max(1f, sp.GlassPct);
+        for (int i = 0; i < 5; i++)
+        {
+            float frac = Mathf.Clamp01(pcts[i] / maxPct);
+            tankFills[i].rectTransform.anchorMax = new Vector2(1, Mathf.Max(0.02f, frac));
+            tankPct[i].text = pcts[i].ToString("0.0") + "%";
+            tankRate[i].text = rates[i].ToString("N0") + " kg/h";
+        }
+
+        purityVal.text = m.FiberPurityPct.ToString("0.0") + "%";
+        purityVal.color = m.FiberPurityPct >= OrderContext.HighPurity ? Ok : (m.FiberPurityPct >= OrderContext.MidPurity ? Warn : Crit);
+        tensileVal.text = m.TensileRetentionPct.ToString("0") + "%";
+        tensileVal.color = m.TensileRetentionPct >= OrderContext.HighTensile ? Ok : (m.TensileRetentionPct >= OrderContext.MidTensile ? Warn : Crit);
+
+        var g = OrderContext.AchievedGrade;
+        gradeBadge.color = g == Grade.High ? Ok : (g == Grade.Mid ? Warn : Crit);
+        gradeBadgeText.text = OrderContext.GradeLabel(g);
     }
 
     void ShowInfeasible(string note)
@@ -260,6 +322,36 @@ public class OrderDashboardController : MonoBehaviour
             ? "No settings in the operating envelope reach that grade at this feed rate. Try a coarser target or a lower quantity."
             : note;
     }
+
+    readonly List<GameObject> planWidgets = new List<GameObject>();
+
+    // One output tank: label on top, a vessel with a gradient fill, percentage + kg/h below.
+    // Mirrors PlantExplorer's tanks (uses the shared UIGradient) so the two screens match.
+    void BuildTank(RectTransform row, int index, string label, Color col, float x, float w)
+    {
+        var tank = new GameObject("tank_" + label, typeof(RectTransform)).GetComponent<RectTransform>();
+        tank.SetParent(row, false);
+        tank.anchorMin = new Vector2(0, 0); tank.anchorMax = new Vector2(0, 1); tank.pivot = new Vector2(0, 0.5f);
+        tank.sizeDelta = new Vector2(w, 0); tank.anchoredPosition = new Vector2(x, 0);
+
+        var lbl = MakeText(tank, "l", label, 13, TextMain, TextAlignmentOptions.Top); lbl.fontStyle = FontStyles.Bold;
+        Anchor(lbl.rectTransform, 0, 0.88f, 1, 1f);
+
+        var body = MakeImage(tank, "body", Hex("EEF1F5"));
+        Anchor(body.rectTransform, 0.14f, 0.30f, 0.86f, 0.86f);
+        var fill = MakeImage(body.rectTransform, "fill", col);
+        fill.rectTransform.anchorMin = new Vector2(0, 0); fill.rectTransform.anchorMax = new Vector2(1, 0.5f);
+        fill.rectTransform.offsetMin = Vector2.zero; fill.rectTransform.offsetMax = Vector2.zero;
+        var grad = fill.gameObject.AddComponent<UIGradient>();
+        grad.top = new Color(1f,1f,1f,1f); grad.bottom = new Color(0.62f,0.62f,0.62f,1f);
+        tankFills[index] = fill;
+
+        var pct = MakeText(tank, "p", "", 16, TextMain, TextAlignmentOptions.Center); pct.fontStyle = FontStyles.Bold;
+        Anchor(pct.rectTransform, 0, 0.14f, 1, 0.28f); tankPct[index] = pct;
+        var rate = MakeText(tank, "r", "", 11, TextSub, TextAlignmentOptions.Center);
+        Anchor(rate.rectTransform, 0, 0.02f, 1, 0.13f); tankRate[index] = rate;
+    }
+
 
     // =====================================================================================
     //  Shared UI helpers (mirrored from PlantExplorerController so the two screens match).
