@@ -166,6 +166,17 @@ accept mid grade."* Sharan displays `note` verbatim.
 > `SplitVFov()` is fully implemented with the 65° clamp. Still TODO and clearly marked in the
 > file: `Camera.rect`, the order panel, `SkipToResults()`, `JumpToChapter()`.
 >
+> ✅ **`Camera.rect`, the order panel and the FOV compensation are done** (Akshat, 3 Sep) in
+> the new `OrderPanel.cs`. No signature here changed. `SkipToResults()` is implemented but
+> cannot be tested end to end until `OutcomeReport` exists — it currently checks
+> `Application.CanStreamedLevelBeLoaded` and falls back to the menu with a warning rather
+> than throwing the player onto a dead stage. `JumpToChapter()` is still a stub.
+>
+> ⚠️ **Ordering rule for whoever touches the exit paths.** `OrderContext.Clear()` is called
+> in `ReturnToMenu()` only. It must **not** be called on the way to `OutcomeReport`:
+> `OutcomeReportController.Start()` reads `Active` and `Model`, so clearing first renders an
+> empty report that looks like a bug in Sharan's scene.
+>
 > **The split width is now `OrderContext.TourSplitWidth` (0.72).** Read it; never type the
 > literal. Anirban's `TourViewportFrame.splitWidth` is a serialised field carrying the same
 > value across 14 canvases — if the two ever disagree, overlays sit off the edge of the 3D view
