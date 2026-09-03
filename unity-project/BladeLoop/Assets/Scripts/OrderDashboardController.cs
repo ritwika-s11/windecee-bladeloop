@@ -276,46 +276,44 @@ public class OrderDashboardController : MonoBehaviour
         var hdr = MakeText(area, "hdr", "THESE SETTINGS DELIVER IT", 13, Faint, TextAlignmentOptions.TopLeft, Mono);
         hdr.characterSpacing = 5f; Anchor(hdr.rectTransform, 0, 0.95f, 1, 1f);
 
-        // found-settings static text (used only if sliders somehow not built; hidden after)
         foundSettingsText = MakeText(area, "found", "", 24, Bone, TextAlignmentOptions.Left, MonoBold);
         Anchor(foundSettingsText.rectTransform, 0, 0.88f, 1, 0.94f);
 
         infeasibleText = MakeText(area, "infeasible", "", 17, Oxide, TextAlignmentOptions.TopLeft, Sans);
         infeasibleText.enableWordWrapping = true; Anchor(infeasibleText.rectTransform, 0, 0.6f, 1, 0.94f);
 
-        // (sliders get built into the 0.62-0.92 band by ShowSolvedPlan)
-
         // YOU WOULD GET — five tanks
         var youGet = MakeText(area, "youget", "YOU WOULD GET", 13, Faint, TextAlignmentOptions.TopLeft, Mono);
-        youGet.characterSpacing = 5f; Anchor(youGet.rectTransform, 0, 0.55f, 1, 0.60f); planWidgets.Add(youGet.gameObject);
+        youGet.characterSpacing = 5f; Anchor(youGet.rectTransform, 0, 0.63f, 1, 0.68f); planWidgets.Add(youGet.gameObject);
 
         var tanksRow = new GameObject("tanks", typeof(RectTransform)).GetComponent<RectTransform>();
-        tanksRow.SetParent(area, false); Anchor(tanksRow, 0, 0.24f, 0.66f, 0.54f); planWidgets.Add(tanksRow.gameObject);
+        tanksRow.SetParent(area, false); Anchor(tanksRow, 0, 0.36f, 0.66f, 0.62f); planWidgets.Add(tanksRow.gameObject);
         Color[] cols = { StreamFibre, StreamOil, StreamGas, StreamChar, StreamLoss };
         float tw = 0.175f, tgap = 0.03f;
         for (int i = 0; i < 5; i++) BuildTank(tanksRow, i, StreamNames[i], cols[i], i*(tw+tgap), tw);
 
         // purity / tensile (right sub-column, beside tanks)
         var pl = MakeText(area, "pl", "FIBRE PURITY", 12, Faint, TextAlignmentOptions.Left, Mono); pl.characterSpacing=3f;
-        Anchor(pl.rectTransform, 0.70f, 0.50f, 1f, 0.55f); planWidgets.Add(pl.gameObject);
+        Anchor(pl.rectTransform, 0.70f, 0.58f, 1f, 0.63f); planWidgets.Add(pl.gameObject);
         purityVal = MakeText(area, "pv", "", 30, Bone, TextAlignmentOptions.Left, MonoBold);
-        Anchor(purityVal.rectTransform, 0.70f, 0.42f, 1f, 0.50f); planWidgets.Add(purityVal.gameObject);
+        Anchor(purityVal.rectTransform, 0.70f, 0.50f, 1f, 0.58f); planWidgets.Add(purityVal.gameObject);
         var tl = MakeText(area, "tl", "TENSILE RETENTION", 12, Faint, TextAlignmentOptions.Left, Mono); tl.characterSpacing=3f;
-        Anchor(tl.rectTransform, 0.70f, 0.35f, 1f, 0.40f); planWidgets.Add(tl.gameObject);
+        Anchor(tl.rectTransform, 0.70f, 0.43f, 1f, 0.48f); planWidgets.Add(tl.gameObject);
         tensileVal = MakeText(area, "tv", "", 30, Bone, TextAlignmentOptions.Left, MonoBold);
-        Anchor(tensileVal.rectTransform, 0.70f, 0.27f, 1f, 0.35f); planWidgets.Add(tensileVal.gameObject);
+        Anchor(tensileVal.rectTransform, 0.70f, 0.35f, 1f, 0.43f); planWidgets.Add(tensileVal.gameObject);
 
-        // THIS ORDER TAKES — campaign figures (lower left)
+        // THIS ORDER TAKES — campaign figures. Even vertical spacing: tanks bottom (0.36),
+        // header (0.25-0.30), campaign (0.08-0.22) - matched ~0.06 gaps above and below.
         var takesHdr = MakeText(area, "takes", "THIS ORDER TAKES", 13, Faint, TextAlignmentOptions.TopLeft, Mono);
-        takesHdr.characterSpacing = 5f; Anchor(takesHdr.rectTransform, 0, 0.17f, 0.66f, 0.22f); planWidgets.Add(takesHdr.gameObject);
+        takesHdr.characterSpacing = 5f; Anchor(takesHdr.rectTransform, 0, 0.25f, 0.66f, 0.30f); planWidgets.Add(takesHdr.gameObject);
         campaignText = MakeText(area, "campaign", "", 18, Muted, TextAlignmentOptions.TopLeft, Mono);
-        campaignText.lineSpacing = 10f; Anchor(campaignText.rectTransform, 0, 0.02f, 0.66f, 0.16f); planWidgets.Add(campaignText.gameObject);
+        campaignText.lineSpacing = 10f; Anchor(campaignText.rectTransform, 0, 0.08f, 0.66f, 0.22f); planWidgets.Add(campaignText.gameObject);
 
         // grade badge + Watch this run (lower right)
-        gradeBadge = MakeImage(area, "badge", Oxide); Anchor(gradeBadge.rectTransform, 0.70f, 0.15f, 1f, 0.22f); planWidgets.Add(gradeBadge.gameObject);
+        gradeBadge = MakeImage(area, "badge", Oxide); Anchor(gradeBadge.rectTransform, 0.70f, 0.20f, 1f, 0.27f); planWidgets.Add(gradeBadge.gameObject);
         gradeBadgeText = MakeText(gradeBadge.rectTransform, "bt", "", 16, Hex("15110E"), TextAlignmentOptions.Center, MonoBold); gradeBadgeText.characterSpacing=2f;
 
-        MakeButton(area, "WatchButton", "WATCH THIS RUN  \u2192", new Vector2(0.70f,0.02f), new Vector2(1f,0.12f), true, OnWatchRun, out watchWidget);
+        MakeButton(area, "WatchButton", "WATCH THIS RUN  \u2192", new Vector2(0.70f,0.06f), new Vector2(1f,0.16f), true, OnWatchRun, out watchWidget);
         planWidgets.Add(watchWidget);
 
         resultsArea.gameObject.SetActive(false);
@@ -439,10 +437,13 @@ public class OrderDashboardController : MonoBehaviour
         var sp = m.OutputSplit();
         float[] pcts = { sp.GlassPct, sp.OilPct, sp.SyngasPct, sp.CharPct, sp.LossPct };
         float[] rates = { sp.GlassKgH, sp.OilKgH, sp.SyngasKgH, sp.CharKgH, sp.LossKgH };
-        float maxPct = Mathf.Max(1f, sp.GlassPct);
+        // Scale every fill against a FIXED reference (not against glass), so the glass bar
+        // itself moves with its share instead of being pinned full. 75% headroom keeps the
+        // dominant glass bar tall without ever clipping the top.
+        const float refPct = 75f;
         for (int i = 0; i < 5; i++)
         {
-            float frac = Mathf.Clamp01(pcts[i] / maxPct);
+            float frac = Mathf.Clamp01(pcts[i] / refPct);
             tankFills[i].rectTransform.anchorMax = new Vector2(1, Mathf.Max(0.02f, frac));
             tankPct[i].text = pcts[i].ToString("0.0") + "%";
             tankRate[i].text = rates[i].ToString("N0");
