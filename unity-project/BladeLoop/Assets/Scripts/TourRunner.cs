@@ -48,22 +48,14 @@ public static class TourRunner
             return;
         }
 
-        // TODO (Akshat): create the DontDestroyOnLoad object that owns the order panel
-        // and hooks SceneManager.sceneLoaded to apply Camera.rect. Suggested shape:
+        // Creates itself, marks itself DontDestroyOnLoad and hooks
+        // SceneManager.sceneLoaded, so the split and the panel follow the chain
+        // through all five scenes without a single scene edit. See OrderPanel.
         //
-        //   void OnSceneLoaded(Scene s, LoadSceneMode m)
-        //   {
-        //       var cam = Camera.main;
-        //       if (cam != null && OrderContext.HasOrder)
-        //           cam.rect = new Rect(0f, 0f, OrderContext.TourSplitWidth, 1f);
-        //   }
-        //
-        // Camera.main can be null on the first frame after a load - defer a frame if
-        // the split fails on stage 1 but works on later ones.
-        //
-        // Use OrderContext.TourSplitWidth, never a literal. Anirban's overlay frames
-        // read the same number; if the two disagree the subtitles sit off the edge of
-        // the 3D view and it is very hard to see why.
+        // Created BEFORE the load so it is already listening when FullPlantTour
+        // raises sceneLoaded; it deliberately does not split the menu camera on
+        // the way out.
+        OrderPanel.Create();
 
         SceneManager.LoadScene(TourSceneName);
     }
@@ -71,13 +63,55 @@ public static class TourRunner
     /// <summary>Ends the run immediately and shows the outcome report.</summary>
     public static void SkipToResults()
     {
-        // TODO (Akshat): stop the sequencer, tear down the panel, restore Camera.rect,
-        // then load OutcomeSceneName. Contract section 5: the sequencer loads the scene,
-        // Sharan's controller just reads OrderContext in Start().
-        //
-        // BackToMenuButton.cs already has teardown logic for the sequencer and its fade
-        // canvas - read it before writing new cleanup, and do not spawn a second sequencer.
-        Debug.LogWarning("TourRunner.SkipToResults is not implemented yet.");
+        // The stage may be paused by Explore mode; never load frozen and silent.
+        Time.timeScale = 1f;
+        AudioListener.pause = false;
+
+        OrderPanel.Teardown();
+        StopSequencer();
+
+        var cam = Camera.main;
+        if (cam != null) cam.rect = new Rect(0f, 0f, 1f, 1f);
+
+        // DELIBERATELY NO OrderContext.Clear() HERE. Contract section 5:
+        // OutcomeReportController.Start() reads Active and Model. Clearing on the
+        // way in would render an empty report, and it would look like Sharan's bug
+        // rather than this line. Clear happens in ReturnToMenu.
+
+        // Sharan's scene does not exist yet. Loading a scene that is not in Build
+        // Settings throws and leaves the player on a dead stage with no sequencer,
+        // so fail loudly and stay put instead.
+        if (!Application.CanStreamedLevelBeLoaded(OutcomeSceneName))
+        {
+            Debug.LogWarning($"[TourRunner] Scene '{OutcomeSceneName}' is not in Build Settings yet " +
+                             "(Sharan is building it). The run has stopped and the viewport is " +
+                             "restored, but there is nothing to show. Returning to the menu instead.");
+            ReturnToMenu();
+            return;
+        }
+
+        SceneManager.LoadScene(OutcomeSceneName);
+    }
+
+    /// <summary>Stops and destroys the chained tour, with its fade canvas.
+    ///
+    /// Left alive, TourSceneSequencer keeps loading the next stage on top of
+    /// whatever replaced it. This mirrors BackToMenuButton.GoToMainMenu, which
+    /// solved the same problem first - if that logic changes, change both.</summary>
+    static void StopSequencer()
+    {
+        var seq = Object.FindAnyObjectByType<TourSceneSequencer>();
+        if (seq == null) return;
+
+        seq.StopAllCoroutines();
+
+        if (seq.fadeCanvas != null)
+        {
+            var fadeRoot = seq.fadeCanvas.transform.root.gameObject;
+            if (fadeRoot != seq.transform.root.gameObject) Object.Destroy(fadeRoot);
+        }
+
+        Object.Destroy(seq.transform.root.gameObject);
     }
 
     /// <summary>Jumps to a stage and continues the chain from there.
@@ -99,12 +133,20 @@ public static class TourRunner
         Time.timeScale = 1f;
         AudioListener.pause = false;
 
-        // TODO (Akshat): also restore Camera.rect to (0,0,1,1) and destroy the panel.
-        // Skipping the rect reset is the first bug this system will have: the menu
+        // Restores the rect on the camera the panel actually split, then removes
+        // itself. Skipping this is the first bug this system would have: the menu
         // renders inside 72% of the window with a black band down the side.
+        OrderPanel.Teardown();
+        StopSequencer();
+
+        // Belt and braces - Camera.main here may not be the camera the panel held.
         var cam = Camera.main;
         if (cam != null) cam.rect = new Rect(0f, 0f, 1f, 1f);
 
+        // Clear() records the last-run summary for the home page BEFORE discarding
+        // the order, so this must happen on the way to the MENU and nowhere else.
+        // Notably NOT in SkipToResults: the outcome report reads Active and Model
+        // in Start(), and clearing first renders it empty.
         OrderContext.Clear();
         SceneManager.LoadScene(MenuSceneName);
     }
