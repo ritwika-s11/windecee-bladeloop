@@ -329,7 +329,22 @@ starting** — the blade-mass figure is still coming from the CEE team.
       early while `cues.Count == 0` and so never drives alpha, which would otherwise leave an empty
       bar on screen. It self-corrects the moment a cue file is assigned. `Stage2_UICanvas` match
       normalised 0 → 0.5.)*
-- [ ] Stage 2 granules visibly differ at 2 / 8 / 16 mm
+- [x] Stage 2 granules visibly differ at 2 / 8 / 16 mm
+      *(Task 2 done — `ShredOutputSizer.cs`. Real granule meshes ride the output conveyor, sized
+      and counted from the order: 130 chips at 6 cm for 2 mm, 30 at 8 mm, 20 chips at 11 cm for
+      16 mm. The heap alone could never work — it is 6–11 cm of material on a plant-scale set, so
+      from any story camera it is a smudge; the belt can be filmed from 1.5 m, which is the only
+      distance where the sizes are distinguishable. Heap kept as the secondary beat.*
+      *Two deviations, both deliberate: (1) not `particleSizeMm / 2` — that is 8× linear at 16 mm,
+      512× the volume per piece, and buries the conveyor; the authored pile is treated as the 8 mm
+      midpoint with count moving against size, so volume grows ~1.4×. (2) the pile is built even
+      with no order, because all 20 authored granules float 3–35 cm above the apron and were never
+      ground-seated (their renderers had been disabled since the scene was built); "change nothing"
+      taken literally would show hovering cubes in free play.*
+      *Three pre-existing bugs fixed on the way: all 20 `S2_OutputPile_*` renderers were disabled;
+      `S2_04_OutputGranules` pointed at empty sky for its full 17 s; and the crane blade was 3.20 m
+      against a 2.22 m hopper mouth, released at y 5.00 when the funnel bottom is 5.53 — blade now
+      2.00 m, landing at y 6.20.)*
 - [ ] Stage 3 kiln visibly differs at 550 / 580 / 600 °C; rotation follows retention
 - [ ] Stage 4 fibre and char streams visibly reflect the output split
 - [ ] Stage 4 has clickable parts; Stage 3's are reachable while paused
