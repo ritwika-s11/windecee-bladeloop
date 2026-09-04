@@ -61,7 +61,10 @@ public class OrderPanel : MonoBehaviour
     Camera splitCam;
     CinemachineBrain brain;
     RectTransform root;      // the panel background, built once
-    RectTransform content;   // everything inside it, rebuilt per stage
+    RectTransform content;    // everything inside it, rebuilt per stage
+    RectTransform viewport;   // masked window the content scrolls behind
+    RectTransform hintBox;    // pinned to the panel foot, outside the scroll
+    ScrollRect    scroll;
 
     // ------------------------------------------------------------- lifecycle --
 
@@ -267,6 +270,37 @@ public class OrderPanel : MonoBehaviour
         var edgeImg = edge.gameObject.AddComponent<Image>();
         edgeImg.color = BladeLoopTheme.Rule;
         edgeImg.raycastTarget = false;
+
+        // ---- scrolling -----------------------------------------------------
+        // The Separation card is the tallest and had about 120 px of headroom on a
+        // 1080 canvas before the design-case references were added. Rather than
+        // ration what the panel is allowed to say, the panel scrolls: content that
+        // fits behaves exactly as it always did, and content that does not is
+        // reachable instead of silently cut off at the bottom of the window.
+        viewport = MakeRect(root, "Viewport");
+        viewport.anchorMin = Vector2.zero;
+        viewport.anchorMax = Vector2.one;
+        viewport.offsetMin = Vector2.zero;
+        viewport.offsetMax = Vector2.zero;
+
+        // A transparent graphic, but a RAYCAST TARGET: without one the mouse wheel
+        // has nothing to hit over the panel and the ScrollRect never receives it.
+        // The panel background deliberately stays non-raycasting, so clicks meant
+        // for Explore mode over the 3D view are still untouched - this only covers
+        // the panel's own 28%, where there is nothing to explore anyway.
+        var vpImg = viewport.gameObject.AddComponent<Image>();
+        vpImg.color = new Color(0f, 0f, 0f, 0f);
+        vpImg.raycastTarget = true;
+
+        viewport.gameObject.AddComponent<RectMask2D>();
+
+        scroll = root.gameObject.AddComponent<ScrollRect>();
+        scroll.viewport      = viewport;
+        scroll.horizontal    = false;
+        scroll.vertical      = true;
+        scroll.movementType  = ScrollRect.MovementType.Clamped;   // no rubber-banding
+        scroll.inertia       = false;                             // a ledger, not a feed
+        scroll.scrollSensitivity = 34f;
     }
 
     /// <summary>What the panel says during one stage.</summary>
@@ -359,6 +393,11 @@ public class OrderPanel : MonoBehaviour
                 // The wind farm decides quantity, not quality, so it shows the
                 // campaign figures and no settings at all.
                 c.title = "WIND FARM";  c.chapter = "STAGE 1 OF 4";
+                // Explore works here too, and the wind farm is where a viewer is
+                // most likely to want a closer look. Without this the panel stayed
+                // silent and the in-scene chip was left to say it instead, which is
+                // the one place the two hints could both appear at once.
+                c.showExplore = true;
                 c.blockHdr  = "THIS ORDER NEEDS";
                 c.blockBody = $"{OrderContext.FeedTonnesNeeded:N0} t of blade material\n" +
                               $"{OrderContext.BladesNeeded:N0} blades   ·   {OrderContext.TurbinesNeeded:N0} turbines\n\n" +
@@ -387,11 +426,22 @@ public class OrderPanel : MonoBehaviour
             Destroy(content.gameObject);
         }
 
-        content = MakeRect(root, "Content");
-        content.anchorMin = Vector2.zero;
-        content.anchorMax = Vector2.one;
-        content.offsetMin = Vector2.zero;
-        content.offsetMax = Vector2.zero;
+        // Top-anchored with a top pivot, which is what a ScrollRect needs and also
+        // what the layout below already assumes - every row is placed by a negative
+        // y measured down from the top, so nothing else has to change.
+        content = MakeRect(viewport, "Content");
+        content.anchorMin = new Vector2(0f, 1f);
+        content.anchorMax = new Vector2(1f, 1f);
+        content.pivot     = new Vector2(0.5f, 1f);
+        content.offsetMin = new Vector2(0f, content.offsetMin.y);
+        content.offsetMax = new Vector2(0f, content.offsetMax.y);
+        content.anchoredPosition = Vector2.zero;
+        content.sizeDelta = new Vector2(0f, 0f);
+
+        if (scroll != null) scroll.content = content;
+
+        // Built before the rows, because it decides how tall the scrolling area is.
+        BuildExploreHint(card.showExplore);
 
         float y = 34f;
 
@@ -436,6 +486,23 @@ public class OrderPanel : MonoBehaviour
         bool anySetting = false;
         for (int i = 0; i < card.shown.Length; i++) anySetting |= card.shown[i];
 
+        // What the design case would have used, for the reference line under each row.
+        var refM = OrderContext.Reference;
+        string[] refValues =
+        {
+            "design " + refM.TempC.ToString("0") + " °C",
+            "design " + refM.RetentionMin.ToString("0") + " min",
+            "design " + refM.FeedKgH.ToString("N0") + " kg/h",
+            "design " + refM.ParticleSizeMm.ToString("0.#") + " mm"
+        };
+        string[] deltas =
+        {
+            SignedDelta(m.TempC          - refM.TempC,          "0",  "°C"),
+            SignedDelta(m.RetentionMin   - refM.RetentionMin,   "0",  "min"),
+            SignedDelta(m.FeedKgH        - refM.FeedKgH,        "N0", "kg/h"),
+            SignedDelta(m.ParticleSizeMm - refM.ParticleSizeMm, "0.#","mm")
+        };
+
         if (anySetting)
         {
             SectionHeader("SETTINGS", ref y);
@@ -455,7 +522,28 @@ public class OrderPanel : MonoBehaviour
                              BladeLoopTheme.MonoBold, ref y, advance: false);
                 v.alignment = TextAlignmentOptions.TopRight;
 
-                y += 21f * LineFactor + 6f;
+                y += 21f * LineFactor + 1f;
+
+                // ---- the reference line ------------------------------------
+                // A bare "550 °C" tells the user nothing: they have no idea what
+                // this plant is supposed to run at, and they will never see the
+                // other two orders to work it out. Naming the design value turns
+                // every setting from a fact into a decision the operator made.
+                //
+                // Explicit height rather than the shared LineFactor leading: this is
+                // an annotation hanging off the value above, not a line of its own,
+                // and four rows of 55% leading is 40 px the Separation card does not
+                // have. Tight spacing also groups it visually with its value.
+                const float RefH = 15f;
+
+                Text(labels[i] + "Ref", refValues[i], 13.5f, BladeLoopTheme.Faint,
+                     BladeLoopTheme.Mono, ref y, advance: false, height: RefH);
+
+                var d = Text(labels[i] + "Delta", deltas[i], 13.5f, BladeLoopTheme.Muted,
+                             BladeLoopTheme.Mono, ref y, advance: false, height: RefH);
+                d.alignment = TextAlignmentOptions.TopRight;
+
+                y += RefH + 5f;
             }
         }
 
@@ -466,12 +554,19 @@ public class OrderPanel : MonoBehaviour
         {
             y += 10f;
             y = Divider(y) + 24f;
-            SectionHeader(card.blockHdr, ref y);
+            SectionHeader(card.blockHdr, ref y, "|  design case");
 
             string[] streams = { "Fibre", "Oil", "Syngas", "Char", "Loss" };
             var cols = BladeLoopTheme.StreamColours;
             var sp = m.OutputSplit();
             float[] pcts = { sp.GlassPct, sp.OilPct, sp.SyngasPct, sp.CharPct, sp.LossPct };
+
+            // The same five numbers for the design case. These become a tick on each
+            // bar rather than another column of text: a fill that visibly overshoots
+            // or falls short of a target mark is the one comparison that needs no
+            // reading at all, and it is the idiom every real gauge already uses.
+            var rsp = OrderContext.ReferenceSplit;
+            float[] refPcts = { rsp.GlassPct, rsp.OilPct, rsp.SyngasPct, rsp.CharPct, rsp.LossPct };
 
             for (int i = 0; i < streams.Length; i++)
             {
@@ -505,6 +600,21 @@ public class OrderPanel : MonoBehaviour
                 fillImg.color = cols[i];
                 fillImg.raycastTarget = false;
 
+                // Design-case target tick. Created AFTER the fill so it draws on top
+                // of it, and made taller than the track so it still reads where the
+                // fill has already run past it. Same /72f divisor as the fill, or the
+                // mark would sit at a position the bar could never reach.
+                float tx = Mathf.Clamp01(refPcts[i] / 72f);
+                var mark = MakeRect(track, streams[i] + "Target");
+                mark.anchorMin = new Vector2(tx, 0f);
+                mark.anchorMax = new Vector2(tx, 1f);
+                mark.offsetMin = new Vector2(-1f, -3f);
+                mark.offsetMax = new Vector2( 1f,  3f);
+
+                var markImg = mark.gameObject.AddComponent<Image>();
+                markImg.color = BladeLoopTheme.Bone;
+                markImg.raycastTarget = false;
+
                 var pct = Text(streams[i] + "Pct", pcts[i].ToString("0.0") + "%", 18f,
                                BladeLoopTheme.Bone, BladeLoopTheme.Mono, ref y, advance: false);
                 pct.alignment = TextAlignmentOptions.TopRight;
@@ -512,14 +622,25 @@ public class OrderPanel : MonoBehaviour
                 y += 18f * LineFactor + 8f;
             }
 
+            // The tick is named in the section header above, on its own line, so it
+            // costs nothing here. An unexplained mark would just be noise.
+
             // Quality sits with the bars: it describes the same product they do.
             y += 4f;
             Text("QualityLbl", "Purity", 17f, BladeLoopTheme.Muted,
                  BladeLoopTheme.Sans, ref y, advance: false);
+            // Purity is the number the grade tiers are actually drawn on, so it is the
+            // one that most needs an anchor: 82.5% sounds poor until you can see that
+            // best-in-class recovery is 93%, not 100%. The reference rides the same
+            // line via rich text rather than taking one of its own - the Separation
+            // card cannot afford the extra row. <alpha> works even though this label
+            // is a single TMP object, which a second colour parameter would not.
             var q = Text("QualityVal",
-                         $"{m.FiberPurityPct:0.0}%   ·   tensile {m.TensileRetentionPct:0.0}%",
+                         $"{m.FiberPurityPct:0.0}%<alpha=#77> / {refM.FiberPurityPct:0.0}<alpha=#FF>" +
+                         $"   ·   tensile {m.TensileRetentionPct:0.0}%<alpha=#77> / {refM.TensileRetentionPct:0.0}<alpha=#FF>",
                          17f, BladeLoopTheme.Bone, BladeLoopTheme.MonoBold,
                          ref y, advance: false);
+            q.richText = true;
             q.alignment = TextAlignmentOptions.TopRight;
             y += 17f * LineFactor + 14f;
         }
@@ -537,24 +658,64 @@ public class OrderPanel : MonoBehaviour
                         height: 240f);
         body.lineSpacing = 8f;
 
-        // ---- how to look around ----------------------------------------------
-        // Anchored to the foot of the panel rather than flowing after the block:
-        // it is a persistent control hint, not part of the stage's argument, and
-        // it should sit in the same place every stage so the eye can ignore it.
-        if (card.showExplore) BuildExploreHint();
+        // The block body is placed with advance:false and a fixed 240 px rect, so it
+        // does NOT move the cursor. Nothing needed that before, because the only
+        // thing after it was pinned to the panel foot. The scroll height does need
+        // it, or the content stops short and the body cannot be scrolled to.
+        y += MeasuredHeight(body) + 18f;
+
+        // ---- size the scroll content -----------------------------------------
+        // The measured stack, not the window. Shorter than the viewport and the
+        // ScrollRect simply has nothing to scroll, so every card that already fit
+        // behaves exactly as it did before.
+        if (content != null)
+            content.sizeDelta = new Vector2(0f, y + 30f);
     }
 
-    /// <summary>The pause-and-look-around hint, pinned to the bottom of the panel.</summary>
-    void BuildExploreHint()
+    /// <summary>The pause-and-look-around hint, pinned to the foot of the panel.
+    ///
+    /// Deliberately a sibling of the viewport, NOT part of the scrolling content.
+    /// It is a persistent control hint, not part of any stage's argument: it should
+    /// sit in the same place on every stage, stay put while the statistics scroll
+    /// past it, and never be something the reader has to scroll down to discover.
+    /// The viewport's bottom is inset by exactly its height, so content scrolls to
+    /// the hint and stops rather than sliding underneath it.</summary>
+    void BuildExploreHint(bool show)
     {
-        var box = MakeRect(content, "ExploreHint");
+        const float HintH   = 128f;
+        const float HintPad = 24f;
+
+        // Rebuilt per stage because the copy varies, so clear the previous one.
+        if (hintBox != null)
+        {
+            hintBox.gameObject.SetActive(false);
+            Destroy(hintBox.gameObject);
+            hintBox = null;
+        }
+
+        // Give the scrolling area its bottom back when there is no hint.
+        if (viewport != null)
+            viewport.offsetMin = new Vector2(0f, show ? HintH + HintPad : 0f);
+
+        if (!show) return;
+
+        // The message now lives here and nowhere else. The in-scene chip says the
+        // same thing in the opposite corner, and two instructions for one action is
+        // worse than one - so while the panel is up, the chip stands down. Found
+        // live rather than wired, because the stage scenes cannot be edited; and
+        // only reached when a panel exists, so free play keeps its chip untouched.
+        var chip = Object.FindFirstObjectByType<ExploreHintChip>(FindObjectsInactive.Include);
+        if (chip != null && chip.gameObject.activeSelf) chip.gameObject.SetActive(false);
+
+        var box = MakeRect(root, "ExploreHint");
+        hintBox = box;
         box.anchorMin = new Vector2(0f, 0f);
         box.anchorMax = new Vector2(1f, 0f);
         box.pivot     = new Vector2(0.5f, 0f);
         box.offsetMin = new Vector2(Pad, 0f);
         box.offsetMax = new Vector2(-Pad, 0f);
-        box.anchoredPosition = new Vector2(box.anchoredPosition.x, 30f);
-        box.sizeDelta = new Vector2(box.sizeDelta.x, 128f);
+        box.anchoredPosition = new Vector2(box.anchoredPosition.x, HintPad);
+        box.sizeDelta = new Vector2(box.sizeDelta.x, HintH);
 
         var rule = MakeRect(box, "HintRule");
         rule.anchorMin = new Vector2(0f, 1f);
@@ -645,12 +806,42 @@ public class OrderPanel : MonoBehaviour
 
     // ---- small builders ------------------------------------------------------
 
-    void SectionHeader(string label, ref float y)
+    /// <summary>A section heading, optionally with a small right-aligned note.
+    ///
+    /// The note rides the SAME line as the heading rather than taking one of its own.
+    /// The Separation card is the tallest in the panel and was already within about
+    /// 120 px of the bottom of a 1080-tall canvas before any of this was added, so a
+    /// spare line here costs more than it looks - it pushes the explore hint box off
+    /// the screen on exactly the stage the run has been building towards.</summary>
+    void SectionHeader(string label, ref float y, string note = null)
     {
         var t = Text(label.Replace(" ", "  "), label, 15f, BladeLoopTheme.Muted,
                      BladeLoopTheme.SansBold, ref y, advance: false);
         t.characterSpacing = 6f;
+
+        if (!string.IsNullOrEmpty(note))
+        {
+            var n = Text(label + "Note", note, 13f, BladeLoopTheme.Faint,
+                         BladeLoopTheme.Mono, ref y, advance: false);
+            n.alignment = TextAlignmentOptions.TopRight;
+        }
+
         y += 15f * LineFactor + 12f;
+    }
+
+    /// <summary>How far a setting sits from the design case, as a signed figure.
+    ///
+    /// Returns "on spec" rather than "+0" at the design case itself, which is not
+    /// cosmetic: the high-grade preset IS the design case exactly, so without this
+    /// that run would show four rows of "+0" and read like a bug. "on spec" says
+    /// the true thing - this order asked for the optimum and got it.
+    ///
+    /// Plain ASCII +/- deliberately. The TMP atlases are static, so a typographic
+    /// minus would render as a missing-glyph box on some builds.</summary>
+    static string SignedDelta(float diff, string fmt, string unit)
+    {
+        if (Mathf.Abs(diff) < 0.0005f) return "on spec";
+        return (diff > 0f ? "+" : "-") + Mathf.Abs(diff).ToString(fmt) + " " + unit;
     }
 
     /// <summary>Adds a line of text at the cursor. When advance is true the cursor

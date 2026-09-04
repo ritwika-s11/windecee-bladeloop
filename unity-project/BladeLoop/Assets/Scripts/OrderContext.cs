@@ -98,6 +98,60 @@ public static class OrderContext
         ParticleSizeMm = ProcessModel.OptParticle
     };
 
+    // ------------------------------------------------- the reference to show --
+    //
+    // A user runs ONE order. They never see the other two, so "this run looks
+    // different" is a claim they have no way to check - you cannot perceive a
+    // difference you are only ever shown one half of. Every number in the panel
+    // was unanchored for exactly this reason: 46.5% fibre means nothing on its
+    // own, and the plant behind it looked the same either way.
+    //
+    // So the design case travels with the run as a permanent reference. It is
+    // deliberately the same object everywhere - panel marks, and any later in-scene
+    // A/B - so the thing the user is comparing against can never drift between
+    // two places that both claim to be "the design case".
+    //
+    // Read-only by contract. Nothing may mutate Reference or ReferenceSplit; they
+    // are shared, static and long-lived, and a single stray write would silently
+    // move the baseline for the whole app.
+    static ProcessModel _reference;
+    static ProcessModel.Split _referenceSplit;
+    static bool _referenceReady;
+
+    /// <summary>The design case, cached. Do not mutate.</summary>
+    public static ProcessModel Reference
+    {
+        get { EnsureReference(); return _reference; }
+    }
+
+    /// <summary>The design case's output split, cached. Do not mutate.</summary>
+    public static ProcessModel.Split ReferenceSplit
+    {
+        get { EnsureReference(); return _referenceSplit; }
+    }
+
+    static void EnsureReference()
+    {
+        // Static state survives scene loads but resets on domain reload, so this
+        // rebuilds itself rather than relying on a field initialiser order.
+        if (_referenceReady && _reference != null) return;
+        _reference = DesignCase();
+        _referenceSplit = _reference.OutputSplit();
+        _referenceReady = true;
+    }
+
+    /// <summary>True when the active run IS the design case, so the panel says
+    /// "on spec" instead of printing a delta of zero against itself.</summary>
+    public static bool RunIsReference()
+    {
+        var m = Model;
+        if (m == null) return false;
+        return Mathf.Approximately(m.TempC,          ProcessModel.OptTemp)
+            && Mathf.Approximately(m.RetentionMin,   ProcessModel.OptRetention)
+            && Mathf.Approximately(m.FeedKgH,        ProcessModel.OptFeed)
+            && Mathf.Approximately(m.ParticleSizeMm, ProcessModel.OptParticle);
+    }
+
     // ----------------------------------------------------------- grade tiers --
 
     // Calibrated to published pyrolysis results, NOT taken from a standard - no
