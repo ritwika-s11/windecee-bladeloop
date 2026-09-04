@@ -40,11 +40,51 @@ public class ShredOutputSizer : MonoBehaviour
     public int referenceCount = 30;
     [Tooltip("How strongly piece SIZE follows particle size. Higher = more dramatic.")]
     public float sizeResponse = 0.368f;
-    [Tooltip("How strongly piece COUNT moves against size. Higher = emptier coarse pile.")]
+    [Tooltip("LEGACY - only used when coverageDrivesCount is off. See the Coverage section " +
+             "below for why this was replaced.")]
     public float countResponse = 0.943f;
     [Range(0f, 0.6f)]
     [Tooltip("Random size variation per piece, so it reads as shredded material.")]
     public float sizeJitter = 0.25f;
+
+    // ── Coverage ────────────────────────────────────────────────────────────────
+    //
+    // This is the fix for "2 mm and 16 mm look the same", and it is worth stating the
+    // diagnosis because the old behaviour looked correct on paper.
+    //
+    // Size and count were both responding to particle size, in OPPOSITE directions:
+    // pieces got 2.15x bigger from 2 mm to 16 mm while the count fell from 111 to 16.
+    // Covered area is count x size^2, so the two cancelled almost exactly:
+    //
+    //     2 mm  111 x 0.60^2 = 40.0        (relative covered area)
+    //     8 mm   30 x 1.00^2 = 30.0
+    //    16 mm   16 x 1.29^2 = 26.7
+    //
+    // A 1.5x spread in coverage, which at plant camera distance is nothing. Every run
+    // showed a similarly-full belt and a similarly-full heap; only the granularity of
+    // the material changed, and granularity is exactly the thing you cannot resolve
+    // from thirty metres away. So the setting genuinely was driving the scene, and the
+    // scene genuinely did look the same.
+    //
+    // Piece SIZE cannot be pushed much harder to compensate - Anirban capped it at
+    // 0.368 for a good reason, since a literal 8x linear at 16 mm is 512x the volume
+    // per piece and the pile swallows the conveyor.
+    //
+    // So coverage becomes the CONTROLLED variable instead of an accident of the other
+    // two. Count is now solved for a target coverage, which means it automatically
+    // compensates for whatever size does. Fine shred packs the belt into a continuous
+    // bed; coarse shred arrives as separated lumps with bare belt showing between them.
+    // Bare belt between the lumps is the cue - it is a large, high-contrast, whole-frame
+    // difference that survives any camera distance, which piece size never will.
+    [Header("Coverage - the cue that actually reads")]
+    [Tooltip("Turn off to fall back to the old countResponse curve.")]
+    public bool coverageDrivesCount = true;
+    [Tooltip("Fraction of the footprint covered at 2 mm. Near-total: fine shred is a " +
+             "continuous bed of material with no gaps.")]
+    [Range(0.2f, 1f)] public float coverFine = 0.92f;
+    [Tooltip("Fraction covered at 16 mm. Deliberately low - the bare belt and bare apron " +
+             "showing THROUGH the material is the thing the viewer actually notices.")]
+    [Range(0.05f, 1f)] public float coverCoarse = 0.34f;
 
     [Header("Heap shape")]
     [Tooltip("Fraction of the authored footprint the heap occupies. The authored 20 are " +
@@ -97,6 +137,16 @@ public class ShredOutputSizer : MonoBehaviour
     public float beltHalfWidth = 0.30f;
     [Tooltip("Metres per second up the belt.")]
     public float beltSpeed = 1.15f;
+    [Tooltip("Chips on the belt at the reference size. Count at other sizes is solved " +
+             "from the coverage target, exactly as the heap is.")]
+    public int beltReferenceCount = 37;
+    [Tooltip("How much each chip wanders from its even spacing along the belt. Chips are " +
+             "spaced evenly and then jittered, rather than dropped at random: with only a " +
+             "dozen lumps on the belt, pure random placement clumps some together and " +
+             "leaves one big empty stretch, which reads as a half-loaded belt instead of " +
+             "coarse material. Even-plus-jitter reads as separated lumps, which is the " +
+             "cue. 0 = a rigid grid, 1 = effectively random again.")]
+    [Range(0f, 1f)] public float beltGapJitter = 0.7f;
 
     const string BeltHolderName = "S2_BeltLoad_Generated";
     Transform beltHolder;
@@ -168,11 +218,34 @@ public class ShredOutputSizer : MonoBehaviour
         return Mathf.Pow(2f, t * sizeResponse);
     }
 
-    /// <summary>How many pieces to show at this size.</summary>
+    /// <summary>Target fraction of the footprint the material covers at this size.
+    /// Fine shred is a continuous bed; coarse shred leaves the surface showing through.</summary>
+    public float CoverageFor(float mm)
+    {
+        return Mathf.Lerp(coverFine, coverCoarse, Mathf.InverseLerp(2f, 16f, mm));
+    }
+
+    /// <summary>How many pieces to show at this size.
+    ///
+    /// Solved from the target coverage rather than set directly, so it cancels out
+    /// whatever SizeFor does: one piece covers area proportional to scale^2, so hitting
+    /// a coverage target needs count proportional to coverage / scale^2. Normalised at
+    /// referenceMm so 8 mm still produces exactly referenceCount pieces and the authored
+    /// mid-grade look is untouched - the change pivots around the middle preset rather
+    /// than shifting all three.</summary>
     public int CountFor(float mm)
     {
-        float t = Mathf.Log(Mathf.Max(mm, 0.1f) / referenceMm, 2f);
-        return Mathf.Clamp(Mathf.RoundToInt(referenceCount * Mathf.Pow(2f, -t * countResponse)), 8, 140);
+        if (!coverageDrivesCount)
+        {
+            // legacy path, kept so the old look is one toggle away
+            float tLegacy = Mathf.Log(Mathf.Max(mm, 0.1f) / referenceMm, 2f);
+            return Mathf.Clamp(Mathf.RoundToInt(referenceCount * Mathf.Pow(2f, -tLegacy * countResponse)), 8, 140);
+        }
+
+        float s = Mathf.Max(SizeFor(mm), 0.01f);
+        float refCover = Mathf.Max(CoverageFor(referenceMm), 0.001f);
+        float n = referenceCount * (CoverageFor(mm) / refCover) / (s * s);
+        return Mathf.Clamp(Mathf.RoundToInt(n), 8, 260);
     }
 
     /// <summary>Rebuild the pile for a given particle size. Safe to call repeatedly.</summary>
@@ -297,8 +370,15 @@ public class ShredOutputSizer : MonoBehaviour
         for (int i = beltHolder.childCount - 1; i >= 0; i--) DestroyImmediate(beltHolder.GetChild(i).gameObject);
 
         // Fine shred covers the belt; coarse arrives as separated lumps with gaps between.
-        // ~130 chips at 2 mm (a covered belt), ~37 at 8 mm, ~20 at 16 mm (separated lumps).
-        int n = Mathf.Clamp(Mathf.RoundToInt(130f * Mathf.Pow(2f / Mathf.Max(mm, 0.1f), 0.90f)), 14, 150);
+        // Solved from the coverage target for the same reason the heap is: the old fixed
+        // curve moved count and size in opposite directions, so the belt ended up looking
+        // equally full at every setting. Roughly 141 chips at 2 mm (a continuous bed),
+        // 37 at 8 mm, 11 at 16 mm (clearly separated lumps with belt showing between).
+        float refCoverB = Mathf.Max(CoverageFor(referenceMm), 0.001f);
+        float sB = Mathf.Max(scaleMul, 0.01f);
+        int n = coverageDrivesCount
+            ? Mathf.Clamp(Mathf.RoundToInt(beltReferenceCount * (CoverageFor(mm) / refCoverB) / (sB * sB)), 8, 320)
+            : Mathf.Clamp(Mathf.RoundToInt(130f * Mathf.Pow(2f / Mathf.Max(mm, 0.1f), 0.90f)), 14, 150);
 
         for (int i = 0; i < n; i++)
         {
@@ -320,7 +400,13 @@ public class ShredOutputSizer : MonoBehaviour
             Recolour(rend, rng);
 
             beltPieces.Add(go.transform);
-            beltU.Add(Mathf.Lerp(-beltHalfLength, beltHalfLength, (float)rng.NextDouble()));
+
+            // One chip per stratum, jittered inside it, instead of a uniform random draw
+            // along the whole belt. At 141 chips the difference is invisible; at 11 it is
+            // the whole effect, because random placement of 11 items over ten metres
+            // reliably produces a clump and a long empty stretch.
+            float slot = (i + 0.5f + ((float)rng.NextDouble() - 0.5f) * beltGapJitter) / Mathf.Max(n, 1);
+            beltU.Add(Mathf.Lerp(-beltHalfLength, beltHalfLength, Mathf.Clamp01(slot)));
             beltW.Add(Mathf.Lerp(-beltHalfWidth, beltHalfWidth, (float)rng.NextDouble()));
             beltLift.Add(rend != null ? rend.bounds.extents.y : 0.05f);
         }

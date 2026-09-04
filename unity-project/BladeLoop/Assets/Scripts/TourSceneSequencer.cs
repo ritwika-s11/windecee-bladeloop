@@ -25,13 +25,51 @@ public class TourSceneSequencer : MonoBehaviour
     [Tooltip("Extra hold on the last frame of each stage before cutting.")]
     public float endHold = 1.0f;
 
+    // ---------------------------------------------------------------- steering --
+    //
+    // The chain is one coroutine, so "skip" and "jump" are just requests it checks
+    // while it is waiting out the current stage. Nothing here changes how an
+    // uninterrupted run plays: with no request pending, every wait condition and
+    // every hold is exactly what it was.
+
+    /// <summary>The running sequencer, if a tour is in progress.</summary>
+    public static TourSceneSequencer Active { get; private set; }
+
+    /// <summary>Index into sceneSequence of the stage on screen right now.</summary>
+    public int CurrentIndex { get; private set; } = -1;
+
+    bool skipRequested;
+    int  pendingJump = -1;
+
+    /// <summary>Cut to the next stage without waiting out this one.</summary>
+    public void SkipCurrentStage() { skipRequested = true; }
+
+    /// <summary>Cut straight to a stage by its index in sceneSequence.</summary>
+    public void JumpToStage(int index)
+    {
+        if (sceneSequence == null || sceneSequence.Length == 0) return;
+        pendingJump   = Mathf.Clamp(index, 0, sceneSequence.Length - 1);
+        skipRequested = true;   // stop waiting out the current stage as well
+    }
+
+    void OnEnable()  { Active = this; }
+    void OnDisable() { if (Active == this) Active = null; }
+
     IEnumerator Start()
     {
         DontDestroyOnLoad(gameObject);
         if (fadeCanvas != null) DontDestroyOnLoad(fadeCanvas.transform.root.gameObject);
 
-        for (int i = 0; i < sceneSequence.Length; i++)
+        int i = 0;
+        while (i < sceneSequence.Length)
         {
+            CurrentIndex = i;
+
+            // Cleared before the stage plays, so a request made DURING this stage
+            // survives to the end of it. Clearing any later would swallow it.
+            skipRequested = false;
+            pendingJump   = -1;
+
             yield return StartCoroutine(Fade(0f, 1f));
             yield return SceneManager.LoadSceneAsync(sceneSequence[i], LoadSceneMode.Single);
             yield return null; // let Awake/Start run
@@ -42,15 +80,28 @@ public class TourSceneSequencer : MonoBehaviour
             {
                 double dur = director.duration;
                 // wait for the story to reach its end (pausing the story pauses the chain too)
-                while (director != null && director.time < dur - 0.1)
+                while (director != null && director.time < dur - 0.1 && !skipRequested)
                     yield return null;
             }
             else
             {
+                // Hand-rolled rather than WaitForSeconds so it can be interrupted.
+                // Time.deltaTime is scaled, exactly as WaitForSeconds was, so the
+                // 8x fast-tour toggle still shortens this the same way.
                 float dur = (i < sceneDurations.Length) ? sceneDurations[i] : 30f;
-                yield return new WaitForSeconds(dur);
+                float t = 0f;
+                while (t < dur && !skipRequested)
+                {
+                    t += Time.deltaTime;
+                    yield return null;
+                }
             }
-            yield return new WaitForSeconds(endHold);
+
+            // No lingering on a frame the user has just asked to leave.
+            if (!skipRequested) yield return new WaitForSeconds(endHold);
+
+            if (pendingJump >= 0) { i = pendingJump; pendingJump = -1; }
+            else                  { i++; }
         }
 
         yield return StartCoroutine(Fade(0f, 1f));
