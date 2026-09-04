@@ -232,6 +232,13 @@ TourRunner.StartRun();
 
 ## 5. Ending a run — owner: Akshat *(answers S5)*
 
+> ⏸ **`OutcomeReport` is deferred to 12–24 September**, after the sprint review. What a run should
+> *mean* is a product question, and a statistics screen built before that question is answered gets
+> built twice. `TourRunner.SkipToResults()` already handles the scene being absent: it stops the
+> run, restores the viewport, logs a warning and returns to the menu. Nothing is broken by the wait.
+>
+> The contract below stands unchanged for when it is built.
+
 **Decided: the sequencer loads the scene; Sharan's scene only reads state.**
 
 `TourSceneSequencer` already ends the chain and loads `MainMenu`. It now loads
@@ -323,7 +330,14 @@ customer orders, not solver output.
 | When | Who | What |
 |---|---|---|
 | ✅ Mon 31 Aug | Ritwika | `OrderContext` + `OrderSolver` + self-test merged to `main`. |
-| ✅ Tue 1 Sep | Ritwika | Home page rebuilt; `TourRunner.cs` stub, `OrderContext.TourSplitWidth`, IBM Plex fonts. **The order cards call `TourRunner.StartRun()` — it has a live caller now.** |
+| ✅ Tue 1 Sep | Ritwika | Home page rebuilt; `TourRunner.cs` stub, `OrderContext.TourSplitWidth`, IBM Plex fonts. |
+| ✅ Wed 2 Sep | Akshat | `TourRunner` completed, `OrderPanel` + viewport split, `BladeLoopTheme`. |
+| ✅ Wed 2 Sep | Sharan | `OrderDashboard` — Custom Order screen, since handed to Akshat. |
+| **Thu 3 Sep →** | Anirban | 🔴 `StageParameterBinder` — the stage visuals. **The only unbuilt piece of the core argument.** |
+| Thu 3 Sep → | Ritwika | The tour: shot lock, narration, VO, subtitles. |
+| Thu 3 Sep → | Akshat | Custom Order polish, then chapter nav. |
+| Thu 3 Sep → | Sharan | How It Works screen. |
+| **12–24 Sep** | — | Outcome report, deliberately after the sprint review. |
 | Mon 31 Aug | Sharan | Pull. Build the screens against the real API — no waiting, no guessing. |
 | Mon 31 Aug | Anirban | Pull. Wire Task 1's split flag off the real `HasOrder`. |
 | Mon 31 Aug | Akshat | Start at **Task 3, the dual screen** — the new critical path. |

@@ -2,29 +2,45 @@
 
 **Read `docs/BLADELOOP-PRODUCT-VISION.md` first.** This file is the build detail for your tasks.
 
-> 🔴 **`docs/interface-contract.md` answers S1, S2, S3, S4 and S5.** It fixes the exact signatures
-> for `OrderContext`, `OrderSolver` and `TourRunner`, states who owns which number, gives the
-> canonical verification table, and defines the tour → Outcome Report handoff.
->
-> **You do not have to wait for Tuesday.** Build Task 3 and Task 4 against those signatures now.
-> The code won't compile until Akshat merges — that's expected. Get the layout and logic done, then
-> pull on Tuesday and fix up. That should take minutes, not a rebuild.
+Branch off current `main`: `feature/how-it-works-screen`
+Feature freeze **Wed 9 Sep** · sprint review **Fri 11 Sep**
 
-Branch off current `main`: `feature/order-dashboard`
-Start **today, Mon 31 Aug** · Custom Order screen **Fri 4 Sep** · feature freeze **Wed 9 Sep**
+> ## 🔄 Reassigned Wed 2 September — How It Works is your whole focus
+>
+> **Custom Order is done and handed to Akshat.** It merged clean and the two things that mattered
+> most were both right: the feed slider bounded by `OrderSolver.MaxFeed`, and infeasible targets
+> shown as a readable sentence. Thank you — and please don't touch
+> `OrderDashboardController.cs` or `OrderDashboard.unity` again, Akshat owns them now.
+>
+> **Your one job: build the How It Works screen.** You already wrote the content in PR 47
+> (`docs/how-it-works-content.md`) — this is turning it into `HowItWorks.unity` +
+> `HowItWorksController.cs`, same runtime-built pattern as your other screens.
+>
+> Build it in the **home page palette**, not Plant Explorer's light theme — bone `#EDE8DF`, oxide
+> `#C2603A`, warm charcoal `#12100D`, IBM Plex Sans/Mono. Better still, read the constants from
+> `BladeLoopTheme` rather than redefining them; the palette already exists in three files and
+> shouldn't become four.
+>
+> **Add the scene to Build Settings.** Ritwika will enable the HOW IT WORKS button on the home page
+> once it exists — it is currently non-interactive because loading a missing scene throws.
+>
+> **Outcome Report is deferred to 12–24 September**, after the sprint review. Not because it's hard,
+> but because what a run should *mean* is a product question, and building a statistics screen
+> before we know the answer means building it twice. Don't start it.
+>
+> This page is what protects us in the defence — the grade thresholds labelled as project
+> assumptions, the sources cited, "purity" defined in our own terms. It is worth doing carefully
+> rather than quickly.
 
 ---
 
 ## The goal
 
-**Build the screens where the user works with numbers instead of watching the plant.**
+**Build the page that explains what the app models and where its numbers come from.**
 
-The Plant Explorer you built is not going away — it is being **promoted**. Its sliders, tanks and
-quality metrics become the Custom Order screen, reached through the order flow instead of sitting
-as a separate tab. Same components, better place in the product.
-
-All three screens use the approach you already use: **UI built entirely in C# at runtime, no
-prefabs, no Scene view layout.**
+It is the page that protects us in the defence: it states which figures are sourced, which are our
+own assumptions, and what a word like "purity" actually means here. Same approach as your other
+screens — UI built entirely in C# at runtime, no prefabs, nothing laid out in the Scene view.
 
 ---
 
@@ -56,8 +72,7 @@ prefabs, no Scene view layout.**
 > separate free-play dashboard has no job left. Its components aren't wasted — the sliders, tanks
 > and quality metrics are exactly what Custom Order needs. It's being promoted, not deleted.
 >
-> **So build Custom Order and the Outcome Report in the home page's palette from the start**, not
-> Plant Explorer's blue-on-light. The homepage now uses bone `#EDE8DF`, oxide `#C2603A`, warm
+> **So build How It Works in the home page's palette**, not Plant Explorer's blue-on-light. The homepage now uses bone `#EDE8DF`, oxide `#C2603A`, warm
 > charcoal `#12100D`, with material-true output streams (fibre off-white `#E4DCCD`, oil amber
 > `#C99A3E`, syngas `#6B8F62`, char near-black `#2E2823`, loss grey `#5A524A`) and IBM Plex
 > Sans/Mono. Copy those constants from `MainMenuController` rather than inventing a third palette.
@@ -123,7 +138,10 @@ them on this page. Two facts worth naming, because they turn our tiers into real
 
 ---
 
-## Task 3 — Custom Order screen 🎯 main task
+## ~~Task 3 — Custom Order screen~~ ✅ DONE, AND HANDED TO AKSHAT
+
+*You built this and it merged clean on 2 Sep. Akshat owns it now — don't touch it again.
+Kept below because it documents what's in there and why.*
 
 > ✅ **Not blocked — `OrderContext.cs` and `OrderSolver.cs` are on `main` now.** Pull and build
 > against the real thing, not a guess. `OrderSolver.MaxFeed(particleMm)` is public; bind your feed
@@ -207,7 +225,11 @@ Computed from the current `ProcessModel` and correct. **Different numbers means 
 
 ---
 
-## Task 4 — Outcome Report screen
+## ⏸ Task 4 — Outcome Report screen — DEFERRED TO 12–24 SEP
+
+*Do not start this. It waits until after the sprint review: what a run should MEAN is a product
+question, and a statistics screen built before that is answered gets built twice. Spec kept below
+for when it resumes.*
 
 Shown when a tour finishes, or when the user hits *Skip to results*.
 `Assets/Scenes/OutcomeReport.unity` + `Assets/Scripts/OutcomeReportController.cs`.
@@ -232,13 +254,15 @@ It answers one question: **did we fill the order, and what did it cost in time a
 
 ---
 
-## Task 5 — How it works screen
+## Task 5 — How it works screen 🎯 THIS IS YOUR JOB NOW
 
 Turn your Task 2 markdown into `Assets/Scenes/HowItWorks.unity` +
 `Assets/Scripts/HowItWorksController.cs`. Plain, readable, scrollable, same palette. One
 `[ ← Menu ]` button.
 
-Do this **last** — it's the lowest-risk item and the easiest to finish quickly if time gets tight.
+**This is now your only active task.** Custom Order is done and handed over; Outcome Report is
+deferred. Build it in the home page palette (bone/oxide/warm charcoal, IBM Plex) reading from
+`BladeLoopTheme`, and add the scene to Build Settings so Ritwika can enable the home page button.
 
 ---
 
@@ -272,6 +296,7 @@ desyncs all three.
 - [ ] Custom Order: form → solve → settings + outputs + campaign figures → Watch this run
 - [ ] Verified against the three preset number sets above
 - [ ] Infeasible targets produce a readable explanation, not an error
-- [ ] Outcome Report: verdict, settings, outputs, campaign, live trade-off line
+- [x] ~~Custom Order~~ — done and handed to Akshat
+- [ ] ~~Outcome Report~~ — deferred to 12–24 Sep, do not start
 - [ ] How it works screen readable and scrollable
 - [ ] Unity console: zero errors
