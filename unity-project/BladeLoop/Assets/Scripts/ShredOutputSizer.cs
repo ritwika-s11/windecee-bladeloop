@@ -75,8 +75,35 @@ public class ShredOutputSizer : MonoBehaviour
     [Tooltip("Extra brightness spread on top of the colour mix, so no two pieces match.")]
     public float shadeSpread = 0.14f;
 
-    [Header("Optional: match the conveyor stream to the pile")]
+    [Header("Conveyor stream - this is where the change actually reads")]
+    [Tooltip("S2_PS_OutputGranules and friends. The belt carries the shredded output nine " +
+             "metres up to the kiln, in motion and in process, which sells particle size far " +
+             "better than a static heap on the apron.")]
     public ParticleSystem[] streams;
+    [Tooltip("Exponent on the size multiplier for particles. Above 1 exaggerates, because a " +
+             "size spread that reads clearly on a chunk is invisible on a small particle.")]
+    [Range(1f, 3f)] public float streamSizeBoost = 1.9f;
+
+    float[] baseSize, baseRate;
+
+    [Header("Belt load - the shot that actually reads")]
+    [Tooltip("The inclined conveyor's Belt transform. Real granule meshes ride this, sized by " +
+             "the order. Particles are a few pixels across at plant distance and can never show " +
+             "the difference between 2 mm and 16 mm; solid geometry filmed close can.")]
+    public Transform beltSurface;
+    [Tooltip("How far along the belt the load runs, either side of its centre.")]
+    public float beltHalfLength = 5.2f;
+    [Tooltip("Half the belt width the load spreads across.")]
+    public float beltHalfWidth = 0.30f;
+    [Tooltip("Metres per second up the belt.")]
+    public float beltSpeed = 1.15f;
+
+    const string BeltHolderName = "S2_BeltLoad_Generated";
+    Transform beltHolder;
+    readonly List<Transform> beltPieces = new List<Transform>();
+    readonly List<float> beltU = new List<float>();
+    readonly List<float> beltW = new List<float>();
+    readonly List<float> beltLift = new List<float>();
 
     const string HolderName = "S2_OutputPile_Generated";
 
@@ -92,11 +119,18 @@ public class ShredOutputSizer : MonoBehaviour
 
         Measure();
 
-        // No order: leave the pile exactly as authored - same twenty pieces, same
-        // positions, same sizes. Only their colour is corrected, which is a look fix
-        // rather than an order-driven change, so free play still behaves identically.
-        if (!OrderContext.HasOrder) { RecolourSourceGranules(); return; }
-
+        // Build the heap in every case, order or not.
+        //
+        // The obvious reading of "change nothing without an order" would be to leave the
+        // authored twenty alone. That turns out to be wrong here: all twenty float above
+        // the apron - the lowest sits 3 cm up, the highest 35 cm - because their renderers
+        // were disabled from the day the scene was built, so nobody ever saw them and
+        // nobody ever seated them. Leaving them untouched means free play shows twenty
+        // pale cubes hovering over concrete, which is worse than what was there before.
+        //
+        // With no order, OrderContext.Model is the design case, so this builds the same
+        // heap a high-grade run produces. Free play still behaves identically in every
+        // way that was ever visible.
         Rebuild(OrderContext.Model.ParticleSizeMm);
     }
 
@@ -232,7 +266,94 @@ public class ShredOutputSizer : MonoBehaviour
             }
         }
 
-        MatchStreams(scaleMul);
+        MatchStreams(scaleMul, count);
+        BuildBeltLoad(mm, scaleMul, rng);
+    }
+
+    /// <summary>
+    /// Lays real granule meshes along the conveyor belt, sized by the order.
+    ///
+    /// This is the answer to the actual problem. The output pile is 7-16 cm of material on a
+    /// plant-scale set, so from any story camera it is a smudge; moving the camera around
+    /// never fixed that, because the objects are simply too small to resolve at that
+    /// distance. A load riding the belt can be filmed from under a metre away, where a
+    /// 16 mm chip fills a good part of the frame and a 2 mm one clearly does not.
+    ///
+    /// Pieces are positioned in the belt's own axes - right() runs up the slope, up() is the
+    /// surface normal - so this keeps working if anyone re-angles the conveyor.
+    /// </summary>
+    void BuildBeltLoad(float mm, float scaleMul, System.Random rng)
+    {
+        beltPieces.Clear(); beltU.Clear(); beltW.Clear(); beltLift.Clear();
+        if (beltSurface == null || sourceGranules.Count == 0) return;
+
+        if (beltHolder == null)
+        {
+            var existing = transform.Find(BeltHolderName);
+            beltHolder = existing != null ? existing : new GameObject(BeltHolderName).transform;
+            beltHolder.SetParent(transform, false);
+            beltHolder.localScale = Vector3.one;
+        }
+        for (int i = beltHolder.childCount - 1; i >= 0; i--) DestroyImmediate(beltHolder.GetChild(i).gameObject);
+
+        // Fine shred covers the belt; coarse arrives as separated lumps with gaps between.
+        // ~130 chips at 2 mm (a covered belt), ~37 at 8 mm, ~20 at 16 mm (separated lumps).
+        int n = Mathf.Clamp(Mathf.RoundToInt(130f * Mathf.Pow(2f / Mathf.Max(mm, 0.1f), 0.90f)), 14, 150);
+
+        for (int i = 0; i < n; i++)
+        {
+            var src = sourceGranules[i % sourceGranules.Count];
+            if (src == null) continue;
+            var go = Instantiate(src.gameObject, beltHolder);
+            go.name = "BeltChip_" + i;
+            go.SetActive(true);
+            var rend = go.GetComponent<Renderer>();
+            if (rend != null) rend.enabled = true;
+
+            float jitter = 1f + ((float)rng.NextDouble() * 2f - 1f) * sizeJitter;
+            go.transform.localScale = src.localScale * scaleMul * jitter;
+            go.transform.rotation = Quaternion.Euler(
+                (float)rng.NextDouble() * 360f,
+                (float)rng.NextDouble() * 360f,
+                (float)rng.NextDouble() * 360f);
+
+            Recolour(rend, rng);
+
+            beltPieces.Add(go.transform);
+            beltU.Add(Mathf.Lerp(-beltHalfLength, beltHalfLength, (float)rng.NextDouble()));
+            beltW.Add(Mathf.Lerp(-beltHalfWidth, beltHalfWidth, (float)rng.NextDouble()));
+            beltLift.Add(rend != null ? rend.bounds.extents.y : 0.05f);
+        }
+        PlaceBeltPieces();
+    }
+
+    void PlaceBeltPieces()
+    {
+        if (beltSurface == null) return;
+        Vector3 along = beltSurface.right;      // up the slope
+        Vector3 normal = beltSurface.up;        // belt surface normal
+        Vector3 across = beltSurface.forward;   // across the belt
+        Vector3 centre = beltSurface.position;
+        for (int i = 0; i < beltPieces.Count; i++)
+        {
+            if (beltPieces[i] == null) continue;
+            beltPieces[i].position = centre
+                + along  * beltU[i]
+                + across * beltW[i]
+                + normal * (0.06f + beltLift[i] * 0.7f);
+        }
+    }
+
+    void Update()
+    {
+        if (beltPieces.Count == 0 || beltSurface == null) return;
+        float d = beltSpeed * Time.deltaTime;
+        for (int i = 0; i < beltU.Count; i++)
+        {
+            beltU[i] += d;
+            if (beltU[i] > beltHalfLength) beltU[i] -= beltHalfLength * 2f;   // wrap back to the feed end
+        }
+        PlaceBeltPieces();
     }
 
     /// <summary>
@@ -281,17 +402,54 @@ public class ShredOutputSizer : MonoBehaviour
         }
     }
 
-    /// <summary>Make the conveyor stream carry the same size material as the pile.</summary>
-    void MatchStreams(float scaleMul)
+    /// <summary>
+    /// Drives the conveyor stream from the same setting as the heap.
+    ///
+    /// This is where the task actually reads, not the heap. The output stream rides nine
+    /// metres of inclined belt up to the kiln with an 8.6 s particle lifetime, so it is
+    /// long, moving, well lit and unmistakably mid-process - a heap on concrete is static
+    /// and has to be explained. Size alone is too weak a cue on particles this small, so
+    /// the emission rate moves the opposite way as well: fine shred streams densely,
+    /// coarse shred arrives as sparse chunks with gaps between them.
+    ///
+    /// Rates and sizes are captured once, so repeated Rebuild calls scale from the
+    /// authored values rather than compounding.
+    /// </summary>
+    void MatchStreams(float scaleMul, int count)
     {
         if (streams == null) return;
-        foreach (var ps in streams)
+
+        if (baseSize == null || baseSize.Length != streams.Length)
         {
+            baseSize = new float[streams.Length];
+            baseRate = new float[streams.Length];
+            for (int i = 0; i < streams.Length; i++)
+            {
+                if (streams[i] == null) continue;
+                baseSize[i] = streams[i].main.startSize.constant;
+                baseRate[i] = streams[i].emission.rateOverTime.constant;
+            }
+        }
+
+        // Push size harder than the heap does - a 2.15x spread reads clearly on a
+        // 20 cm chunk and barely at all on a particle a few pixels across.
+        float sizeMul = Mathf.Pow(scaleMul, streamSizeBoost);
+        float rateMul = Mathf.Clamp(count / (float)Mathf.Max(referenceCount, 1), 0.35f, 2.2f);
+
+        for (int i = 0; i < streams.Length; i++)
+        {
+            var ps = streams[i];
             if (ps == null) continue;
+
             var main = ps.main;
-            var s = main.startSize;
-            s.constant = Mathf.Clamp(s.constant * scaleMul, 0.02f, 1.5f);
-            main.startSize = s;
+            var sz = main.startSize;
+            sz.constant = Mathf.Clamp(baseSize[i] * sizeMul, 0.03f, 0.9f);
+            main.startSize = sz;
+
+            var em = ps.emission;
+            var rt = em.rateOverTime;
+            rt.constant = Mathf.Max(baseRate[i] * rateMul, 4f);
+            em.rateOverTime = rt;
         }
     }
 }

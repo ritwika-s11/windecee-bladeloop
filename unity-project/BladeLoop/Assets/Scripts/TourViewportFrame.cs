@@ -30,8 +30,10 @@ public class TourViewportFrame : MonoBehaviour
     public const string FrameName = "ViewportFrame";
 
     [Tooltip("Fraction of the window width the 3D tour occupies when an order is running. " +
-             "Must match the value Akshat sets on Camera.rect.")]
-    [Range(0.2f, 1f)] public float splitWidth = 0.72f;
+             "Kept in sync with OrderContext.TourSplitWidth on Awake - that constant is the " +
+             "single source of truth, and OrderPanel reads the same one when it sets Camera.rect. " +
+             "Shown here for inspection only; editing it in the Inspector will not stick.")]
+    [Range(0.2f, 1f)] public float splitWidth = OrderContext.TourSplitWidth;
 
     [Tooltip("Force the split on even with no active order. Editor preview aid only - " +
              "leave off so free play and standalone scene playback are unchanged.")]
@@ -46,6 +48,12 @@ public class TourViewportFrame : MonoBehaviour
 
     void Awake()
     {
+        // The 0.72 is serialised into 17 canvases across 5 scenes. If the product ever
+        // changes the split, editing the constant alone would leave every one of them
+        // stale and the overlays would sit just off the edge of the 3D view with nothing
+        // on screen explaining why. Taking the constant here makes that impossible, and
+        // OrderSelfTest checks the two agree.
+        splitWidth = OrderContext.TourSplitWidth;
         EnsureFrame();
         Apply();
     }

@@ -23,7 +23,7 @@ RenderSettings:
   m_AmbientSkyColor: {r: 0.212, g: 0.227, b: 0.259, a: 1}
   m_AmbientEquatorColor: {r: 0.114, g: 0.125, b: 0.133, a: 1}
   m_AmbientGroundColor: {r: 0.047, g: 0.043, b: 0.035, a: 1}
-  m_AmbientIntensity: 1.35
+  m_AmbientIntensity: 1.02
   m_AmbientMode: 0
   m_SubtractiveShadowColor: {r: 0.42, g: 0.478, b: 0.627, a: 1}
   m_SkyboxMaterial: {fileID: 2100000, guid: 11c7ef3825a235f4889b5fcee6c9a3d9, type: 2}
@@ -6312,8 +6312,8 @@ Transform:
   m_GameObject: {fileID: 163482365}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.9, z: 0}
-  m_LocalScale: {x: 0.05, y: 0.05, z: 0.86}
+  m_LocalPosition: {x: 0, y: 0.5624999, z: 0}
+  m_LocalScale: {x: 0.05, y: 0.031249994, z: 0.86}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 388539551}
@@ -6566,13 +6566,13 @@ MonoBehaviour:
   outputGranules: {fileID: 2037116442}
   outputFallout: {fileID: 1554855675}
   truck: {fileID: 1524693291}
-  pickupWorldPos: {x: 1, y: 1.5, z: -4}
-  dropWorldPos: {x: 5, y: 5.5, z: 0}
+  pickupWorldPos: {x: -2.5, y: 1.35, z: -4}
+  dropWorldPos: {x: 5, y: 5.95, z: 0}
   startDelay: 9
   cycleDuration: 7
   hookHighY: -0.4
-  hookLowPickupY: -4.1222224
-  hookLowDropY: -1.8722223
+  hookLowPickupY: -3.9333334
+  hookLowDropY: -1.2055558
   granulesRunTime: 9999
 --- !u!1 &169112509
 GameObject:
@@ -6721,7 +6721,7 @@ Transform:
   m_GameObject: {fileID: 169906769}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -1.74, y: 0.2, z: 0.02}
+  m_LocalPosition: {x: 11.35, y: 5.6, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -19313,8 +19313,8 @@ Light:
   m_Enabled: 1
   serializedVersion: 13
   m_Type: 1
-  m_Color: {r: 1, g: 0.98, b: 0.94, a: 1}
-  m_Intensity: 1.6
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Intensity: 1.75
   m_Range: 10
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
@@ -19323,7 +19323,7 @@ Light:
     m_Type: 2
     m_Resolution: -1
     m_CustomResolution: -1
-    m_Strength: 1
+    m_Strength: 0.92
     m_Bias: 0.05
     m_NormalBias: 0.4
     m_NearPlane: 0.2
@@ -19357,8 +19357,8 @@ Light:
   m_LightShadowCasterMode: 0
   m_AreaSize: {x: 1, y: 1}
   m_BounceIntensity: 1
-  m_ColorTemperature: 6570
-  m_UseColorTemperature: 0
+  m_ColorTemperature: 5600
+  m_UseColorTemperature: 1
   m_BoundingSphereOverride: {x: 0, y: 0, z: 0, w: 0}
   m_UseBoundingSphereOverride: 0
   m_UseViewFrustumForShadowCasterCull: 1
@@ -60383,7 +60383,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1188960609}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.000000007450581, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -62036,8 +62036,8 @@ Transform:
   m_GameObject: {fileID: 1223698401}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: -0.9, z: 0}
-  m_LocalScale: {x: 0.05, y: 0.05, z: 0.86}
+  m_LocalPosition: {x: 0, y: -0.5624999, z: 0}
+  m_LocalScale: {x: 0.05, y: 0.031249994, z: 0.86}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 388539551}
@@ -64945,7 +64945,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: -0.5, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 1, y: 0.6249999, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 388539551}
@@ -71701,8 +71701,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1471913075}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.11950364, y: 0.4496787, z: -0.06085419, w: 0.8830656}
-  m_LocalPosition: {x: -2.62, y: 0.5, z: -0.62}
+  m_LocalRotation: {x: 0.20748045, y: 0.3525361, z: -0.08047104, w: 0.9089525}
+  m_LocalPosition: {x: 10.3, y: 6.35, z: -1.15}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -122480,6 +122480,11 @@ MonoBehaviour:
   - {fileID: 877591579}
   - {fileID: 1554855675}
   - {fileID: 2037116442}
+  streamSizeBoost: 1.9
+  beltSurface: {fileID: 19560615}
+  beltHalfLength: 5.2
+  beltHalfWidth: 0.3
+  beltSpeed: 1.15
 --- !u!4 &6500256727915290910
 Transform:
   m_ObjectHideFlags: 0
