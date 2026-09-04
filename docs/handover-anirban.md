@@ -345,8 +345,48 @@ starting** — the blade-mass figure is still coming from the CEE team.
       `S2_04_OutputGranules` pointed at empty sky for its full 17 s; and the crane blade was 3.20 m
       against a 2.22 m hopper mouth, released at y 5.00 when the funnel bottom is 5.53 — blade now
       2.00 m, landing at y 6.20.)*
-- [ ] Stage 3 kiln visibly differs at 550 / 580 / 600 °C; rotation follows retention
-- [ ] Stage 4 fibre and char streams visibly reflect the output split
+- [x] Stage 3 kiln visibly differs at 550 / 580 / 600 °C; rotation follows retention
+      *(Task 3 changes 1–4 done — all in one new `KilnOrderBinding.cs`. It reads the authored
+      values on `Start`, applies the order on top, and returns immediately when no order is
+      running, so `TemperatureRampAnimator`, `KilnRotator`, `AirlockDoorCycle` and
+      `AirlockFlowController` are untouched and free play still behaves exactly as authored.
+      One 10-line edit to an existing script: `shellHeatStrength` was hardcoded at 0.15, so it
+      had to be exposed — change 2 is impossible without it.*
+      *Two latent bugs found doing change 1: the authored ramp runs t=42→62, but every kiln
+      beauty shot is 31.5–39 s, so the drum was still cold in all of them and 550 and 600 looked
+      identical — the whole ramp moves to 12→28. And the colour range spanned 25–620 °C, which
+      spends 85% of the ramp on temperatures the plant never runs at; re-mapped onto 540–610.*
+      *Change 4 deviations, both deliberate: (1) the presets only span 6,500–8,800 kg/h, a 35%
+      range that nobody would see, so the response is exaggerated (exponent 1.8) the same way the
+      temperature band is — feed reads as ×1.45 / ×1.73 on screen. (2) barely any of it goes into
+      shortening the door cycle. `AirlockDoorCycle`'s phases start at fixed absolute times
+      (3 s / 4 s / 4.6 s) rather than fractions of `cycleLength`, so a shorter cycle keeps its
+      full 3 s of accumulation and takes the entire cut out of phase 3 — the discharge into the
+      kiln, and the only part the cameras see. Shortening it hard made the charge stream shorter
+      as fast as it made it denser and net flow into the kiln came out flat; speed is carried by
+      the particle streams instead. Net flow into the kiln now ×1.25 / ×1.37, monotonic on every
+      one of the five streams, and a cycle floor of 4.9 s keeps all three door phases alive.
+      Worth fixing those boundaries properly if anyone touches that script later.)*
+- [x] Stage 4 fibre and char streams visibly reflect the output split
+      *(Task 4 done — `Stage4OrderBinding.cs`, same additive pattern as Task 3: authored values
+      read on `Start`, order applied on top, returns immediately with no order, no existing script
+      edited. Emission is driven from `OutputSplit()`, anchored on the MID run so neither extreme
+      has to be pushed to an absurd value.*
+      *Per run — fibre 32.4 / 26.0 / 19.0 per second, char 5.3 / 14.0 / 23.9 each drum. The char
+      ratio against fibre goes 0.33 → 1.08 → 2.52, so on a cement-works run the drums are visibly
+      the busier product while the fibre box fills slowly, which is what the brief asks for.*
+      *One deviation: fibre carries a mild 1.35 exponent because glass only spans 69→46%, a 1.5×
+      range that reads soft on screen; char is left at 1.0 because it spans 5.9→26.5% — a genuine
+      4.5× — and is the one output cue in the app that needs no exaggeration at all.*
+      *Both supporting cues done: fibre tinted by `FiberPurityPct` (93 → 82 → 70%, clean off-white
+      to grey, so a low-grade run yields less fibre AND dirtier fibre), and fill levels on the box
+      and both drums grow from a fixed base so the split reads in a still frame.*
+      *Two pre-existing bugs fixed: both char particle systems were rendering with
+      `M4V2_Part_FibreChip` — the fibre material — so char and fibre were visually identical; and
+      the four output cards carried the design case as fixed text ("CARBON CHAR · 6%", "GLASS FIBRE
+      · 70%", "OIL · 16%", "SYNGAS · 8%"). On a cement-works run the scene showed heavy char while
+      the sign beside it read 6%. The labels are now rewritten from the split — 69/6/16/8 for high,
+      46/27/13/7 for low — keeping each card's existing wording and separator.)*
 - [ ] Stage 4 has clickable parts; Stage 3's are reachable while paused
 - [ ] All three presets played end to end — each looks distinctly different
 - [ ] Stage scenes still play standalone in the editor with no order set
