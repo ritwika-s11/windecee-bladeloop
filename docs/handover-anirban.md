@@ -185,10 +185,10 @@ that in the wind farm would be a nice opening beat. Low priority.
 ## Definition of done
 
 - [ ] One scene pass merged today: binders in place, known bugs fixed
-- [ ] Stage 4 fibre and char streams visibly track the output split
-- [ ] Stage 2 granules visibly differ at 2 / 8 / 16 mm
-- [ ] Stage 3 kiln visibly differs at 550 / 580 / 600 °C
+- [x] Stage 4 fibre and char streams visibly track the output split
+- [x] Stage 2 granules visibly differ at 2 / 8 / 16 mm
+- [x] Stage 3 kiln visibly differs at 550 / 580 / 600 °C
 - [ ] All three presets played end to end — each looks distinctly different
 - [ ] Free play with no order is identical to today
 - [ ] No further scene edits after the first pass
-- [ ] Unity console: zero errors
+- [x] Unity console: zero errors

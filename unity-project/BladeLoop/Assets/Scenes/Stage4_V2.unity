@@ -118905,7 +118905,7 @@ ParticleSystemRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: d848f22ae65124df6b7f8b1782a72964, type: 2}
+  - {fileID: 2100000, guid: 544c81478cf5248ddb664ab5c72dae2d, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -165867,7 +165867,7 @@ ParticleSystemRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: d848f22ae65124df6b7f8b1782a72964, type: 2}
+  - {fileID: 2100000, guid: 544c81478cf5248ddb664ab5c72dae2d, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -238652,6 +238652,69 @@ Transform:
   - {fileID: 1567732487}
   m_Father: {fileID: 181184227}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1914266419
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1914266421}
+  - component: {fileID: 1914266420}
+  m_Layer: 0
+  m_Name: Stage4_OrderBinding
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1914266420
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1914266419}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 99952ab98e8ee54458d64677c903c57f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Stage4OrderBinding
+  fibreToBox: {fileID: 110361161}
+  charToDrum0: {fileID: 1562289435}
+  charToDrum1: {fileID: 1304629529}
+  fibreBox: {fileID: 2104224568}
+  charDrum0: {fileID: 1911979212}
+  charDrum1: {fileID: 1622826575}
+  referenceGlassPct: 58.6
+  referenceCharPct: 15.5
+  fibreResponse: 1.35
+  charResponse: 1
+  minFactor: 0.22
+  maxFactor: 3.2
+  purityFloorPct: 72
+  purityCeilingPct: 93
+  dirtyFibre: {r: 0.56, g: 0.535, b: 0.48, a: 1}
+  cleanFibre: {r: 0.93, g: 0.918, b: 0.878, a: 1}
+  fillResponse: 0.62
+  minFill: 0.3
+  maxFill: 1.25
+--- !u!4 &1914266421
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1914266419}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1915042001
 GameObject:
   m_ObjectHideFlags: 0
@@ -263903,3 +263966,4 @@ SceneRoots:
   - {fileID: 2078652745}
   - {fileID: 1853787571}
   - {fileID: 1793180252}
+  - {fileID: 1914266421}

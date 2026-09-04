@@ -23,6 +23,10 @@ public class TemperatureRampAnimator : MonoBehaviour
     public Color hotColor  = new Color(1.0f, 0.55f, 0.15f);
     public float coolIntensity = 0.3f;
     public float hotIntensity  = 6.0f;
+    [Tooltip("How much of the heat colour reaches the kiln shell. The authored 0.15 is almost " +
+             "invisible; KilnOrderBinding raises it while an order is running so 550, 580 and " +
+             "600 C read differently, as Task 3 change 2 asks for.")]
+    public float shellHeatStrength = 0.15f;
 
     [Header("Temperature label (optional)")]
     public TextMeshPro temperatureLabel;
@@ -65,7 +69,11 @@ public class TemperatureRampAnimator : MonoBehaviour
         if (kilnMat != null)
         {
             kilnMat.EnableKeyword("_EMISSION");
-            kilnMat.SetColor("_EmissionColor", emitFinal * 0.15f); // subtle heat on shell
+            // Task 3 change 2 - widen the visual range. At the old fixed 0.15 the shell
+            // barely glowed, so a 550 C run and a 600 C run looked identical even though
+            // the intensities differ by more than 2x. Exposed so KilnOrderBinding can push
+            // it when an order is running, and left at the authored value otherwise.
+            kilnMat.SetColor("_EmissionColor", emitFinal * shellHeatStrength);
         }
         if (ringMat != null)
         {
