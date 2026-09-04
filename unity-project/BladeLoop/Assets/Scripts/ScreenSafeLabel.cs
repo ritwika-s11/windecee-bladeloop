@@ -1,19 +1,23 @@
 using UnityEngine;
 
 /// <summary>
-/// Keeps a world-space label inside the visible frame and facing the camera.
+/// Keeps a world-space label readable: constant size on screen, inside the frame, one
+/// consistent colour, and out of the way when the camera is too close to need it.
 ///
-/// The kiln zone headings sat above the drum, which reads well in the wide shot
-/// but puts them far outside the frame on the close-up zone shots - the camera
-/// there is low and angled down, so the labels were roughly 50 degrees off axis
-/// and never appeared at all. Moving them down would have broken the wide shot
-/// instead, so this clamps the label into a safe area per-frame rather than
-/// picking one compromise position.
+/// The first version only clamped the label into a safe area. That fixed the original
+/// bug - kiln zone headings sitting far outside the frame on the close-up shots - but
+/// created a worse one. A world-space label grows as the camera approaches, and the zone
+/// cameras sit 2.8 m from the kiln, so the headings filled the screen and overlapped
+/// each other. Clamping three of them into the same safe area then stacked them on top
+/// of one another.
 ///
-/// The label keeps its authored world position whenever that position is already
-/// comfortably in frame; it only slides toward the safe area when it would
-/// otherwise be clipped, and only along the camera's own axes so it never
-/// appears to drift in depth.
+/// So this now does three things instead of one:
+///   - scales the label by distance, so it occupies the same fraction of the screen
+///     whether the camera is 3 m away or 30
+///   - fades it out below a minimum distance, because a heading is pointless when the
+///     subject already fills the frame
+///   - only pulls a label into the safe area when it would otherwise be clipped, and
+///     never past the point where it would sit on top of another one
 /// </summary>
 [DefaultExecutionOrder(120)]
 [RequireComponent(typeof(Renderer))]
@@ -26,22 +30,40 @@ public class ScreenSafeLabel : MonoBehaviour
     [Range(0f, 0.4f)] public float marginX = 0.06f;
     [Range(0f, 0.4f)] public float marginY = 0.10f;
 
-    [Header("Behaviour")]
-    public bool faceCamera = true;
+    [Header("Constant screen size")]
+    [Tooltip("Hold the label at the size it has when the camera is this far away. " +
+             "Without this a world-space label balloons as the camera closes in - which is " +
+             "exactly what happened on the zone shots.")]
+    public float referenceDistance = 12f;
+    [Tooltip("Clamp so it never becomes microscopic or enormous.")]
+    public float minScale = 0.45f;
+    public float maxScale = 2.2f;
+
+    [Header("Fade")]
+    [Tooltip("Below this distance the subject already fills the frame, so the heading only " +
+             "gets in the way. Fades out rather than popping.")]
+    public float hideNearerThan = 4.5f;
+    public float fadeBand = 2.0f;
     [Tooltip("Hide entirely when the anchor is behind the camera.")]
     public bool hideWhenBehind = true;
-    [Tooltip("How quickly the label slides into the safe area.")]
+
+    [Header("Behaviour")]
+    public bool faceCamera = true;
     public float damping = 10f;
 
     Renderer rend;
+    TMPro.TMP_Text label;
     Vector3 current;
+    Vector3 baseScale;
     bool init;
 
     void Awake()
     {
         rend = GetComponent<Renderer>();
+        label = GetComponent<TMPro.TMP_Text>();
         if (anchor == Vector3.zero) anchor = transform.position;
         current = anchor;
+        baseScale = transform.localScale;
     }
 
     void LateUpdate()
@@ -53,12 +75,23 @@ public class ScreenSafeLabel : MonoBehaviour
 
         if (vp.z <= 0f)
         {
-            if (hideWhenBehind && rend.enabled) rend.enabled = false;
+            if (hideWhenBehind) SetAlpha(0f);
             return;
         }
-        if (!rend.enabled) rend.enabled = true;
 
-        // clamp into the safe area, keeping the same depth
+        float dist = vp.z;
+
+        // Fade out once the camera is close enough that the label is just clutter.
+        float a = Mathf.Clamp01((dist - hideNearerThan) / Mathf.Max(fadeBand, 0.01f));
+        SetAlpha(a);
+        if (a <= 0.001f) return;
+
+        // Constant apparent size: counteract perspective foreshortening.
+        float k = Mathf.Clamp(dist / Mathf.Max(referenceDistance, 0.01f), minScale, maxScale);
+        transform.localScale = baseScale * k;
+
+        // Only rescue it when it would actually be clipped; otherwise leave the authored
+        // position alone, so three labels never converge on the same safe-area corner.
         float cx = Mathf.Clamp(vp.x, marginX, 1f - marginX);
         float cy = Mathf.Clamp(vp.y, marginY, 1f - marginY);
         Vector3 target = cam.ViewportToWorldPoint(new Vector3(cx, cy, vp.z));
@@ -70,5 +103,19 @@ public class ScreenSafeLabel : MonoBehaviour
 
         if (faceCamera)
             transform.rotation = Quaternion.LookRotation(transform.position - cam.transform.position, cam.transform.up);
+    }
+
+    void SetAlpha(float a)
+    {
+        if (label != null)
+        {
+            var c = label.color;
+            if (!Mathf.Approximately(c.a, a)) { c.a = a; label.color = c; }
+            if (rend != null && rend.enabled != (a > 0.001f)) rend.enabled = a > 0.001f;
+        }
+        else if (rend != null && rend.enabled != (a > 0.001f))
+        {
+            rend.enabled = a > 0.001f;
+        }
     }
 }
