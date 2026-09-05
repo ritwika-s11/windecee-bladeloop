@@ -109,10 +109,10 @@ public class HowItWorksController : MonoBehaviour
         Body("The point of the app is not to run a perfect plant. It is to show that there is no single right setting \u2014 only a different customer. Run for the highest quality and you recover clean, structural-grade fibre slowly; push more material through and you recover more fibre per hour at a lower grade \u2014 and there is a real buyer for each.");
 
         Heading("The four inputs, and why they matter");
-        Body("<b>Kiln temperature (400\u2013700 \u00b0C, optimum 600 \u00b0C).</b>  Around 600 \u00b0C the resin cracks cleanly and the glass fibre comes through intact. Too cold and the resin never fully cracks, so residue stays stuck to the fibre and purity falls. Too hot and the fibre itself weakens while more of the material turns to char.");
-        Body("<b>Retention time (30\u201345 min, optimum 35 min).</b>  How long material spends inside the rotary kiln. On target, the fibres are fully freed of resin without over-cooking. Too short and some resin stays bound to the fibre; too long and the fibre embrittles and char output climbs.");
-        Body("<b>Feed rate (4,000\u20139,000 kg/h, optimum 6,500 kg/h).</b>  How fast shredded material is fed in. At design throughput each particle gets its ideal time inside the kiln. Push the feed far above capacity and residence time per particle is cut short \u2014 the extra material is worth having, but each piece is processed less completely.");
-        Body("<b>Particle size (1\u201320 mm, optimum 2 mm).</b>  How finely the blade is shredded before the kiln. This is the most influential setting in the model \u2014 it carries more weight than temperature. At about 2 mm, heat penetrates evenly and every particle decomposes completely. Coarser feedstock leaves particle cores that never fully decompose, meaning poorer fibre and more waste.");
+        Body($"<b>Kiln temperature (400\u2013700 \u00b0C, optimum {ProcessModel.OptTemp:0} \u00b0C).</b>  Around {ProcessModel.OptTemp:0} \u00b0C the resin cracks cleanly and the glass fibre comes through intact. Too cold and the resin never fully cracks, so residue stays stuck to the fibre and purity falls. Too hot and the fibre itself weakens while more of the material turns to char.");
+        Body($"<b>Retention time (30\u201345 min, optimum {ProcessModel.OptRetention:0} min).</b>  How long material spends inside the rotary kiln. On target, the fibres are fully freed of resin without over-cooking. Too short and some resin stays bound to the fibre; too long and the fibre embrittles and char output climbs.");
+        Body($"<b>Feed rate (4,000\u20139,000 kg/h, optimum {ProcessModel.OptFeed:N0} kg/h).</b>  How fast shredded material is fed in. At design throughput each particle gets its ideal time inside the kiln. Push the feed far above capacity and residence time per particle is cut short \u2014 the extra material is worth having, but each piece is processed less completely.");
+        Body($"<b>Particle size (1\u201320 mm, optimum {ProcessModel.OptParticle:0.#} mm).</b>  How finely the blade is shredded before the kiln. This is the most influential setting in the model \u2014 it carries more weight than temperature. At about 2 mm, heat penetrates evenly and every particle decomposes completely. Coarser feedstock leaves particle cores that never fully decompose, meaning poorer fibre and more waste.");
         Body("Feed rate and particle size are linked. Finer shredding is slower shredding, so the finer you grind, the less material the shredder can pass per hour. The maximum feed rate therefore depends on particle size \u2014 you cannot ask for the finest grind and the highest throughput at once. On the Custom Order screen, the feed control is bounded by the particle-size control for exactly this reason.");
 
         Heading("Where the numbers come from");
@@ -123,7 +123,7 @@ public class HowItWorksController : MonoBehaviour
         Body("We sort recovered fibre into three grades, each routed to a real end market:");
         TierTable();
         Body("The tiering approach is real; the specific threshold numbers are our own project assumptions. Grading recovered fibre by quality and routing each grade to a different market is exactly how this material is handled in practice. But there is no published grading standard for recovered composite glass fibre against which to set the cutoffs \u2014 the closest analogue, PAS 101, covers container cullet glass only. Every research group defines its own quality bar. So we set ours, and label them as assumptions rather than claiming a standard that does not exist.");
-        Body("Where the tiers are grounded is in demonstrated performance. Real recovered fibre has been measured across roughly a 72\u201393 % tensile-retention range: ordinary single-step pyrolysis of real wind-blade waste lands in the low-to-mid 70s, while a published two-step study on wind-blade epoxy reported 76 % tensile strength and 88 % modulus retention. Our mid tier sits around that demonstrated result. Our high tier (\u2265 90 %) is deliberately aspirational \u2014 best-in-class recovery, not the routine output of a standard thermal process.");
+        Body("Where the tiers are grounded is in demonstrated performance. Real recovered fibre has been measured across roughly a 72\u201393 % tensile-retention range: ordinary single-step pyrolysis of real wind-blade waste lands in the low-to-mid 70s, while a published two-step study on wind-blade epoxy reported 76 % tensile strength and 88 % modulus retention. Our mid tier sits around that demonstrated result. Our high tier is deliberately aspirational: its \u2265 90 % purity / \u2265 85 % tensile bar describes best-in-class recovery, not the routine output of a standard thermal process.");
         Body("Both markets below the top tier already exist. Recovered blade fibre is sold into precast concrete today (for example by Regen Fiber), and cement co-processing \u2014 where the glass substitutes for raw silica and the resin burns as kiln fuel in place of coal \u2014 is currently the most commercially mature end-of-life route at scale. We did not invent these customers.");
         Quote("Low grade is not something you choose \u2014 it is where you land. Contaminated or oversized feedstock, a shredder at its limit, an under-fired kiln, or a deadline that forces throughput all produce low-grade output. The point of a grade-tiered market is that the material still has somewhere to go when the plant can't do better.");
 
@@ -160,8 +160,6 @@ public class HowItWorksController : MonoBehaviour
     void Quote(string text)
     {
         // measure, draw a warm-charcoal box, then the italic text inside it
-        float h = new GameObject().AddComponent<TextMeshProUGUI>().GetPreferredValues(text, ContentW - 40f, 0f).y;
-        // (the temp object above is discarded; simpler: measure via a helper)
         var box = MakeImage(content, "quote", BladeLoopTheme.SkyWarm);
         var brt = box.rectTransform;
         brt.anchorMin = new Vector2(0,1); brt.anchorMax = new Vector2(1,1); brt.pivot = new Vector2(0.5f,1);
@@ -183,10 +181,12 @@ public class HowItWorksController : MonoBehaviour
 
     void TierTable()
     {
+        // Thresholds pulled live from OrderContext so this page can never contradict the app.
+        string hi = $"<mspace=0.62em>High   \u2265 {OrderContext.HighPurity:0} %    \u2265 {OrderContext.HighTensile:0} %    Composite manufacturing</mspace>";
+        string md = $"<mspace=0.62em>Mid    \u2265 {OrderContext.MidPurity:0} %    \u2265 {OrderContext.MidTensile:0} %    Precast concrete, casting</mspace>";
         string tbl =
             "<mspace=0.62em>Tier   Purity    Tensile   Goes to</mspace>\n" +
-            "<mspace=0.62em>High   \u2265 90 %    \u2265 85 %    Composite manufacturing</mspace>\n" +
-            "<mspace=0.62em>Mid    \u2265 78 %    \u2265 70 %    Precast concrete, casting</mspace>\n" +
+            hi + "\n" + md + "\n" +
             "<mspace=0.62em>Low    below     below     Cement kiln co-processing</mspace>";
         Block(tbl, 15, BladeLoopTheme.Bone, BladeLoopTheme.Mono, 16f);
     }
