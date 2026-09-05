@@ -116,7 +116,13 @@ public class HowItWorksController : MonoBehaviour
         Body("Feed rate and particle size are linked. Finer shredding is slower shredding, so the finer you grind, the less material the shredder can pass per hour. The maximum feed rate therefore depends on particle size \u2014 you cannot ask for the finest grind and the highest throughput at once. On the Custom Order screen, the feed control is bounded by the particle-size control for exactly this reason.");
 
         Heading("Where the numbers come from");
-        Body("The baseline output proportions \u2014 that at good conditions the recovered stream splits into roughly 70 % glass fibre, 16 % oil, 8 % syngas and 6 % char \u2014 come from the CEE reference model for this process. Those are the proportions the plant is calibrated to.");
+        // Baseline split derived live from the design-case model (of the recovered stream,
+        // i.e. excluding losses) so the copy tracks ProcessModel without hardcoding.
+        var _bm = new ProcessModel { TempC = ProcessModel.OptTemp, RetentionMin = ProcessModel.OptRetention, FeedKgH = ProcessModel.OptFeed, ParticleSizeMm = ProcessModel.OptParticle };
+        var _bs = _bm.OutputSplit();
+        float _rec = _bs.GlassKgH + _bs.OilKgH + _bs.SyngasKgH + _bs.CharKgH;
+        int _g = Mathf.RoundToInt(_bs.GlassKgH/_rec*100f), _o = Mathf.RoundToInt(_bs.OilKgH/_rec*100f), _sy = Mathf.RoundToInt(_bs.SyngasKgH/_rec*100f), _c = Mathf.RoundToInt(_bs.CharKgH/_rec*100f);
+        Body($"The baseline output proportions \u2014 that at good conditions the recovered stream splits into roughly {_g} % glass fibre, {_o} % oil, {_sy} % syngas and {_c} % char \u2014 come from the CEE reference model for this process. Those are the proportions the plant is calibrated to.");
         Body("Everything that describes how the plant behaves away from those ideal conditions \u2014 how much each input can drift before quality suffers, how deviations are weighted, how losses grow, and how purity and strength fall \u2014 is our own model, calibrated to that baseline. It reproduces the reference case exactly at the design set-point and models the trade-offs around it.");
 
         Heading("Our assumptions, stated honestly");
