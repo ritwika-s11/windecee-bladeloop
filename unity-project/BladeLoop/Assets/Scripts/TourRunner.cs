@@ -119,10 +119,34 @@ public static class TourRunner
     /// Transport_StoryMode is a pass-through and has no chapter index.</summary>
     public static void JumpToChapter(int index)
     {
-        // TODO (Akshat): TourSceneSequencer already loads scenes by name from
-        // sceneSequence. This is mostly restructuring its coroutine to start from an
-        // index rather than always from 0.
-        Debug.LogWarning($"TourRunner.JumpToChapter({index}) is not implemented yet.");
+        var seq = Object.FindAnyObjectByType<TourSceneSequencer>();
+        if (seq == null)
+        {
+            Debug.LogWarning($"TourRunner.JumpToChapter({index}) called with no tour running.");
+            return;
+        }
+
+        // Chapters are the four STAGES the panel numbers; sceneSequence also holds
+        // Transport, which is a pass-through with no chapter of its own. So the two
+        // indices are NOT the same and mapping by name is the only safe way - a
+        // straight index would send chapter 1 to the transport leg.
+        string[] byChapter = { "Stage1_StoryMode", "Stage2_StoryMode",
+                               "Stage3_StoryMode", "Stage4_V2" };
+        if (index < 0 || index >= byChapter.Length)
+        {
+            Debug.LogWarning($"TourRunner.JumpToChapter({index}) is out of range 0-3.");
+            return;
+        }
+
+        int target = System.Array.IndexOf(seq.sceneSequence, byChapter[index]);
+        if (target < 0)
+        {
+            Debug.LogWarning($"TourRunner.JumpToChapter({index}): '{byChapter[index]}' " +
+                             "is not in the sequencer's sceneSequence.");
+            return;
+        }
+
+        seq.JumpToStage(target);
     }
 
     /// <summary>Returns to the menu and clears the run.

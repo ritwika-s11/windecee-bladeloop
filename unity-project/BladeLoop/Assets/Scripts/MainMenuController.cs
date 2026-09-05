@@ -413,7 +413,11 @@ public class MainMenuController : MonoBehaviour
         float y0 = 0.072f, y1 = 0.122f;
         const float right = 0.945f, w = 0.118f, gap = 0.012f;
         float x2 = right - w, x1b = x2 - gap - w, x0b = x1b - gap - w;
-        MakeLink(root, "custom",   "CUSTOM ORDER",   x0b, y0, x0b + w, y1, null, false, accent: true);
+        // Custom Order is live (Sharan, PR #52). How It Works is still to come - it stays
+        // non-interactive rather than dead, because loading a scene that is not in Build
+        // Settings throws.
+        MakeLink(root, "custom",   "CUSTOM ORDER",   x0b, y0, x0b + w, y1,
+                 () => SceneManager.LoadScene("OrderDashboard"), true, accent: true);
         MakeLink(root, "how",      "HOW IT WORKS",   x1b, y0, x1b + w, y1, null, false);
         MakeLink(root, "explorer", "PLANT EXPLORER", x2,  y0, x2 + w,  y1,
                  () => SceneManager.LoadScene("PlantExplorer"), true);

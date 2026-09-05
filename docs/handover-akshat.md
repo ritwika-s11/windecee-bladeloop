@@ -2,12 +2,46 @@
 
 **Read `docs/BLADELOOP-PRODUCT-VISION.md` first.** This file is the build detail for your tasks.
 
-> 🔴 **`docs/interface-contract.md` is binding.** Sharan is building his screens against those exact
-> signatures right now, before your code exists. Implement to them precisely. If a signature there is
-> wrong or awkward, **say so before Tuesday** — changing it after he has built against it costs a day.
+> 🔴 **`docs/interface-contract.md` is binding.** `OrderContext`, `OrderSolver`, `TourRunner` and the
+> `TourSplitWidth` constant are all implemented to it and merged. Anything you change in those
+> signatures now breaks a live caller, so change the contract first and tell the group.
 
 Branch off current `main`: `feature/order-spine`
-Explore spec and FOV fix **Wed 2 Sep** · feature freeze **Wed 9 Sep**
+Feature freeze **Wed 9 Sep** · sprint review **Fri 11 Sep**
+
+> ## 🔄 Reassigned Wed 2 September — you now own the Custom Order screen
+>
+> **`OrderDashboardController.cs` and `OrderDashboard.unity` are yours**, handed over from Sharan,
+> who moves to How It Works. He will not touch them again. Your job is to make that screen properly
+> product-like — it works, but it is the screen a professor will actually *use*, and it should feel
+> like software rather than a form.
+>
+> **Read it before you change it.** Two things in there are correct and must not regress:
+>
+> 1. **The feed slider is bounded by `OrderSolver.MaxFeed(particle)`.** This is the constraint that
+>    stops a user finding a setting that beats all three presets on throughput *and* quality — the
+>    exploit you found yourself. If that coupling breaks, the product's central claim breaks with it.
+> 2. **Infeasible targets show `result.note` as a readable sentence**, not an error or a blank panel.
+>
+> **What's already done and shipped** (thank you — the dual screen landed clean):
+> `TourRunner`, `OrderPanel`, the viewport split, `SplitVFov` with the 65° clamp, `BladeLoopTheme`.
+>
+> **Still open, in priority order:**
+>
+> 1. **Custom Order polish** — the new work. Ritwika will send you specifics; she is the product voice.
+> 2. **Chapter navigation and *Skip to results*** — `JumpToChapter` is still a `TODO` in `TourRunner`.
+>    Nobody is blocked on it, so it is cut-first if the week runs short.
+> 3. **Explore mode** — ⚠️ **play it on current `main` before writing anything.** Your original
+>    diagnosis was against `5bace06`, and Anirban's PR landed after that with `minPitch 5 / maxPitch
+>    75` and `PauseFramePreserver` in all four stages. Both causes may already be fixed. If it still
+>    sticks, send Anirban a repro — he wrote the current versions.
+>
+> **Do not touch:** the stage scenes or their timelines (Ritwika owns the whole tour from today),
+> or `MainMenuController.cs`.
+>
+> One cheap follow-up when convenient: the palette now exists in three files —
+> `BladeLoopTheme`, `MainMenuController` and `OrderDashboardController`. Pointing all three at
+> `BladeLoopTheme` takes fifteen minutes and prevents drift the first time anyone tweaks the accent.
 
 > ## ✅ Tasks 0, 1 and 2 are done — Ritwika wrote them on 31 Aug
 >

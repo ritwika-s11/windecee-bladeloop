@@ -499,7 +499,63 @@ roughly 206 turbines"* — and the difference shows up downstream, where it belo
 
 ---
 
+## 6b. Where we are — 2 September
+
+**The plumbing is finished.** `OrderContext`, `OrderSolver`, the home page, the dual screen with
+its persistent order panel, the 14 overlay wrappers, and the Custom Order screen are all on `main`
+and working. You can pick an order, watch the plant run, and the panel tracks it throughout.
+
+**One thing is missing, and it is the whole argument.** No stage scene reads `OrderContext.Model`.
+Pick any order today and the plant behind the panel looks identical. The panel proves the *numbers*
+changed; it does not yet prove the *plant* did — which is exactly the criticism we set out to answer.
+
+That is now Anirban's whole job, and it is the highest-value work left in the project.
+
+**The outcome report is deliberately deferred to 12–24 September**, after the sprint review. Not
+because it is hard, but because what a run should *mean* is a product question, and building a
+statistics screen before we know the answer would mean building it twice. If asked on the 11th:
+*"the outcome report is last on purpose — we want to know what a run should mean before we decide
+what it shows."*
+
+---
+
 ## 7. Who does what
+
+*Reassigned 2 September. This supersedes the split below.*
+
+| Person | Now | Not touching |
+|---|---|---|
+| **Ritwika** | The entire tour — shot list, timelines, narration scripts, VO, subtitles | stage visuals, the four screens |
+| **Anirban** | Per-grade stage visuals, plus stage bug fixes | timelines, shots, audio |
+| **Akshat** | Custom Order screen — taking it over from Sharan | the tour, stage scenes |
+| **Sharan** | How It Works screen | Custom Order (handed over), Plant Explorer |
+
+### 🔴 The scene-collision rule, and it applies this week
+
+Ritwika owns the tour. Anirban owns the stage visuals. **Both live in the same five `.unity`
+files**, which cannot be merged. Left alone, one of them redoes a day's work by hand.
+
+**So Anirban's scene edits happen ONCE, today, and then stop:**
+
+1. He adds **one `StageParameterBinder` component per stage scene**, plus any scene-level bug fixes
+   he already knows about — all batched into a single pass.
+2. He pushes it immediately.
+3. **After that the stage scenes are Ritwika's.** Every further change he makes is in the `.cs`
+   file — how much the char stream grows, how dim the kiln goes — with no scene edit at all.
+4. If he later needs a scene change, he messages Ritwika rather than opening the file.
+
+The binder finds the granules, the kiln and the particle systems at runtime and drives them from
+`OrderContext.Model`. Same pattern as `OrderPanel` and `TourViewportFrame`: one small hook in the
+scene, all the behaviour in code, so the diff stays reviewable and the file stays mergeable.
+
+### 🔒 Shot lock
+
+The narration is written to the camera cuts, so **the shot list is locked before recording.**
+Ritwika re-cuts Stages 1–3 first, then writes to those shots, then records once. Stage 4 is already
+written against its real 14-shot list and should not move.
+
+When the shot list is locked, Ritwika tells Anirban — his brief has said "do not move any shot"
+since 31 August and that instruction now belongs to her.
 
 Each person also has a technical brief in `docs/` to give their Claude.
 
@@ -599,9 +655,10 @@ Need a change in someone else's scene? Message them. Don't open it.
 | Scene | Owner |
 |---|---|
 | `MainMenu.unity` | Ritwika |
-| `Stage1_StoryMode`, `Transport_StoryMode`, `Stage2_StoryMode`, `Stage3_StoryMode`, `Stage4_V2` | Anirban |
-| `PlantExplorer.unity` and any new dashboard scene | Sharan |
-| *(none — code only)* | Akshat |
+| `Stage1_StoryMode`, `Transport_StoryMode`, `Stage2_StoryMode`, `Stage3_StoryMode`, `Stage4_V2` | **Ritwika from 2 Sep** — after Anirban's single binder pass. See §7. |
+| `OrderDashboard.unity` | **Akshat from 2 Sep** (was Sharan) |
+| `HowItWorks.unity` (to create), `PlantExplorer.unity` | Sharan |
+| `FullPlantTour.unity` | Akshat — it holds the sequencer |
 
 ### Rule 2 — one owner per script
 
@@ -609,8 +666,11 @@ Need a change in someone else's scene? Message them. Don't open it.
 |---|---|
 | `ProcessModel.cs` | Sharan — **additive only**, never change an existing formula |
 | `PlantExplorerController.cs` | Sharan |
-| `TourSceneSequencer.cs`, `StoryModeController.cs`, `PauseFramePreserver.cs`, `ExploreOrbitCamera.cs`, `ExploreClickRaycaster.cs`, `TourRunner.cs` | Akshat |
-| `OrderContext.cs`, `OrderSolver.cs`, `OrderSelfTest.cs` | Ritwika — **moved from Akshat 31 Aug**, already written and merged |
+| `TourSceneSequencer.cs`, `StoryModeController.cs`, `PauseFramePreserver.cs`, `ExploreOrbitCamera.cs`, `ExploreClickRaycaster.cs`, `TourRunner.cs`, `OrderPanel.cs` | Akshat |
+| `OrderDashboardController.cs` | **Akshat from 2 Sep** — handed over by Sharan. Read it before changing it: the feed/particle coupling and the infeasibility handling are both correct and must not regress. |
+| `OrderContext.cs`, `OrderSolver.cs`, `OrderSelfTest.cs`, `MainMenuController.cs`, `HomeStageDrift.cs`, `SubtitleTrack.cs`, `SceneLoader.cs` | Ritwika |
+| `StageParameterBinder.cs` (to be created), `TourViewportFrame.cs`, `KilnRotator.cs`, `TemperatureRampAnimator.cs`, `AirlockFlowController.cs`, stage animators | Anirban |
+| `BladeLoopTheme.cs` | Akshat — **everyone reads from it, nobody redefines the palette.** It currently exists in three places (`MainMenuController`, `OrderDashboardController`, `BladeLoopTheme`); consolidating is a cheap follow-up, not urgent. |
 | `KilnRotator.cs`, `TemperatureRampAnimator.cs`, `AirlockFlowController.cs`, stage animators | Anirban |
 | `SceneLoader.cs`, `SubtitleTrack.cs` | Ritwika |
 
@@ -653,18 +713,23 @@ Anirban works, and it means a null `OrderContext` can never crash the build.
 | Date | Milestone |
 |---|---|
 | ~~Sun 30 Aug~~ | ✅ CEE numbers delivered. Doc reviews in from Akshat, Sharan, Anirban. |
-| **Mon 31 Aug — today** | ✅ **`OrderContext` + `OrderSolver` written and merged** (Ritwika, taken off Akshat). Anirban and Sharan unblocked. Akshat starts on the dual screen. |
-| **Tue 1 Sep** | Dual screen and viewport split taking shape. |
-| **Wed 2 Sep** | Akshat's Explore spec to Anirban. FOV compensation merged. Narration scripts drafted. |
-| **Fri 4 Sep** | Dual screen working on one stage. Custom Order screen functional. Homepage laid out. |
-| **Mon 7 Sep** | All four stages responding to parameters. Voiceover re-recorded. |
+| ~~Mon 31 Aug~~ | ✅ `OrderContext` + `OrderSolver` + self-test merged. |
+| ~~Tue 1 Sep~~ | ✅ Home page rebuilt. `TourRunner` stub, `TourSplitWidth`, IBM Plex fonts. |
+| **Wed 2 Sep — today** | ✅ Dual screen, `OrderPanel`, viewport split, `BladeLoopTheme` (Akshat). Custom Order screen (Sharan). 14 overlay wrappers (Anirban). Home page ledger redesign. **Work reassigned — see §7.** 🔴 Anirban's single scene pass should land today or first thing tomorrow. |
+| **Thu 3 Sep** | Stage scenes pass to Ritwika: shot list locked, narration written to it. Anirban: Stage 4 output streams, in code only. |
+| **Fri 4 Sep** | Sharan: How It Works merged. Akshat: Custom Order polish. |
+| **Mon 7 Sep** | Voiceover recorded. All three stages visibly responding to grade. |
+| **Tue 8 Sep** | Subtitles wired for all four stages. Windows build target proven with one throwaway `.exe`. |
 | **Wed 9 Sep** | 🔴 **Feature freeze.** All branches merged. Bug fixes only after this. |
-| **Thu 10 Sep** | WebGL build. Full run-through. Rehearse the demo. |
+| **Thu 10 Sep** | Build. Full run-through. Rehearse the demo. |
 | **Fri 11 Sep** | **Sprint review.** |
-| 12–24 Sep | Report, plus anything the review asks for. |
-| **Fri 25 Sep** | **Submission.** |
+| **12–24 Sep** | Outcome report — the ending, decided with the professors' reaction in hand. Then the report. |
+| **Fri 25 Sep** | **Submission** — Windows executable. |
 
 The 9 September freeze is not negotiable. Not merged by then means it doesn't ship.
+
+**The critical path runs through Anirban.** Everything else is built or in hand; the plant not
+visibly changing is the one gap between us and the argument we set out to make.
 
 ### Why this moved
 
