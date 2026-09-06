@@ -81,7 +81,10 @@ Everything after that is editing this one file.
 > because Ritwika owns those scene files from now on and Unity scenes cannot be merged.
 >
 > Project constraints:
-> - **New Input System only.** `OnMouseDown` and the legacy `Input` class never fire.
+> - **New Input System only.** The legacy `Input` class never fires. **`OnMouseDown` DOES
+>   fire** — it is a physics-picking message, not part of `Input`. Do not use it: it ignores
+>   pause state and UI hit-testing, which is exactly how info dialogs used to appear over the
+>   film. Route clicks through `ExploreClickRaycaster`.
 > - UI positions live in `RectTransform.anchoredPosition`, not `transform.position`.
 > - `GameObject.Find` ignores inactive objects — use
 >   `FindObjectsByType<Transform>(FindObjectsInactive.Include, FindObjectsSortMode.None)`.

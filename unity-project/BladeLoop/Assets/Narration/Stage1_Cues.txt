@@ -1,0 +1,17 @@
+# Stage 1 - wind farm
+# Format: start | end | text     (seconds on Stage1_Timeline; '#' is a comment)
+#
+# Timed against Stage1_V2_tight.mp3 (22.944 s), which sits at 0.30 s on the
+# timeline. Speech positions were measured with silence detection, not estimated:
+#     0.30-5.12   5.40-12.86   13.14-18.94   19.20-23.15
+# and the shots were cut to match: 0.0/5.9, 4.9/8.7, 12.6/7.0, 18.6/5.2.
+#
+# Each cue opens a fraction before its line and closes a fraction after, so the
+# text is never chasing the voice.
+#
+# Re-measure if the VO changes. None of these are round numbers by accident.
+
+ 0.2 |  5.3 | Every order begins here, in a field of turbines that have reached the end of their working lives.
+ 5.3 | 13.0 | A blade looks like waste, but around sixty percent of it is glass fibre, held in a resin built to survive twenty years in the open.
+13.1 | 19.1 | So an order for recovered fibre is really an order for blades, and it always takes more of them than you would expect.
+19.1 | 23.4 | How much comes back, and how clean it is, gets decided further down the line.
