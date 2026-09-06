@@ -409,18 +409,24 @@ public class MainMenuController : MonoBehaviour
         thesis.characterSpacing = 4f;
         Anchor(thesis.rectTransform, 0.055f, 0.085f, 0.55f, 0.125f);
 
-        // Equal widths, equal gaps - they are one control group, not three stray links.
+        // Equal widths, equal gaps - they are one control group, not two stray links.
+        // Positions are measured leftward from the right margin, so removing a link
+        // re-flows the rest against that edge instead of leaving a hole in the row.
         float y0 = 0.072f, y1 = 0.122f;
         const float right = 0.945f, w = 0.118f, gap = 0.012f;
-        float x2 = right - w, x1b = x2 - gap - w, x0b = x1b - gap - w;
-        // Custom Order is live (Sharan, PR #52). How It Works is still to come - it stays
-        // non-interactive rather than dead, because loading a scene that is not in Build
-        // Settings throws.
-        MakeLink(root, "custom",   "CUSTOM ORDER",   x0b, y0, x0b + w, y1,
+        float xLast = right - w, xFirst = xLast - gap - w;
+
+        // How It Works was parked as non-interactive until its scene existed -
+        // loading a scene that is not in Build Settings throws - and that scene
+        // landed with Sharan's PR #55, so the link is switched on.
+        //
+        // PLANT EXPLORER is no longer offered here. Its scene stays in Build
+        // Settings and is untouched, so anything that loads it by name still works;
+        // it simply has no entry point from the home page any more.
+        MakeLink(root, "custom", "CUSTOM ORDER", xFirst, y0, xFirst + w, y1,
                  () => SceneManager.LoadScene("OrderDashboard"), true, accent: true);
-        MakeLink(root, "how",      "HOW IT WORKS",   x1b, y0, x1b + w, y1, null, false);
-        MakeLink(root, "explorer", "PLANT EXPLORER", x2,  y0, x2 + w,  y1,
-                 () => SceneManager.LoadScene("PlantExplorer"), true);
+        MakeLink(root, "how",    "HOW IT WORKS", xLast,  y0, xLast + w,  y1,
+                 () => SceneManager.LoadScene("HowItWorks"), true);
     }
 
     // ==================================================================  actions ==
