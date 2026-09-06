@@ -15,7 +15,7 @@ described in §3–§6.
 |---|---|
 | Unity | 6000.4.7f1, URP |
 | Target | WebGL (edited on macOS/Metal) |
-| Input | **New Input System only** (`activeInputHandler: 1`) — `OnMouseDown` and the legacy `Input` class never fire |
+| Input | **New Input System only** (`activeInputHandler: 1`) — the legacy `Input` class never fires. `OnMouseDown` **does** still fire (physics picking, not `Input`), but must never be used: it bypasses pause state, UI hit-testing and drag tolerance. Clicks go through `ExploreClickRaycaster`. |
 | Camera | Cinemachine 3 — a `CinemachineTrack` does nothing unless `director.SetGenericBinding(track, brain)` is called |
 
 ---

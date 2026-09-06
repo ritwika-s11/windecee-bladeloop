@@ -82,8 +82,12 @@ Feature freeze **Wed 9 Sep** · sprint review **Fri 11 Sep**
 > `docs/plant-explorer-architecture.md` for how the existing code is structured.
 >
 > Project constraints:
-> - **New Input System only** (`activeInputHandler: 1`). `OnMouseDown` and the legacy `Input`
->   class never fire. Use `Mouse.current` / `Keyboard.current`.
+> - **New Input System only** (`activeInputHandler: 1`). The legacy `Input` class never fires —
+>   use `Mouse.current` / `Keyboard.current`. **`OnMouseDown` DOES still fire**, though: it is a
+>   MonoBehaviour message raised by physics picking, not part of the `Input` class. An earlier
+>   version of this note said it never fires, and that was wrong — `ClickablePart` relied on it
+>   and popped info dialogs over the film mid-narration. Never use it: it bypasses pause state,
+>   UI hit-testing and drag tolerance.
 > - **Cinemachine 3.** A `CinemachineTrack` on a Timeline does nothing unless you call
 >   `director.SetGenericBinding(track, brain)`.
 > - `ProcessModel.cs` is read-only for me — Sharan owns it. Never change a formula there.

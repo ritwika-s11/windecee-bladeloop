@@ -1,0 +1,17 @@
+# Transport - the road to the plant
+# Format: start | end | text     ('#' is a comment)
+#
+# Transport has NO timeline and NO PlayableDirector - it is a fixed-length
+# pass-through. SubtitleTrack therefore runs on time since the scene loaded,
+# which is the same clock the AudioSource starts on.
+#
+# Timed against Transport_V1_tight.mp3 (8.928 s) playing from 0.2 s.
+# Speech measured with silence detection, not estimated:
+#     block 1  0.00-4.38     block 2  4.64-8.87   (in file time)
+# so on the scene clock, with the 0.2 s offset:
+#     block 1  0.20-4.58     block 2  4.84-9.07
+#
+# Two cues, not three: sentences 2 and 3 are one thought and one breath apart.
+
+0.1 | 4.7 | The blades leave the field by road, sometimes for hundreds of kilometres.
+4.7 | 9.3 | It is the last easy part of the job. What happens after the gate is up to you.

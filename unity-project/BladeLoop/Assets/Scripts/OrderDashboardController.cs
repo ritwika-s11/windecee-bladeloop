@@ -456,9 +456,12 @@ public class OrderDashboardController : MonoBehaviour
         gradeBadge.color = g == Grade.High ? StreamGas : (g == Grade.Mid ? Oxide : Faint);
         gradeBadgeText.text = OrderContext.GradeLabel(g).ToUpperInvariant();
 
+        // Labels, not raw figures. This is the one screen where the user picks the
+        // tonnage themselves, so it is the screen most likely to be showing a small
+        // order - where "0 t feedstock, 0 blades, 0.0 days" would be the result.
         campaignText.text =
-            OrderContext.FeedTonnesNeeded.ToString("N0") + " t feedstock   \u00b7   " + OrderContext.BladesNeeded.ToString("N0") + " blades\n" +
-            OrderContext.TurbinesNeeded.ToString("N0") + " turbines   \u00b7   " + OrderContext.CampaignDays.ToString("0.0") + " days at 24/7";
+            OrderContext.FeedTonnesLabel + " feedstock   \u00b7   " + OrderContext.BladesLabel + "\n" +
+            OrderContext.TurbinesLabel + "   \u00b7   " + OrderContext.CampaignLabel + " at 24/7";
     }
 
     void ShowInfeasible(string note)
