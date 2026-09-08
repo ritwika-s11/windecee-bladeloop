@@ -65,10 +65,21 @@ public class SubtitleTrack : MonoBehaviour
         cues.Sort((a, b) => a.start.CompareTo(b.start));
     }
 
+    /// <summary>Seconds since this stage began.
+    ///
+    /// Normally the timeline clock, so subtitles stay locked to the camera and the
+    /// voice even when someone steps between beats. Transport has no timeline and no
+    /// PlayableDirector at all - it is a fixed-length pass-through held open by
+    /// TourSceneSequencer.sceneDurations - so there it falls back to time since the
+    /// scene loaded, which is the same clock its AudioSource started on.
+    ///
+    /// Next/Back stay director-only. Without a timeline there is nothing to seek.</summary>
+    double Clock => director != null ? director.time : Time.timeSinceLevelLoadAsDouble;
+
     void Update()
     {
-        if (director == null || label == null || cues.Count == 0) return;
-        double t = director.time;
+        if (label == null || cues.Count == 0) return;
+        double t = Clock;
 
         int idx = -1;
         for (int i = 0; i < cues.Count; i++)

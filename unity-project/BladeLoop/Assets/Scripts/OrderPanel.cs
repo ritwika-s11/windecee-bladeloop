@@ -383,7 +383,7 @@ public class OrderPanel : MonoBehaviour
                 // the settings block stays empty and the copy says why.
                 c.title = "IN TRANSIT";  c.chapter = "";
                 c.blockHdr  = "ON THE ROAD";
-                c.blockBody = $"{OrderContext.BladesNeeded:N0} blades, cut down on site and trucked to " +
+                c.blockBody = $"{OrderContext.BladesLabel}, cut down on site and trucked to " +
                               "the plant.\n\nNothing is decided on the road. The first real choice comes " +
                               "at the shredder.";
                 break;
@@ -399,10 +399,15 @@ public class OrderPanel : MonoBehaviour
                 // the one place the two hints could both appear at once.
                 c.showExplore = true;
                 c.blockHdr  = "THIS ORDER NEEDS";
-                c.blockBody = $"{OrderContext.FeedTonnesNeeded:N0} t of blade material\n" +
-                              $"{OrderContext.BladesNeeded:N0} blades   ·   {OrderContext.TurbinesNeeded:N0} turbines\n\n" +
-                              $"Running without stopping, the plant takes " +
-                              $"{OrderContext.CampaignDays:0.0} days to fill this order.";
+                c.blockBody = $"{OrderContext.FeedTonnesLabel} of blade material\n" +
+                              $"{OrderContext.BladesLabel}   ·   {OrderContext.TurbinesLabel}\n\n" +
+                              // The duration used to be stated and never explained, which
+                              // left the headline number of the stage unsupported: 44.6
+                              // days is only meaningful next to the rate that produces it.
+                              // Rate times time is the whole of it, so show both.
+                              $"The plant recovers about {OrderContext.FibreKgH:N0} kg of fibre " +
+                              $"an hour, so this order is {OrderContext.CampaignLabel} of " +
+                              "continuous running.";
                 break;
         }
 

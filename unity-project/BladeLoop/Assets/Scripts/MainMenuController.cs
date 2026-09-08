@@ -115,14 +115,19 @@ public class MainMenuController : MonoBehaviour
         // behind the ledger. A whole farm cannot fit in a 16-degree slice; trying to show
         // one made every turbine a distant stick.
         //
-        // WF_Turbine_01 is the only full-size one (60 m, centred -15.1/30/-13.3). The other
-        // ten are ~20 m background pieces. It sits 69 m out and 12.5 deg right of centre,
-        // which keeps the headline clear on the left and the status line clear top-right.
+        // WF_Turbine_01 is the only full-size one (60 m, centred -13.5/30/-12.8). The other
+        // ten are ~20 m background pieces.
         //
-        // If you move this, check both: the rotor must clear the status text, and the tower
-        // must meet the ledger seam rather than floating above it.
+        // Yaw pushes it right of centre, away from the wordmark, the statement and the
+        // call to action, which all live in the left half. Measured, not judged by eye:
+        // projecting the turbine's eight bounds corners at this pose puts it across
+        // viewport x 0.575 to 0.923, centre 0.739. Going further looked tempting but
+        // -78 deg puts its right edge at 0.989 and the rotor kisses the screen edge.
+        //
+        // Yaw only moves it horizontally, so the tower still meets the ledger seam.
+        // If you change this, re-check the right edge stays clear of 1.0.
         cam.transform.position = new Vector3(44f, 11f, -58f);
-        cam.transform.rotation = Quaternion.Euler(-5.5f, -66.5f, 0f);
+        cam.transform.rotation = Quaternion.Euler(-5.5f, -74f, 0f);
         cam.fieldOfView = 46f;
         cam.nearClipPlane = 0.3f;
         cam.farClipPlane = 500f;
@@ -213,15 +218,59 @@ public class MainMenuController : MonoBehaviour
         // read as a rendering fault rather than atmosphere.
         var haze = MakeImage(root, "haze", new Color(Panel.r, Panel.g, Panel.b, 0.30f)).rectTransform;
         Anchor(haze, 0, 0.655f, 1, 1);
+        // Seam moved down with the hero: the call to action and its three entry
+        // modes belong to the sky half, the examples to the ledger half.
         var ground = MakeImage(root, "ground", Panel).rectTransform;
-        Anchor(ground, 0, 0, 1, 0.655f);
+        Anchor(ground, 0, 0, 1, 0.600f);
         // A single hairline where the sky meets the ledger, so the join is deliberate.
         var seam = MakeImage(root, "seam", Rule).rectTransform;
-        Anchor(seam, 0, 0.6545f, 1, 0.6565f);
+        Anchor(seam, 0, 0.5995f, 1, 0.6015f);
 
         BuildMasthead(root);
-        BuildLedger(root);
+        BuildPlanCTA(root);      // the tool, above the seam, in the hero
+        BuildLedger(root);       // the examples, below it
         BuildFooter(root);
+    }
+
+    /// <summary>The primary action, promoted out of the footer into the hero.
+    ///
+    /// It sat in a row of equal-width footer links, which said "here are some other
+    /// places you could go" - the opposite of the truth. Planning a run IS the
+    /// product; the three rows below are worked examples of it. So it moves above
+    /// the seam, next to the statement, at a size nothing else on the page competes
+    /// with, and the ledger becomes what it always was: evidence.</summary>
+    void BuildPlanCTA(RectTransform root)
+    {
+        // Dropped clear of the statement rather than tucked under it - the heading
+        // is the page's sentence, and the button is what you do about it, so they
+        // should not read as one block.
+        var hit = MakeImage(root, "planCta", Oxide).rectTransform;
+        Anchor(hit, 0.055f, 0.652f, 0.262f, 0.730f);
+        hit.GetComponent<Image>().raycastTarget = true;
+
+        var btn = hit.gameObject.AddComponent<Button>();
+        btn.targetGraphic = hit.GetComponent<Image>();
+        var c = btn.colors;
+        c.normalColor      = Color.white;
+        c.highlightedColor = new Color(1.14f, 1.09f, 1.05f, 1f);
+        c.pressedColor     = new Color(0.85f, 0.85f, 0.85f, 1f);
+        c.fadeDuration     = 0.08f;
+        btn.colors = c;
+        btn.onClick.AddListener(() => SceneManager.LoadScene("OrderDashboard"));
+
+        var lbl = MakeText(hit.transform, "planLbl", "PLAN A RUN   →", 22, Hex("15110E"),
+                           TextAlignmentOptions.Center, MonoBold);
+        lbl.characterSpacing = 4f;
+        Anchor(lbl.rectTransform, 0f, 0f, 1f, 1f);
+
+        // The three ways a planner arrives at this screen, in their own words. This
+        // is a promise about Akshat's Custom Order screen - if those modes are not
+        // in the build by submission, cut this line rather than ship a page that
+        // offers something the next screen does not.
+        var modes = MakeText(root, "planModes",
+            "I know my order   ·   I have blades in the yard   ·   I'm limited to one particle size",
+            17, Muted, TextAlignmentOptions.Left, Sans);
+        Anchor(modes.rectTransform, 0.055f, 0.612f, 0.60f, 0.647f);
     }
 
     void BuildMasthead(RectTransform root)
@@ -234,10 +283,11 @@ public class MainMenuController : MonoBehaviour
         var tick = MakeImage(root, "tick", Oxide).rectTransform;
         Anchor(tick, 0.055f, 0.888f, 0.088f, 0.892f);
 
-        var status = MakeText(root, "status", StatusLine(), 14, Muted, TextAlignmentOptions.TopRight, Mono);
-        status.characterSpacing = 2f;
-        status.lineSpacing = 12f;
-        Anchor(status.rectTransform, 0.5f, 0.880f, 0.945f, 0.955f);
+        // The feedstock read-out that used to sit top right is gone. It quoted one
+        // preset's figures as though they described the app, and a planner arriving
+        // here has not chosen an order yet - so the numbers answered a question
+        // nobody had asked. The same figures appear, correctly and for the order
+        // actually loaded, on the first panel of every run.
 
         // Sits just under the oxide rule. An earlier version left a tenth of the screen
         // empty between the wordmark and this line, which read as a layout mistake.
@@ -246,26 +296,24 @@ public class MainMenuController : MonoBehaviour
         Anchor(statement.rectTransform, 0.055f, 0.795f, 0.78f, 0.878f);
     }
 
-    /// <summary>Everything here is computed. Nothing is invented.</summary>
-    string StatusLine()
-    {
-        // Feedstock is the wind farm all three orders draw on - the "same input,
-        // three outcomes" point, stated as fact. Taken from the high-grade preset
-        // because all three land within 30 t of each other by design.
-        OrderContext.ApplyPreset(0);
-        string feed = $"FEEDSTOCK  {OrderContext.FeedTonnesNeeded:N0} t  ·  {OrderContext.BladesNeeded:N0} BLADES  ·  {OrderContext.TurbinesNeeded} TURBINES";
-        OrderContext.ForgetLastRun();   // that ApplyPreset was a calculation, not a run
-        OrderContext.Clear();
-        OrderContext.ForgetLastRun();
-
-        return feed + "\nAWAITING ORDER";
-    }
+    /// <summary>Right edge of everything in the ledger half - rows, rules, the footer
+    /// button - matching the page margin on the left.
+    ///
+    /// This was briefly pulled in to 0.72 to close the gap between a buyer's name and
+    /// its RUN button. That was the wrong fix: the gap existed because the settings
+    /// and output columns had been removed from the middle, and shrinking the table
+    /// to hide a hole just left the whole page hanging off the left edge. The middle
+    /// is filled again instead - see BuildRow.</summary>
+    const float LedgerRight = 0.945f;
 
     void BuildLedger(RectTransform root)
     {
         BuildColumnHeads(root);
 
-        const float top = 0.596f, bottom = 0.175f;
+        // Pulled down to make room for the worked-examples label and the taller
+        // hero above the seam. Rows lay out in their own 0..1 space, so their
+        // contents rescale with them and nothing inside needs touching.
+        const float top = 0.512f, bottom = 0.135f;
         float rowH = (top - bottom) / OrderContext.Presets.Length;
 
         for (int i = 0; i < OrderContext.Presets.Length; i++)
@@ -277,19 +325,19 @@ public class MainMenuController : MonoBehaviour
 
     void BuildColumnHeads(RectTransform root)
     {
+        // Names what the three rows are. Below the seam now, so it reads as the
+        // heading of the ledger rather than as a second hero line.
+        var lead = MakeText(root, "examplesLead",
+                            "WORKED EXAMPLES — WATCH A RUN END TO END", 13, Faint,
+                            TextAlignmentOptions.Left, Mono);
+        lead.characterSpacing = 6f;
+        Anchor(lead.rectTransform, 0.055f, 0.545f, 0.70f, 0.577f);
+
         var head = MakeImage(root, "headRule", Rule).rectTransform;
-        Anchor(head, 0.055f, 0.6075f, 0.945f, 0.610f);
+        Anchor(head, 0.055f, 0.5225f, LedgerRight, 0.525f);
 
-        MakeCol(root, "hBuyer",  "BUYER",          0.095f, 0.345f);
-        MakeCol(root, "hSet",    "PLANT SETTINGS", 0.365f, 0.585f);
-        MakeCol(root, "hOut",    "OUTPUT",         0.605f, 0.80f);
-    }
-
-    void MakeCol(RectTransform root, string name, string label, float x0, float x1)
-    {
-        var t = MakeText(root, name, label, 13, Faint, TextAlignmentOptions.Left, Mono);
-        t.characterSpacing = 6f;
-        Anchor(t.rectTransform, x0, 0.615f, x1, 0.645f);
+        // BUYER / PLANT SETTINGS / OUTPUT are gone with the columns they labelled.
+        // One remaining column does not need a header - the rows say what they are.
     }
 
     void BuildRow(RectTransform root, int index, float y0, float y1, bool drawRuleBelow)
@@ -299,9 +347,22 @@ public class MainMenuController : MonoBehaviour
         var m     = p.model;
         var grade = order.targetGrade;
 
+        // Run length for this example. Computed locally from the preset rather than
+        // read from OrderContext.CampaignDays, because that property needs an order
+        // to be ACTIVE and this is only drawing a card - applying a preset here to
+        // read one number would clobber whatever the user is doing.
+        // Same arithmetic: order tonnage divided by the fibre recovered per hour.
+        var split      = m.OutputSplit();
+        float fibreKgH = split.GlassKgH;
+        float days     = fibreKgH > 0.01f ? order.targetTonnes * 1000f / fibreKgH / 24f : 0f;
+
         // The whole row is the button. No pill, no fill - the hover tint is the affordance.
+        //
+        // Stops at LedgerRight, not the page margin. With the settings and output
+        // columns gone the row had a thousand empty pixels between the buyer's name
+        // and its RUN button, which read as a missing column rather than as space.
         var row = MakeImage(root, "row_" + grade, new Color(1f, 1f, 1f, 0f)).rectTransform;
-        Anchor(row, 0.05f, y0, 0.95f, y1);
+        Anchor(row, 0.05f, y0, LedgerRight, y1);
         row.GetComponent<Image>().raycastTarget = true;
         var btn = row.gameObject.AddComponent<Button>();
         btn.targetGraphic = row.GetComponent<Image>();
@@ -317,7 +378,7 @@ public class MainMenuController : MonoBehaviour
         if (drawRuleBelow)
         {
             var r = MakeImage(root, "rule_" + grade, RuleSoft).rectTransform;
-            Anchor(r, 0.055f, y0, 0.945f, y0 + 0.0018f);
+            Anchor(r, 0.055f, y0, LedgerRight, y0 + 0.0018f);
         }
 
         // 01 / 02 / 03 - the first row is the recommended one, so it carries the accent.
@@ -325,33 +386,31 @@ public class MainMenuController : MonoBehaviour
                            TextAlignmentOptions.Left, Mono);
         AnchorIn(row, num.rectTransform, 0.005f, 0.52f, 0.05f, 0.78f);
 
-        var tag = MakeText(row, "tag", $"{OrderContext.GradeLabel(grade)}  ·  {order.targetTonnes:N0} t",
+        // Size AND lead time, because that pair is how a planner identifies a job.
+        // Rounded to whole days here - the exact figure is on the run's own panel.
+        var tag = MakeText(row, "tag",
+                           $"{OrderContext.GradeLabel(grade)}  ·  {order.targetTonnes:N0} t  ·  {days:0} DAYS",
                            13, Muted, TextAlignmentOptions.Left, Mono);
         tag.characterSpacing = 5f;
-        AnchorIn(row, tag.rectTransform, 0.05f, 0.70f, 0.33f, 0.88f);
+        AnchorIn(row, tag.rectTransform, 0.05f, 0.70f, 0.42f, 0.88f);
 
         var buyer = MakeText(row, "buyer", order.customerType, 25, Bone, TextAlignmentOptions.Left, SansBold);
-        AnchorIn(row, buyer.rectTransform, 0.05f, 0.44f, 0.33f, 0.70f);
+        AnchorIn(row, buyer.rectTransform, 0.05f, 0.42f, 0.44f, 0.70f);
 
         var use = MakeText(row, "use", p.endUse, 16, Faint, TextAlignmentOptions.TopLeft, Sans);
         use.enableWordWrapping = true;
-        AnchorIn(row, use.rectTransform, 0.05f, 0.14f, 0.33f, 0.44f);
+        AnchorIn(row, use.rectTransform, 0.05f, 0.12f, 0.44f, 0.42f);
 
-        // The teaching content: the four numbers someone copies into Custom Order.
-        var settings = MakeText(row, "settings",
-            $"{m.TempC:0} °C     {m.RetentionMin:0} min\n{m.FeedKgH:N0} kg/h     {m.ParticleSizeMm:0.#} mm",
-            27, Bone, TextAlignmentOptions.Left, MonoBold);
-        settings.lineSpacing = 18f;
-        AnchorIn(row, settings.rectTransform, 0.345f, 0.34f, 0.60f, 0.80f);
-
+        // The four plant settings and the purity/strength readout stay gone - twelve
+        // numbers a row, thirty-six on screen, before the reader had decided anything.
+        //
+        // The BAR comes back, though, and it is the reason the row can span the full
+        // page again. It carries no text at all: five coloured blocks whose widths
+        // are the mass balance. High grade's char block is a sliver, low grade's is a
+        // quarter of the bar, and you read that difference without reading a number.
+        // Content in the middle is what a wide row needs; numbers are not the only
+        // kind of content.
         BuildOutputBar(row, m);
-
-        var split = m.OutputSplit();
-        var readout = MakeText(row, "readout",
-            $"{split.GlassPct:0}% FIBRE   ·   {m.FiberPurityPct:0.0}% PURE   ·   {m.TensileRetentionPct:0}% STRENGTH",
-            14, Muted, TextAlignmentOptions.Left, Mono);
-        readout.characterSpacing = 2f;
-        AnchorIn(row, readout.rectTransform, 0.585f, 0.26f, 0.86f, 0.44f);
 
         // An explicit target. The whole row is clickable, but a bare arrow did not say
         // so - people did not know where to press.
@@ -375,9 +434,13 @@ public class MainMenuController : MonoBehaviour
     /// 5.9%, low grade's is 26.5%, and you can see that without reading a number.</summary>
     void BuildOutputBar(RectTransform row, ProcessModel m)
     {
+        // Wider and thicker than before, and vertically centred in the row. It is no
+        // longer one element among four in a crowded right-hand block - it is the
+        // only thing between the buyer and the RUN button, so it has to hold that
+        // span on its own.
         var split = m.OutputSplit();
         var track = MakeImage(row, "bar", Hex("1A1713")).rectTransform;
-        AnchorIn(row, track, 0.585f, 0.50f, 0.835f, 0.59f);
+        AnchorIn(row, track, 0.475f, 0.40f, 0.800f, 0.545f);
 
         float[] pct = { split.GlassPct, split.OilPct, split.SyngasPct, split.CharPct, split.LossPct };
         Color[] col = { StreamFibre, StreamOil, StreamGas, StreamChar, StreamLoss };
@@ -402,25 +465,27 @@ public class MainMenuController : MonoBehaviour
     void BuildFooter(RectTransform root)
     {
         var rule = MakeImage(root, "footRule", Rule).rectTransform;
-        Anchor(rule, 0.055f, 0.145f, 0.945f, 0.1475f);
+        Anchor(rule, 0.055f, 0.1225f, LedgerRight, 0.125f);
 
-        var thesis = MakeText(root, "thesis", OrderContext.Thesis.ToUpperInvariant(),
-                              14, Faint, TextAlignmentOptions.Left, Mono);
-        thesis.characterSpacing = 4f;
-        Anchor(thesis.rectTransform, 0.055f, 0.085f, 0.55f, 0.125f);
+        // The thesis line is gone from the footer. It was a claim set in small caps
+        // at the bottom of a page that now makes the same point structurally - one
+        // farm, three buyers, three outcomes, sitting in the rows above it. Stated
+        // AND demonstrated was one too many. It still opens How It Works, which is
+        // where someone has actually asked to be told what we think.
 
-        // Equal widths, equal gaps - they are one control group, not three stray links.
-        float y0 = 0.072f, y1 = 0.122f;
-        const float right = 0.945f, w = 0.118f, gap = 0.012f;
-        float x2 = right - w, x1b = x2 - gap - w, x0b = x1b - gap - w;
-        // Custom Order is live (Sharan, PR #52). How It Works is still to come - it stays
-        // non-interactive rather than dead, because loading a scene that is not in Build
-        // Settings throws.
-        MakeLink(root, "custom",   "CUSTOM ORDER",   x0b, y0, x0b + w, y1,
-                 () => SceneManager.LoadScene("OrderDashboard"), true, accent: true);
-        MakeLink(root, "how",      "HOW IT WORKS",   x1b, y0, x1b + w, y1, null, false);
-        MakeLink(root, "explorer", "PLANT EXPLORER", x2,  y0, x2 + w,  y1,
-                 () => SceneManager.LoadScene("PlantExplorer"), true);
+        // Only How It Works remains down here. Plan a run was promoted into the hero
+        // (BuildPlanCTA) and Plant Explorer no longer has a home-page entry - its
+        // scene is untouched and still loadable by name, it is simply not offered.
+        // Background reading belongs in the footer; the tool does not.
+        //
+        // How It Works was parked as non-interactive until its scene existed -
+        // loading a scene that is not in Build Settings throws - and that scene
+        // landed with Sharan's PR #55, so the link is switched on.
+        // Flush with the ledger's right edge, so it lines up with the RUN buttons
+        // stacked above it rather than floating off on its own margin.
+        const float wSecondary = 0.118f;
+        MakeLink(root, "how", "HOW IT WORKS", LedgerRight - wSecondary, 0.072f, LedgerRight, 0.122f,
+                 () => SceneManager.LoadScene("HowItWorks"), true);
     }
 
     // ==================================================================  actions ==
@@ -475,7 +540,12 @@ public class MainMenuController : MonoBehaviour
     void MakeLink(RectTransform root, string name, string label, float x0, float y0, float x1, float y1,
                   UnityEngine.Events.UnityAction onClick, bool enabled, bool accent = false)
     {
-        var fill = enabled ? new Color(1f, 1f, 1f, 0.05f) : new Color(1f, 1f, 1f, 0.02f);
+        // Accent used to mean "same faint box, oxide outline", which read as barely
+        // different from the secondary one beside it. The primary action of the page
+        // should look like the primary action of a row, so it now borrows the same
+        // solid-oxide treatment the 01 RUN button uses.
+        var fill = accent ? Oxide
+                          : (enabled ? new Color(1f, 1f, 1f, 0.05f) : new Color(1f, 1f, 1f, 0.02f));
         var hit = MakeImage(root, name, fill).rectTransform;
         Anchor(hit, x0, y0, x1, y1);
         hit.GetComponent<Image>().raycastTarget = true;
@@ -493,11 +563,17 @@ public class MainMenuController : MonoBehaviour
             btn.colors = colors;
         }
 
-        var edge = hit.gameObject.AddComponent<Outline>();
-        edge.effectColor = accent ? Oxide : (enabled ? Hex("4A4238") : RuleSoft);
-        edge.effectDistance = new Vector2(1.2f, -1.2f);
+        // No outline on the accent button - a filled block does not need an edge,
+        // and drawing one over oxide just muddies it.
+        if (!accent)
+        {
+            var edge = hit.gameObject.AddComponent<Outline>();
+            edge.effectColor = enabled ? Hex("4A4238") : RuleSoft;
+            edge.effectDistance = new Vector2(1.2f, -1.2f);
+        }
 
-        var t = MakeText(hit.transform, "label", label, 15, enabled ? Bone : Faint,
+        var t = MakeText(hit.transform, "label", label, 15,
+                         accent ? Hex("15110E") : (enabled ? Bone : Faint),
                          TextAlignmentOptions.Center, MonoBold);
         t.characterSpacing = 3f;
         Anchor(t.rectTransform, 0, 0, 1, 1);

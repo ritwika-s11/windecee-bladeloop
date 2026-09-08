@@ -267,6 +267,86 @@ public static class OrderContext
     public static int TurbinesNeeded =>
         HasOrder ? Mathf.RoundToInt(FeedTonnesNeeded / BladeMassTonnes / BladesPerTurbine) : 0;
 
+    // ------------------------------------------------------ display labels ----
+    //
+    // The numeric properties above are the truth and are NOT changed here -
+    // OrderSelfTest asserts on them directly. These are only for text a user reads.
+    //
+    // The three presets all sit near 7,000 t, where "6,962 t / 616 blades / 44.6
+    // days" reads fine. A custom order can be any size, and at the small end the
+    // same formatting collapses: 50 kg of fibre needs 0.07 t of blade, which prints
+    // as "0 t of blade material, 0 blades, 0 turbines, 0.0 days". Every one of those
+    // is arithmetically correct and every one of them looks like a broken app - on
+    // the first screen of the run, which is the worst place to lose someone.
+    //
+    // So the unit follows the magnitude, and below one blade we say so in words
+    // rather than rounding a real quantity down to nothing.
+
+    static string Plural(int n, string one, string many) => n == 1 ? one : many;
+
+    /// <summary>Feedstock tonnage, in a unit that suits the size of the order.</summary>
+    public static string FeedTonnesLabel
+    {
+        get
+        {
+            float t = FeedTonnesNeeded;
+            if (t <= 0f)   return "no material";
+            if (t < 1f)    return (t * 1000f).ToString("N0") + " kg";
+            if (t < 100f)  return t.ToString("N1") + " t";
+            return t.ToString("N0") + " t";
+        }
+    }
+
+    /// <summary>Blade count, or "less than one blade" when the order is small.</summary>
+    public static string BladesLabel
+    {
+        get
+        {
+            if (!HasOrder || BladeMassTonnes <= 0.001f) return "no blades";
+            float exact = FeedTonnesNeeded / BladeMassTonnes;
+            if (exact <= 0f) return "no blades";
+            if (exact < 1f)  return "less than one blade";
+            int n = Mathf.RoundToInt(exact);
+            return n.ToString("N0") + Plural(n, " blade", " blades");
+        }
+    }
+
+    /// <summary>Turbine count, same treatment as blades.</summary>
+    public static string TurbinesLabel
+    {
+        get
+        {
+            if (!HasOrder || BladeMassTonnes <= 0.001f) return "no turbines";
+            float exact = FeedTonnesNeeded / BladeMassTonnes / BladesPerTurbine;
+            if (exact <= 0f) return "no turbines";
+            if (exact < 1f)  return "less than one turbine";
+            int n = Mathf.RoundToInt(exact);
+            return n.ToString("N0") + Plural(n, " turbine", " turbines");
+        }
+    }
+
+    /// <summary>Run length, in minutes, hours or days as the size demands. A short
+    /// custom order is a matter of hours, and "0.0 days" tells the user nothing.</summary>
+    public static string CampaignLabel
+    {
+        get
+        {
+            float h = CampaignHours;
+            if (h <= 0f) return "no run time";
+            if (h < 1f)
+            {
+                int mins = Mathf.Max(1, Mathf.RoundToInt(h * 60f));
+                return mins + Plural(mins, " minute", " minutes");
+            }
+            if (h < 48f)
+            {
+                int whole = Mathf.RoundToInt(h);
+                return h < 1.05f ? "1 hour" : h.ToString("0.#") + Plural(whole, " hour", " hours");
+            }
+            return CampaignDays.ToString("0.0") + " days";
+        }
+    }
+
     // ------------------------------------------------------------- presets ----
 
     public struct Preset

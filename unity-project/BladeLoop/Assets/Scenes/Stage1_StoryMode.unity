@@ -14529,17 +14529,17 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 248734693}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 382156102}
-  m_Father: {fileID: 2090014499}
+  m_Father: {fileID: 1642608225}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 0.5}
   m_AnchorMax: {x: 1, y: 0.5}
-  m_AnchoredPosition: {x: -18, y: 0}
+  m_AnchoredPosition: {x: -448.4514, y: -310.2892}
   m_SizeDelta: {x: 132, y: 52}
   m_Pivot: {x: 1, y: 0.5}
 --- !u!114 &248734695
@@ -43886,7 +43886,7 @@ MonoBehaviour:
   - {fileID: 1097312204}
   - {fileID: 803693966}
   cycleDuration: 3.5
-  startDelay: 24
+  startDelay: 4.5
 --- !u!114 &728752468
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -84538,8 +84538,8 @@ MonoBehaviour:
   doorLocalOffset: {x: -1.4, y: 0.05, z: -1.7}
   overseeSpot: {x: 1, y: 0.05, z: 10.5}
   lookAtWhileIdle: {x: -2, y: 2.5, z: 15}
-  exitTime: 16
-  returnStartTime: 33.5
+  exitTime: 6.5
+  returnStartTime: 13.5
   walkSpeed: 1.8
   characterAnimator: {fileID: 1461120777}
 --- !u!1 &1462275851
@@ -94608,6 +94608,8 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 2090014499}
+  - {fileID: 1766497702}
+  - {fileID: 248734694}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -101563,17 +101565,17 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1766497701}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1187560749}
-  m_Father: {fileID: 2090014499}
+  m_Father: {fileID: 1642608225}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0.5}
   m_AnchorMax: {x: 0, y: 0.5}
-  m_AnchoredPosition: {x: 18, y: 0}
+  m_AnchoredPosition: {x: 448.4514, y: -310.2892}
   m_SizeDelta: {x: 132, y: 52}
   m_Pivot: {x: 0, y: 0.5}
 --- !u!114 &1766497703
@@ -108424,7 +108426,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f6234f72494314663b73fa8d71bb9583, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TruckDriving
-  startDelay: 37.5
+  startDelay: 19.5
   speed: 4.5
   direction: {x: 1, y: 0, z: 0}
   maxDistance: 45
@@ -119623,8 +119625,6 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1714568547}
-  - {fileID: 1766497702}
-  - {fileID: 248734694}
   m_Father: {fileID: 1642608225}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0}
@@ -119645,7 +119645,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SubtitleTrack
   director: {fileID: 1239968282}
-  cueFile: {fileID: 0}
+  cueFile: {fileID: 4900000, guid: 1e8f182cb9ea1483691b03f065909f16, type: 3}
   label: {fileID: 1714568545}
   group: {fileID: 2090014501}
   backRestartsCurrentLine: 0
@@ -119677,7 +119677,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
   m_Color: {r: 0.06, g: 0.09, b: 0.16, a: 0.88}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
