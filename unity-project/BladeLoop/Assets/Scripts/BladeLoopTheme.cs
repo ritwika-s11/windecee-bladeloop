@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections.Generic;
 using TMPro;
 
 /// <summary>
@@ -127,5 +128,63 @@ public static class BladeLoopTheme
     {
         InitPalette();
         InitFonts();
+    }
+
+    // ---- rounded surfaces ----------------------------------------------------
+
+    static readonly Dictionary<int, Sprite> roundedCache = new Dictionary<int, Sprite>();
+
+    /// <summary>
+    /// A white 9-sliced sprite with rounded corners, for use with Image.type =
+    /// Sliced. Tint it with Image.color as usual.
+    ///
+    /// WHY THIS EXISTS. Every surface built from a bare Image is a hard-edged
+    /// rectangle, and a screen made entirely of hard rectangles reads as a form
+    /// however good the type and spacing are. uGUI has no corner radius, so the
+    /// standard answer is a sliced sprite - generated here rather than shipped as
+    /// an asset so it needs no import, no meta file and no one else's approval.
+    ///
+    /// Cached per radius: a handful of small textures for the whole application.
+    /// Anti-aliased on the diagonal, so it holds up when the sprite is scaled.
+    /// </summary>
+    public static Sprite Rounded(int radius)
+    {
+        radius = Mathf.Clamp(radius, 1, 48);
+        Sprite cached;
+        if (roundedCache.TryGetValue(radius, out cached) && cached != null) return cached;
+
+        // Two-pixel middle band is all a sliced sprite needs; the corners carry the shape.
+        int size = radius * 2 + 2;
+        var tex = new Texture2D(size, size, TextureFormat.RGBA32, false)
+        {
+            filterMode = FilterMode.Bilinear,
+            wrapMode   = TextureWrapMode.Clamp,
+            hideFlags  = HideFlags.HideAndDontSave
+        };
+
+        var px = new Color32[size * size];
+        for (int y = 0; y < size; y++)
+        {
+            for (int x = 0; x < size; x++)
+            {
+                // Distance past the corner arc, in pixels. Negative inside.
+                float dx = Mathf.Max(radius - x - 0.5f, x + 0.5f - (size - radius));
+                float dy = Mathf.Max(radius - y - 0.5f, y + 0.5f - (size - radius));
+                float d  = (dx > 0f && dy > 0f) ? Mathf.Sqrt(dx * dx + dy * dy) - radius
+                                                : Mathf.Max(dx, dy) - radius;
+                // One pixel of coverage falloff gives a clean edge at any scale.
+                float a = Mathf.Clamp01(0.5f - d);
+                px[y * size + x] = new Color32(255, 255, 255, (byte)(a * 255f));
+            }
+        }
+        tex.SetPixels32(px);
+        tex.Apply(false, true);
+
+        var sprite = Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f),
+                                   100f, 0, SpriteMeshType.FullRect,
+                                   new Vector4(radius, radius, radius, radius));
+        sprite.hideFlags = HideFlags.HideAndDontSave;
+        roundedCache[radius] = sprite;
+        return sprite;
     }
 }
