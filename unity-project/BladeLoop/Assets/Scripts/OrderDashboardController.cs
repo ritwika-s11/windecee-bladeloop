@@ -333,8 +333,15 @@ public class OrderDashboardController : MonoBehaviour
                 bool off;
                 note   = Verdict(m, out off);
                 title  = off ? "Something better is available" : "A plan worth running";
-                body   = "The four settings stay live. Temperature and time decide how completely the resin "
-                       + "breaks down; particle size decides both quality and how fast you can feed.";
+                // Campaign figures come from OrderContext's LABEL properties, not the
+                // raw numbers. Ritwika added them because Custom Order is the one
+                // screen where the user sets the tonnage, so it is the one most
+                // likely to be showing a small order - where the raw figures print
+                // "0 t, 0 blades, 0.0 days". Every one of those is arithmetically
+                // correct and looks like a broken app.
+                body   = $"Filling this order takes {OrderContext.FeedTonnesLabel} of blade material — "
+                       + $"{OrderContext.BladesLabel}, {OrderContext.TurbinesLabel} — over "
+                       + $"{OrderContext.CampaignLabel} of continuous running.";
                 accent = off ? BladeLoopTheme.Oxide : BladeLoopTheme.StreamGas;
                 aL = "FIBRE PER HOUR"; aV = $"{m.OutputSplit().GlassKgH:N0} kg/h";
                 bL = "PURITY";         bV = $"{m.FiberPurityPct:0.0}%";
