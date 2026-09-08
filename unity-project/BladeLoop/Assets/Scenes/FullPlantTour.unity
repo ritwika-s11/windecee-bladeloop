@@ -162,7 +162,7 @@ MonoBehaviour:
   - 86
   fadeCanvas: {fileID: 787970055}
   fadeDuration: 0.5
-  endHold: 1
+  endHold: 0.3
 --- !u!4 &138009250
 Transform:
   m_ObjectHideFlags: 0

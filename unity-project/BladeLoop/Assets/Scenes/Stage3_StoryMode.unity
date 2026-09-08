@@ -7805,17 +7805,17 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 143070777}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 238518771}
-  m_Father: {fileID: 1106994474}
+  m_Father: {fileID: 1245327437}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 0.5}
   m_AnchorMax: {x: 1, y: 0.5}
-  m_AnchoredPosition: {x: -18, y: 0}
+  m_AnchoredPosition: {x: -448.4514, y: -310.28925}
   m_SizeDelta: {x: 132, y: 52}
   m_Pivot: {x: 1, y: 0.5}
 --- !u!114 &143070779
@@ -81719,7 +81719,7 @@ Material:
     - _ZWrite: 1
     m_Colors:
     - _BaseColor: {r: 0.08, g: 0.07, b: 0.07, a: 1}
-    - _Color: {r: 0.079999976, g: 0.06999998, b: 0.06999998, a: 1}
+    - _Color: {r: 0.07999996, g: 0.06999998, b: 0.06999998, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []
@@ -83992,7 +83992,7 @@ Material:
     - _ZWrite: 1
     m_Colors:
     - _BaseColor: {r: 0.1, g: 0.08, b: 0.08, a: 1}
-    - _Color: {r: 0.09999997, g: 0.079999976, b: 0.079999976, a: 1}
+    - _Color: {r: 0.09999997, g: 0.07999996, b: 0.07999996, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []
@@ -99696,8 +99696,6 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1481924961}
-  - {fileID: 1904055266}
-  - {fileID: 143070778}
   m_Father: {fileID: 1245327437}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0}
@@ -99718,7 +99716,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SubtitleTrack
   director: {fileID: 657623981}
-  cueFile: {fileID: 0}
+  cueFile: {fileID: 4900000, guid: 14d4a103ee9094161a7ca56925fab297, type: 3}
   label: {fileID: 1481924959}
   group: {fileID: 1106994476}
   backRestartsCurrentLine: 0
@@ -99750,7 +99748,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
   m_Color: {r: 0.06, g: 0.09, b: 0.16, a: 0.88}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
@@ -113337,6 +113335,8 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1106994474}
+  - {fileID: 1904055266}
+  - {fileID: 143070778}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -113375,8 +113375,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CutawayTimelineTrigger
   director: {fileID: 657623981}
   toggler: {fileID: 1449720908}
-  showAtTime: 48
-  hideAtTime: 75
+  showAtTime: 17.8
+  hideAtTime: 27
 --- !u!4 &1248842506
 Transform:
   m_ObjectHideFlags: 0
@@ -158804,7 +158804,7 @@ Transform:
   m_GameObject: {fileID: 1797344428}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 2.05, y: 8.35, z: 0}
+  m_LocalPosition: {x: 1.5, y: 8.35, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -159647,6 +159647,7 @@ MonoBehaviour:
   button: {fileID: 1859511876}
   buttonLabel: {fileID: 2116443395}
   toggler: {fileID: 1449720908}
+  window: {fileID: 0}
 --- !u!114 &1859511876
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -160073,7 +160074,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1875037028
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -170576,17 +170577,17 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1904055265}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1131913837}
-  m_Father: {fileID: 1106994474}
+  m_Father: {fileID: 1245327437}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0.5}
   m_AnchorMax: {x: 0, y: 0.5}
-  m_AnchoredPosition: {x: 18, y: 0}
+  m_AnchoredPosition: {x: 448.4514, y: -310.28925}
   m_SizeDelta: {x: 132, y: 52}
   m_Pivot: {x: 0, y: 0.5}
 --- !u!114 &1904055267
@@ -178384,8 +178385,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TemperatureRampAnimator
   director: {fileID: 657623981}
-  rampStartTime: 42
-  rampEndTime: 62
+  rampStartTime: 9.5
+  rampEndTime: 18.5
   kilnShellRenderer: {fileID: 5561703346231707391}
   burnerRingRenderer: {fileID: 0}
   burnerNozzleRenderers: []
@@ -178394,7 +178395,7 @@ MonoBehaviour:
   coolIntensity: 0.3
   hotIntensity: 6
   shellHeatStrength: 0.15
-  temperatureLabel: {fileID: 1875037028}
+  temperatureLabel: {fileID: 0}
   tempStart: 25
   tempEnd: 620
 --- !u!4 &2025653950
@@ -178426,6 +178427,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::KilnOrderBinding
   ramp: {fileID: 2025653949}
   rotator: {fileID: 437447455}
+  airlock: {fileID: 0}
+  referenceFeedKgH: 6500
+  readabilityExponent: 1.8
+  amountVsSpeed: 0.7
+  cycleShortenExponent: 0.15
+  minCycleLength: 4.9
+  maxCycleLength: 7.5
+  minFeedFactor: 0.7
+  maxFeedFactor: 2
   visualFloorC: 540
   visualCeilingC: 610
   hotByTime: 28
@@ -178560,7 +178570,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &2032311542
 Transform:
   m_ObjectHideFlags: 0
@@ -200522,7 +200532,7 @@ Transform:
   m_GameObject: {fileID: 1698120051924264888}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 1.5, y: 8.02, z: 0}
+  m_LocalPosition: {x: 1.5, y: 7.9700003, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -219092,7 +219102,7 @@ Transform:
   m_GameObject: {fileID: 536053847021306100}
   serializedVersion: 2
   m_LocalRotation: {x: 1, y: -0, z: 0, w: -0.0000000754979}
-  m_LocalPosition: {x: 1.5, y: 7.65, z: 0}
+  m_LocalPosition: {x: 1.5, y: 7.6, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
