@@ -5313,17 +5313,17 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 143070777}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 238518771}
-  m_Father: {fileID: 1106994474}
+  m_Father: {fileID: 1245327437}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 0.5}
   m_AnchorMax: {x: 1, y: 0.5}
-  m_AnchoredPosition: {x: -18, y: 0}
+  m_AnchoredPosition: {x: -448.4514, y: -310.28925}
   m_SizeDelta: {x: 132, y: 52}
   m_Pivot: {x: 1, y: 0.5}
 --- !u!114 &143070779
@@ -57359,8 +57359,6 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1481924961}
-  - {fileID: 1904055266}
-  - {fileID: 143070778}
   m_Father: {fileID: 1245327437}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0}
@@ -57381,7 +57379,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SubtitleTrack
   director: {fileID: 657623981}
-  cueFile: {fileID: 0}
+  cueFile: {fileID: 4900000, guid: b6420c26ba483487a9f8b179c39173b7, type: 3}
   label: {fileID: 1481924959}
   group: {fileID: 1106994476}
   backRestartsCurrentLine: 0
@@ -57413,7 +57411,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
   m_Color: {r: 0.06, g: 0.09, b: 0.16, a: 0.88}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
@@ -63143,6 +63141,8 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1106994474}
+  - {fileID: 1904055266}
+  - {fileID: 143070778}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -74177,7 +74177,7 @@ MonoBehaviour:
   startPos: {x: -17, y: -0.31, z: -4}
   parkedPos: {x: 4.5, y: -0.31, z: -4}
   exitPos: {x: -20, y: -0.31, z: -4}
-  approachDuration: 7
+  approachDuration: 4.5
   exitDuration: 6
   startDelay: 0.5
 --- !u!114 &1524693292
@@ -92709,17 +92709,17 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1904055265}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1131913837}
-  m_Father: {fileID: 1106994474}
+  m_Father: {fileID: 1245327437}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0.5}
   m_AnchorMax: {x: 0, y: 0.5}
-  m_AnchoredPosition: {x: 18, y: 0}
+  m_AnchoredPosition: {x: 448.4514, y: -310.28925}
   m_SizeDelta: {x: 132, y: 52}
   m_Pivot: {x: 0, y: 0.5}
 --- !u!114 &1904055267
@@ -122463,9 +122463,12 @@ MonoBehaviour:
   - {fileID: 828517066594501700}
   referenceMm: 8
   referenceCount: 30
-  sizeResponse: 0.368
+  sizeResponse: 0.6
   countResponse: 0.943
   sizeJitter: 0.25
+  coverageDrivesCount: 1
+  coverFine: 0.92
+  coverCoarse: 0.34
   spread: 0.58
   coarseSpreadBonus: 0.14
   reposeFine: 0.55
@@ -122485,6 +122488,8 @@ MonoBehaviour:
   beltHalfLength: 5.2
   beltHalfWidth: 0.3
   beltSpeed: 1.15
+  beltReferenceCount: 37
+  beltGapJitter: 0.7
 --- !u!4 &6500256727915290910
 Transform:
   m_ObjectHideFlags: 0
