@@ -40,7 +40,6 @@ public class OutcomeReportPanel : MonoBehaviour
     RectTransform body;          // everything that fades in after the slide
     CanvasGroup   bodyGroup;
     TMP_Text      savedNote;
-    string        lastSavedPath;
 
     public static void Show()
     {
@@ -341,17 +340,47 @@ public class OutcomeReportPanel : MonoBehaviour
         savedNote.textWrappingMode = TextWrappingModes.Normal;
     }
 
+#if UNITY_WEBGL && !UNITY_EDITOR
+    [System.Runtime.InteropServices.DllImport("__Internal")]
+    static extern void BladeLoopDownloadFile(string name, string text);
+#endif
+
+    /// <summary>Hands the report to the user.
+    ///
+    /// The two platforms need genuinely different mechanisms, not a shared one
+    /// with a flag. On Windows a file goes to the Desktop and opens in the
+    /// browser. In WebGL there IS no disk: File.WriteAllText writes to an
+    /// IndexedDB virtual filesystem that succeeds, throws nothing, and leaves the
+    /// file somewhere the user can never reach - so the browser build hands the
+    /// bytes to the page as a Blob download instead.
+    ///
+    /// Getting this wrong is invisible in the editor, because the editor is not
+    /// WebGL. It only shows up in a deployed build.</summary>
     void SaveReport()
     {
+        string html = OutcomeReport.BuildHtml();
+        string name = OutcomeReport.FileName();
+
+#if UNITY_WEBGL && !UNITY_EDITOR
+        try
+        {
+            BladeLoopDownloadFile(name, html);
+            if (savedNote != null) savedNote.text = "Downloaded  " + name;
+        }
+        catch (System.Exception e)
+        {
+            if (savedNote != null) savedNote.text = "Could not download the report: " + e.Message;
+            Debug.LogWarning("[OutcomeReport] download failed: " + e);
+        }
+#else
         try
         {
             string dir = System.Environment.GetFolderPath(System.Environment.SpecialFolder.Desktop);
             if (string.IsNullOrEmpty(dir) || !System.IO.Directory.Exists(dir))
                 dir = Application.persistentDataPath;
 
-            string path = System.IO.Path.Combine(dir, OutcomeReport.FileName());
-            System.IO.File.WriteAllText(path, OutcomeReport.BuildHtml());
-            lastSavedPath = path;
+            string path = System.IO.Path.Combine(dir, name);
+            System.IO.File.WriteAllText(path, html);
 
             if (savedNote != null) savedNote.text = "Saved to  " + path;
             Application.OpenURL("file:///" + path.Replace("\\", "/"));
@@ -362,6 +391,7 @@ public class OutcomeReportPanel : MonoBehaviour
             if (savedNote != null) savedNote.text = "Could not save the report: " + e.Message;
             Debug.LogWarning("[OutcomeReport] save failed: " + e);
         }
+#endif
     }
 
     void BackToMenu()
