@@ -20,7 +20,7 @@ public enum Grade { High = 0, Mid = 1, Low = 2 }
 [System.Serializable]
 public class Order
 {
-    public string customerName;     // user-typed on the Custom Order screen; EMPTY for presets
+    public string customerName;     // UNUSED - always "". See the note further down; read customerType.
     public string customerType;     // "Composite manufacturer"
     public Grade  targetGrade;
     public float  targetTonnes;     // tonnes of recovered fibre requested
@@ -395,8 +395,11 @@ public static class OrderContext
     // actually buys that grade (endUse above, EndUseFor below). That states the
     // product's argument on the home page instead of implying it.
     //
-    // customerName stays on Order because the Custom Order screen lets the user
-    // type one. For presets it is empty and the UI falls back to customerType.
+    // customerName is UNUSED. No screen collects a buyer name: the three presets
+    // pass "" and the Custom Order screen passes "" too, putting its buyer string
+    // in customerType (OrderDashboardController -> new Order("", BuyerName(...), ...)).
+    // The field is kept only so existing serialised Orders still deserialise; every
+    // reader should use customerType. Delete it if that constraint ever lifts.
 
     public static void ApplyPreset(int index)
     {

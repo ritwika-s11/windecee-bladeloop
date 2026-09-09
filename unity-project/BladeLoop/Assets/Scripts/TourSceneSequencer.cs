@@ -18,8 +18,12 @@ public class TourSceneSequencer : MonoBehaviour
         "Stage3_StoryMode",
         "Stage4_V2"
     };
-    [Tooltip("Fallback per-scene duration when a scene has no PlayableDirector.")]
-    public float[] sceneDurations = { 43f, 13f, 32f, 84f, 86f };
+    [Tooltip("Fallback per-scene duration, used ONLY when a scene has no " +
+             "PlayableDirector. Today that is Transport alone (index 1) - every other " +
+             "stage is timed by its own timeline and ignores the number here. Keep " +
+             "them true anyway: a wrong value is silently inert until the day someone " +
+             "removes a director, and then it is a mystery.")]
+    public float[] sceneDurations = { 23.8f, 9.6f, 30.4f, 33.6f, 46.7f };
     public CanvasGroup fadeCanvas;
     public float fadeDuration = 0.5f;
     [Tooltip("Extra hold on the last frame of each stage before cutting.")]
@@ -57,6 +61,11 @@ public class TourSceneSequencer : MonoBehaviour
 
     IEnumerator Start()
     {
+        // A previous run's report retires the tour controls permanently. Starting a
+        // new tour is the one event that should bring them back - without this, the
+        // second tour of a session has no Skip or Next.
+        TourControls.Unsuppress();
+
         DontDestroyOnLoad(gameObject);
         if (fadeCanvas != null) DontDestroyOnLoad(fadeCanvas.transform.root.gameObject);
 
@@ -104,9 +113,40 @@ public class TourSceneSequencer : MonoBehaviour
             else                  { i++; }
         }
 
+        // ---- the ending ------------------------------------------------------
+        //
+        // The tour used to fade out and cut to the menu here, which threw away the
+        // one thing the whole run was building towards. Instead the stats panel
+        // grows across the screen and becomes the run report, over the last frame
+        // of Stage 4 - no fade, no scene load, so the plant is still there behind
+        // it. OutcomeReportPanel owns the return to the menu from that point.
+        //
+        // The old path is kept for the case where there is nothing to report on.
+        if (showReportAtEnd && OrderContext.HasOrder)
+        {
+            OutcomeReportPanel.Show();
+            yield break;                     // this object stays alive; EndTour() clears it
+        }
+
         yield return StartCoroutine(Fade(0f, 1f));
-        var root = fadeCanvas != null ? fadeCanvas.transform.root.gameObject : null;
         SceneManager.LoadScene("MainMenu");
+        EndTour();
+    }
+
+    [Tooltip("Finish on the run report instead of cutting back to the menu. Off " +
+             "restores the original ending.")]
+    public bool showReportAtEnd = true;
+
+    /// <summary>Tears the tour down. Called by the report's Back to menu button,
+    /// and by the fallback ending when there is no order to report on.
+    ///
+    /// Does NOT load a scene: the caller decides where to go, because the report
+    /// needs to destroy this object BEFORE loading the menu and the fallback path
+    /// needs the opposite order.</summary>
+    public void EndTour()
+    {
+        var root = fadeCanvas != null ? fadeCanvas.transform.root.gameObject : null;
+        if (Active == this) Active = null;
         if (root != null && root != gameObject) Destroy(root);
         Destroy(gameObject);
     }
