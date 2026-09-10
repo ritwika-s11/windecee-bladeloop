@@ -63,27 +63,6 @@ public class KilnOrderBinding : MonoBehaviour
     public float minFeedFactor = 0.7f;
     public float maxFeedFactor = 2.0f;
 
-    [Header("Readable temperature band")]
-    [Tooltip("Temperature that should read as fully cold. The authored ramp starts at room " +
-             "ambient, which wastes almost the whole colour range on temperatures the plant " +
-             "never runs at - so 550 and 600 end up looking identical.")]
-    public float visualFloorC = 540f;
-    [Tooltip("Temperature that should read as fully hot.")]
-    public float visualCeilingC = 610f;
-
-    [Header("Ramp timing")]
-    [Tooltip("Second by which the kiln should be at full temperature.\n\n" +
-             "The authored ramp finishes at t=62, but the kiln beauty shots run 31.5-39s. " +
-             "That means both a 550 C run and a 600 C run are still part-heated while the kiln " +
-             "is actually on screen, and they look identical - the whole point of the task is " +
-             "lost. Bringing the ramp home before the first kiln shot is what makes the " +
-             "temperature readable.")]
-    public float hotByTime = 28f;
-    [Tooltip("How long the warm-up takes. The authored ramp is t=42 to t=62 - which is after " +
-             "every kiln shot has already been and gone (31.5-39s), so the drum is cold in each " +
-             "one. The whole ramp moves earlier, it does not just finish earlier.")]
-    public float rampDurationSec = 16f;
-
     [Header("Retention")]
     [Tooltip("Retention the authored rpm corresponds to.")]
     public float referenceRetentionMin = 35f;
@@ -103,36 +82,30 @@ public class KilnOrderBinding : MonoBehaviour
         var m = OrderContext.Model;
         if (m == null) return;
 
-        if (ramp != null)
-        {
-            ramp.tempEnd = m.TempC;
-
-            // Move the whole warm-up earlier so the drum is at temperature before the
-            // kiln shots rather than after them.
-            if (hotByTime > 2f)
-            {
-                ramp.rampEndTime   = hotByTime;
-                ramp.rampStartTime = Mathf.Max(1f, hotByTime - Mathf.Max(rampDurationSec, 2f));
-            }
-
-            // Re-map the visual range onto the band the plant actually runs in. Without
-            // this the difference between a 550 C run and a 600 C run is about 8% of the
-            // colour ramp - technically correct and completely invisible.
-            ramp.tempStart = visualFloorC;
-
-            // Push the hot end further for hotter runs so the three presets separate.
-            float hot = Mathf.InverseLerp(visualFloorC, visualCeilingC, m.TempC);
-            ramp.hotIntensity  = Mathf.Lerp(2.2f, 7.5f, hot);
-            ramp.coolIntensity = Mathf.Lerp(0.15f, 0.5f, hot);
-            ramp.hotColor  = Color.Lerp(new Color(0.85f, 0.22f, 0.06f),   // dull red, under-fired
-                                        new Color(1.00f, 0.62f, 0.20f),  // bright even orange
-                                        hot);
-
-            // The authored 0.15 keeps the shell almost cold-looking whatever the intensity,
-            // which is why 550 and 600 were indistinguishable. Push it so the drum itself
-            // carries the temperature, and scale it with the run so a cool run stays dull.
-            ramp.shellHeatStrength = Mathf.Lerp(0.30f, 0.75f, hot);
-        }
+        // ---------------------------------------------------------------------
+        // TEMPERATURE AND COLOUR ARE NO LONGER DRIVEN FROM HERE.
+        //
+        // TemperatureRampAnimator.ApplyOrder() now owns them, and it does the job
+        // properly. This component used to set tempEnd, tempStart, hotColor,
+        // hotIntensity, coolIntensity and shellHeatStrength - and because it runs at
+        // execution order 60, AFTER the ramp's own Start, it overwrote that newer work
+        // every time.
+        //
+        // It was also scaling the wrong thing. shellHeatStrength only reaches
+        // kilnShellRenderer: one renderer, while the glow a viewer actually sees comes
+        // from roughly four hundred units of emission spread across objects this never
+        // touched (S3_Kiln_HotZone alone is 177). The ramp's heatPeak covers all of
+        // them.
+        //
+        // And the ramp timing was the worse problem. hotByTime = 28 with a 16 s ramp
+        // was chosen when Stage3_Timeline ran 84 s with the kiln shots at 31.5-39 s.
+        // After the retime the timeline is ~34.6 s and the kiln is on screen from 0-19 s,
+        // so those absolute times held the drum cold through almost the whole stage -
+        // including the line at 10.2 s about how hot you run it. Hard-coded seconds do
+        // not survive a re-cut, which is exactly the fault I flagged in AirlockDoorCycle.
+        //
+        // Retention and feed rate below are still this component's job.
+        // ---------------------------------------------------------------------
 
         if (rotator != null)
         {
