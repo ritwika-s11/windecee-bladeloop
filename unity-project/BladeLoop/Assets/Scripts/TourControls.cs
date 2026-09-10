@@ -79,8 +79,31 @@ public class TourControls : MonoBehaviour
         Build();
     }
 
+    /// <summary>Retires the tour controls for good.
+    ///
+    /// Called when the run report takes over. The sequencer is still Active at that
+    /// point - its coroutine has finished but EndTour() does not run until the user
+    /// leaves the report - so Update would otherwise keep Previous on screen, over
+    /// the report, wired to a coroutine that has already exited. It looked like a
+    /// button and did nothing.</summary>
+    public static void Suppress()
+    {
+        suppressed = true;
+        if (instance == null) return;
+        if (instance.skipBtn != null) instance.skipBtn.SetActive(false);
+        if (instance.nextBtn != null) instance.nextBtn.SetActive(false);
+        if (instance.prevBtn != null) instance.prevBtn.SetActive(false);
+    }
+
+    /// <summary>Lets a fresh tour bring them back after one has ended.</summary>
+    public static void Unsuppress() { suppressed = false; }
+
+    static bool suppressed;
+
     void Update()
     {
+        if (suppressed) return;
+
         var seq = TourSceneSequencer.Active;
 
         if (seq == null)
