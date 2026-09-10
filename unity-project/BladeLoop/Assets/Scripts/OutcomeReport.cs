@@ -31,16 +31,25 @@ using UnityEngine;
 public static class OutcomeReport
 {
     // ---- palette, mirrored from BladeLoopTheme so the file stands alone -------
-    const string CBone  = "#EDE8DF";
-    const string CMuted = "#8A8177";
-    const string CFaint = "#6E665C";
-    const string COxide = "#C2603A";
-    const string CRule  = "#2A2520";
-    const string CPanel = "#12100D";
-    const string CSky   = "#1A1713";
-    const string CGood  = "#6B8F62";
+    //
+    // MIRRORED, not referenced: the output is a standalone HTML file that has to
+    // render with no Unity runtime, so the colours have to exist here as text.
+    // That makes this the one place in the project that does NOT update itself
+    // when the theme changes - it has to be edited by hand, as it was for the
+    // 8 Sep palette revamp. If BladeLoopTheme.InitPalette changes again, change
+    // these too, or the downloaded report will quietly disagree with the app it
+    // came from.
+    const string CBone  = "#F2F4F7";   // BladeLoopTheme.Bone
+    const string CMuted = "#9BA4B0";   // Muted
+    const string CFaint = "#5F6A77";   // Faint
+    const string COxide = "#FF6B35";   // Oxide
+    const string CRule  = "#23272E";   // Rule
+    const string CPanel = "#0A0B0D";   // Panel
+    const string CSky   = "#11141A";   // SkyWarm
+    const string CGood  = "#74B36C";   // StreamGas, used as the "order filled" green
 
-    static readonly string[] StreamCols = { "#E4DCCD", "#C99A3E", "#6B8F62", "#2E2823", "#5A524A" };
+    // fibre, oil, syngas, char, loss - same order as BladeLoopTheme.StreamColours
+    static readonly string[] StreamCols = { "#EFE9DB", "#E0A63F", "#74B36C", "#46403A", "#6B7480" };
 
     /// <summary>A filename that sorts chronologically and never collides.</summary>
     public static string FileName()

@@ -886,7 +886,9 @@ public class MainMenuController : MonoBehaviour
         // Wider, and pushed left into the gap the removed columns left behind. This is
         // the most informative element on the page and it was running at a third of
         // the width available to it, with three hundred empty pixels to its left.
-        var track = MakeImage(row, "bar", Hex("1A1713")).rectTransform;
+        // SkyWarm, not a literal. 1A1713 was the OLD SkyWarm; left hardcoded it
+        // silently kept the pre-revamp warm tone under the new cool palette.
+        var track = MakeImage(row, "bar", SkyWarm).rectTransform;
         AnchorIn(row, track, 0.415f, 0.46f, 0.845f, 0.635f);
 
         float[] pct = { split.GlassPct, split.OilPct, split.SyngasPct, split.CharPct, split.LossPct };
