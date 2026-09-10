@@ -38,15 +38,38 @@ public class AirlockDoorCycle : MonoBehaviour
         if (lowerDoor != null) lowerBase = lowerDoor.localPosition;
     }
 
+    // Phase boundaries as FRACTIONS of cycleLength, not absolute seconds.
+    //
+    // These were hardcoded at t = 3.0 / 4.0 / 4.6 against the authored 6 s cycle.
+    // That works only while cycleLength is exactly 6: set it to 4 and the upper
+    // door opens at 3 s of a 4 s cycle, the lower never opens before the wrap, and
+    // the purge never fires at all - the doors quietly stop matching the cycle
+    // they belong to.
+    //
+    // This is the same fault that broke Stage 1's truck, Stage 3's temperature ramp
+    // and Stage 4's gas cutaway after their retimes: choreography written in
+    // absolute seconds against a duration that later changed. Expressed as
+    // fractions, the cycle is correct at any length. 3/6, 4/6 and 4.6/6.
+    // Written as the division, not as a rounded decimal. 0.6667 is NOT 4/6: at
+    // cycleLength 6 it puts the boundary a hair after t=4.0, so the lower door
+    // stays shut for one extra frame and the purge misses its first frame. Two
+    // mismatches over a 600-sample sweep, which is exactly the kind of "surely
+    // that's close enough" that is not.
+    const float AuthoredCycle = 6f;
+    const float UpperOpensAt  = 3.0f / AuthoredCycle;
+    const float LowerOpensAt  = 4.0f / AuthoredCycle;
+    const float PurgeStartsAt = 4.6f / AuthoredCycle;
+
     void Update()
     {
-        CycleT = Time.time % cycleLength;
-        float t = CycleT;
+        float len = Mathf.Max(cycleLength, 0.01f);
+        CycleT = Time.time % len;
+        float u = CycleT / len;                 // 0..1 through the cycle
 
-        UpperOpen = t >= 3f && t < 4f;
-        LowerOpen = t >= 4f;
-        N2PurgeActive = t >= 4.6f;
-        Phase = t < 3f ? 1 : (t < 4f ? 2 : 3);
+        UpperOpen = u >= UpperOpensAt && u < LowerOpensAt;
+        LowerOpen = u >= LowerOpensAt;
+        N2PurgeActive = u >= PurgeStartsAt;
+        Phase = u < UpperOpensAt ? 1 : (u < LowerOpensAt ? 2 : 3);
 
         if (upperDoor != null) Slide(upperDoor, upperBase, UpperOpen);
         if (lowerDoor != null) Slide(lowerDoor, lowerBase, LowerOpen);
