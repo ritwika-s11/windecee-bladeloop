@@ -19439,8 +19439,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CutawayTimelineTrigger
   director: {fileID: 904838325}
   toggler: {fileID: 1139742555}
-  showAtTime: 5.4
-  hideAtTime: 32.4
+  showAtTime: 3.7
+  hideAtTime: 15.06
 --- !u!4 &107840525
 Transform:
   m_ObjectHideFlags: 0
@@ -69238,8 +69238,6 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1695938849}
-  - {fileID: 1513258198}
-  - {fileID: 2019694899}
   m_Father: {fileID: 1793180252}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0}
@@ -69260,7 +69258,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SubtitleTrack
   director: {fileID: 904838325}
-  cueFile: {fileID: 4900000, guid: f459c643bd8f347e08f3e19ef4a2bda2, type: 3}
+  cueFile: {fileID: 4900000, guid: 8b09a4a6c88b74ac8ad1ada6c5904064, type: 3}
   label: {fileID: 1695938847}
   group: {fileID: 854672683}
   backRestartsCurrentLine: 0
@@ -86546,8 +86544,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CutawayTimelineTrigger
   director: {fileID: 904838325}
   toggler: {fileID: 1138128140}
-  showAtTime: 48.8
-  hideAtTime: 79.6
+  showAtTime: 28.8
+  hideAtTime: 39.06
 --- !u!4 &1013326379
 Transform:
   m_ObjectHideFlags: 0
@@ -159344,18 +159342,18 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1513258197}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 25302247}
-  m_Father: {fileID: 854672681}
+  m_Father: {fileID: 1793180252}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0.5}
   m_AnchorMax: {x: 0, y: 0.5}
-  m_AnchoredPosition: {x: 18, y: 0}
-  m_SizeDelta: {x: 132, y: 52}
+  m_AnchoredPosition: {x: 448.5, y: -310.3}
+  m_SizeDelta: {x: 131.99997, y: 52}
   m_Pivot: {x: 0, y: 0.5}
 --- !u!114 &1513258199
 MonoBehaviour:
@@ -223459,6 +223457,8 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 854672681}
+  - {fileID: 1513258198}
+  - {fileID: 2019694899}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -238700,6 +238700,7 @@ MonoBehaviour:
   fillResponse: 0.62
   minFill: 0.3
   maxFill: 1.25
+  drivePercentLabels: 1
 --- !u!4 &1914266421
 Transform:
   m_ObjectHideFlags: 0
@@ -248420,18 +248421,18 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2019694898}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1668748177}
-  m_Father: {fileID: 854672681}
+  m_Father: {fileID: 1793180252}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 0.5}
   m_AnchorMax: {x: 1, y: 0.5}
-  m_AnchoredPosition: {x: -18, y: 0}
-  m_SizeDelta: {x: 132, y: 52}
+  m_AnchoredPosition: {x: -448.5, y: -310.3}
+  m_SizeDelta: {x: 131.99997, y: 52}
   m_Pivot: {x: 1, y: 0.5}
 --- !u!114 &2019694900
 MonoBehaviour:

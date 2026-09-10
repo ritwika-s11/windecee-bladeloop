@@ -49,6 +49,8 @@ public class TourControls : MonoBehaviour
     const float Height = 46f;
     const float SkipW  = 168f;
     const float NextW  = 182f;
+    const float PrevW  = 170f;
+    const float Gap    = 10f;
 
     static readonly Color PlateColour = new Color(1f, 1f, 1f, 0.93f);
     static readonly Color LabelColour = new Color(0.118f, 0.161f, 0.231f, 1f);
@@ -57,7 +59,9 @@ public class TourControls : MonoBehaviour
     static TourControls instance;
 
     RectTransform frame;                 // the tour viewport, mirrored
-    GameObject skipBtn, nextBtn;
+    GameObject skipBtn, nextBtn, prevBtn;
+    StoryModeController controller;      // re-found per stage; drives the dimmed state
+    bool wasPaused;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     static void Bootstrap()
@@ -75,8 +79,31 @@ public class TourControls : MonoBehaviour
         Build();
     }
 
+    /// <summary>Retires the tour controls for good.
+    ///
+    /// Called when the run report takes over. The sequencer is still Active at that
+    /// point - its coroutine has finished but EndTour() does not run until the user
+    /// leaves the report - so Update would otherwise keep Previous on screen, over
+    /// the report, wired to a coroutine that has already exited. It looked like a
+    /// button and did nothing.</summary>
+    public static void Suppress()
+    {
+        suppressed = true;
+        if (instance == null) return;
+        if (instance.skipBtn != null) instance.skipBtn.SetActive(false);
+        if (instance.nextBtn != null) instance.nextBtn.SetActive(false);
+        if (instance.prevBtn != null) instance.prevBtn.SetActive(false);
+    }
+
+    /// <summary>Lets a fresh tour bring them back after one has ended.</summary>
+    public static void Unsuppress() { suppressed = false; }
+
+    static bool suppressed;
+
     void Update()
     {
+        if (suppressed) return;
+
         var seq = TourSceneSequencer.Active;
 
         if (seq == null)
@@ -115,15 +142,38 @@ public class TourControls : MonoBehaviour
         // neither leaves a hole when it goes.
         bool showSkip = plant > 0 && i >= 0 && i < plant;
         bool showNext = i >= 0 && i < last;
+        // Nothing to go back to on the first stage.
+        bool showPrev = i > 0;
 
         if (skipBtn.activeSelf != showSkip) skipBtn.SetActive(showSkip);
         if (nextBtn.activeSelf != showNext) nextBtn.SetActive(showNext);
+        if (prevBtn.activeSelf != showPrev) prevBtn.SetActive(showPrev);
 
         // New Input System only - the legacy Input class never fires in this project.
         // Right arrow is the only unbound navigation key: up, down, W, A, S, R, P,
         // Space and Escape are all already taken by explore mode and story controls.
+        // ---- Explore mode ----
+        // Stage changes are deliberately inert while the story is paused: the point
+        // of Explore is to stand still and look around, and jumping stages from
+        // inside it would drop you into a scene mid-pause with a frozen clock.
+        //
+        // But an enabled-looking button that does nothing is worse than a disabled
+        // one, so they grey out and stop responding rather than silently failing.
+        if (controller == null) controller = FindFirstObjectByType<StoryModeController>();
+        bool paused = controller != null && controller.IsPaused;
+        if (paused != wasPaused)
+        {
+            wasPaused = paused;
+            SetDimmed(nextBtn, paused);
+            SetDimmed(prevBtn, paused);
+            SetDimmed(skipBtn, paused);
+        }
+        if (paused) return;
+
         var kb = Keyboard.current;
-        if (kb != null && showNext && kb.rightArrowKey.wasPressedThisFrame) NextStage();
+        if (kb == null) return;
+        if (showNext && kb.rightArrowKey.wasPressedThisFrame) NextStage();
+        if (showPrev && kb.leftArrowKey.wasPressedThisFrame)  PrevStage();
     }
 
     // ---------------------------------------------------------------- actions --
@@ -148,6 +198,39 @@ public class TourControls : MonoBehaviour
     {
         var seq = TourSceneSequencer.Active;
         if (seq != null) seq.SkipCurrentStage();
+    }
+
+    /// <summary>Back to the previous stage in the chain.
+    ///
+    /// Reloads that scene from the top rather than resuming it part-way: the stage
+    /// scenes rebuild their own choreography in Start, so there is no "half played"
+    /// state to return to, and starting mid-way would show a truck that has already
+    /// left or a crane that has already finished.</summary>
+    public static void PrevStage()
+    {
+        var seq = TourSceneSequencer.Active;
+        if (seq == null || seq.CurrentIndex <= 0) return;
+        seq.JumpToStage(seq.CurrentIndex - 1);
+    }
+
+    /// <summary>Greys a button out and stops it responding, without hiding it -
+    /// a control that vanishes when you pause reads as a glitch, one that dims
+    /// reads as "not now".</summary>
+    static void SetDimmed(GameObject go, bool dimmed)
+    {
+        if (go == null) return;
+        var btn = go.GetComponent<Button>();
+        if (btn != null) btn.interactable = !dimmed;
+
+        var img = go.GetComponent<Image>();
+        if (img != null)
+            img.color = dimmed ? new Color(PlateColour.r, PlateColour.g, PlateColour.b, 0.35f)
+                               : PlateColour;
+
+        var lbl = go.GetComponentInChildren<TMP_Text>();
+        if (lbl != null)
+            lbl.color = dimmed ? new Color(LabelColour.r, LabelColour.g, LabelColour.b, 0.45f)
+                               : LabelColour;
     }
 
     static void EnsureEventSystem()
@@ -194,12 +277,17 @@ public class TourControls : MonoBehaviour
         skipBtn = MakeButton("Btn_SkipIntro", "Skip Intro", SkipW,
                              new Vector2(1f, 1f), new Vector2(-Margin, -Margin), SkipIntro);
 
-        // Bottom-right.
+        // Opposite ends of the same bottom row: back on the left, forward on the
+        // right, with the shot between them. Reads as a transport bar spanning the
+        // frame rather than a huddle of buttons in one corner.
         nextBtn = MakeButton("Btn_NextStage", "Next Stage  →", NextW,
                              new Vector2(1f, 0f), new Vector2(-Margin, Margin), NextStage);
+        prevBtn = MakeButton("Btn_PrevStage", "←  Previous", PrevW,
+                             new Vector2(0f, 0f), new Vector2(Margin, Margin), PrevStage);
 
         skipBtn.SetActive(false);
         nextBtn.SetActive(false);
+        prevBtn.SetActive(false);
     }
 
     /// <summary>A button built to match Btn_BackToMenu: white plate at 0.93, no

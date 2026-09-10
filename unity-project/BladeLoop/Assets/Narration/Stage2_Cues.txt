@@ -1,0 +1,20 @@
+# Stage 2 - shredding
+# Format: start | end | text     (seconds on Stage2_Timeline; '#' is a comment)
+# Assign to the SubtitleTrack component's cueFile field in Stage2_StoryMode.
+#
+# Timed against Stage2_V1_tight.mp3 (28.536 s) sitting at 3.0 s on the timeline -
+# it starts with shot 2, because S2_01 Plant entry is deliberately silent while the
+# truck arrives. Speech measured with silence detection, not estimated.
+#
+# Shot windows after the retime: 0.0/3.5, 3.0/5.6, 8.1/6.3, 13.9/11.6, 25.0/7.0
+#
+# The long shot-4 line is split into three cues. Eleven seconds of text as one
+# caption is a wall; three cues let it land sentence by sentence with the pictures.
+
+ 2.9 |  8.4 | The blades come off the truck in pieces. From here, they stop being blades and start being feedstock.
+ 8.5 | 14.0 | The shredder can cut them coarse or fine, and that choice matters more than anything else you will set today.
+14.1 | 20.3 | Shred fine, and heat reaches the middle of every particle, so the resin breaks down and the fibre comes out clean.
+20.4 | 22.9 | Shred coarse, and the cores never fully cook.
+23.0 | 25.2 | But fine grinding is slow grinding.
+25.3 | 29.1 | Whatever leaves via this conveyor belt is what the kiln has to work with.
+29.2 | 31.7 | Get it wrong here, and heat will not fix it.

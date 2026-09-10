@@ -1,0 +1,24 @@
+# Stage 3 - rotary kiln
+# Format: start | end | text     (seconds on Stage3_Timeline; '#' is a comment)
+# Assign to the SubtitleTrack component's cueFile field in Stage3_StoryMode.
+#
+# Timed against Stage3_V1_tight.mp3 (32.88 s) sitting at 0.5 s on the timeline.
+# Every position measured with silence detection, not estimated. The ten speech
+# runs sit at (file time):
+#   0.00-4.00  4.22-8.16  8.38-9.43 | 9.73-12.39 12.61-15.07 15.29-18.05
+#   18.35-25.37 | 25.67-27.55 27.77-30.23 30.45-32.79
+#
+# Shots after the retime: 0.0/5.5, 4.5/6.0, 9.5/9.5, 18.0/4.0,
+#                         21.5/1.8, 23.1/2.0, 24.9/1.8, 26.2/4.7, 30.4/4.2
+#
+# Cue 5 is deliberately one long caption: it runs across the three zone cutaways
+# (Preheat, Melting, CharCrack) and the words name those three stages in order.
+# Splitting it would put a cut in the middle of a single sentence.
+
+ 0.4 |  4.6 | Inside the kiln there is almost no oxygen, so the resin cannot burn.
+ 4.7 | 10.0 | Starved of air, it breaks down instead and lets go of the fibre it was holding. That is pyrolysis.
+10.2 | 12.9 | How hot you run it decides how completely that happens.
+13.1 | 18.6 | Too cool, and the resin never fully cracks. Too hot, and you start damaging the fibre you came for.
+18.8 | 25.9 | Time matters as much as heat. The material moves through the drum in stages, warming, then softening, then breaking down for good.
+26.1 | 30.8 | What comes out is no longer a blade. It is fibre, oil, gas and char.
+30.9 | 33.5 | But the kiln can only work with what the shredder gave it.

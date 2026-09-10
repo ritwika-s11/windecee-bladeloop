@@ -77,6 +77,19 @@ public class ShredOutputSizer : MonoBehaviour
     // Bare belt between the lumps is the cue - it is a large, high-contrast, whole-frame
     // difference that survives any camera distance, which piece size never will.
     [Header("Coverage - the cue that actually reads")]
+    /// <summary>Floor on how few pieces a coarse run may show.
+    ///
+    /// Size is only judgeable against a reference. A single 16 mm chip alone on the
+    /// belt looks like a chip - the eye has nothing to compare it to, so the whole
+    /// size cue is lost exactly where it matters most. Several chunks together read
+    /// as chunky; one does not.
+    ///
+    /// So coarse runs are kept above a floor rather than allowed to thin out to one
+    /// or two. It costs a little of the sparseness, and buys back the size contrast
+    /// the sparseness was hiding.</summary>
+    const int MinPieces     = 14;
+    const int MinBeltPieces = 18;
+
     [Tooltip("Turn off to fall back to the old countResponse curve.")]
     public bool coverageDrivesCount = true;
     [Tooltip("Fraction of the footprint covered at 2 mm. Near-total: fine shred is a " +
@@ -245,7 +258,7 @@ public class ShredOutputSizer : MonoBehaviour
         float s = Mathf.Max(SizeFor(mm), 0.01f);
         float refCover = Mathf.Max(CoverageFor(referenceMm), 0.001f);
         float n = referenceCount * (CoverageFor(mm) / refCover) / (s * s);
-        return Mathf.Clamp(Mathf.RoundToInt(n), 8, 260);
+        return Mathf.Clamp(Mathf.RoundToInt(n), MinPieces, 260);
     }
 
     /// <summary>Rebuild the pile for a given particle size. Safe to call repeatedly.</summary>
@@ -377,7 +390,7 @@ public class ShredOutputSizer : MonoBehaviour
         float refCoverB = Mathf.Max(CoverageFor(referenceMm), 0.001f);
         float sB = Mathf.Max(scaleMul, 0.01f);
         int n = coverageDrivesCount
-            ? Mathf.Clamp(Mathf.RoundToInt(beltReferenceCount * (CoverageFor(mm) / refCoverB) / (sB * sB)), 8, 320)
+            ? Mathf.Clamp(Mathf.RoundToInt(beltReferenceCount * (CoverageFor(mm) / refCoverB) / (sB * sB)), MinBeltPieces, 320)
             : Mathf.Clamp(Mathf.RoundToInt(130f * Mathf.Pow(2f / Mathf.Max(mm, 0.1f), 0.90f)), 14, 150);
 
         for (int i = 0; i < n; i++)

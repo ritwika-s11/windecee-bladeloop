@@ -454,8 +454,11 @@ public class OrderPanel : MonoBehaviour
         Text("Grade", OrderContext.GradeLabel(order.targetGrade), 30f,
              BladeLoopTheme.Oxide, BladeLoopTheme.MonoBold, ref y);
 
-        Text("Buyer", string.IsNullOrEmpty(order.customerName) ? order.customerType
-                                                               : order.customerName,
+        // customerType, not customerName: no buyer NAME is collected anywhere in the
+        // project. Every Order is built with customerName = "" - the three presets and
+        // the Custom Order screen alike - so the old fallback could never take its
+        // second branch.
+        Text("Buyer", order.customerType,
              18f, BladeLoopTheme.Muted, BladeLoopTheme.Sans, ref y);
 
         y += 12f;

@@ -58,6 +58,39 @@ public class Stage4OrderBinding : MonoBehaviour
     public float minFactor = 0.22f;
     public float maxFactor = 3.2f;
 
+    // ---------------------------------------------------------- downstream ----
+    //
+    // The four things above all live on the elutriator, which is on screen for
+    // shots 04c and 04d - about 8 seconds of a 46.7 second stage. Everything
+    // downstream of it was identical whatever the planner set, so the condenser
+    // and oil/syngas shots (another 10 seconds) carried no order information at
+    // all.
+    //
+    // The cyclone is the valuable one. Its dust IS char, so it moves on the same
+    // 4.5x span as the drums - and it is visible in the condenser shot, which is
+    // where a viewer currently sees nothing change between a high and a low run.
+    //
+    // Syngas is deliberately NOT driven. It spans 7.9% to 6.8%, a 1.16x, which is
+    // below what anyone could see; the only way to make it read would be to
+    // exaggerate it, and that would overstate the difference to the customer -
+    // the same reason charResponse is pinned at 1.0.
+    [Header("Downstream streams")]
+    [Tooltip("Cyclone fines. Same char split as the drums, so the same factor.")]
+    public ParticleSystem cycloneCharFall;
+    public ParticleSystem cycloneCharDrop;
+    [Tooltip("Condenser rain and the knock-out drum drain.")]
+    public ParticleSystem oilRain;
+    public ParticleSystem oilDrain;
+    public ParticleSystem koDroplets;
+
+    [Tooltip("The MID run's oil share, matching how referenceGlassPct and " +
+             "referenceCharPct are set to the mid case rather than an extreme.")]
+    public float referenceOilPct = 14.3f;
+    [Tooltip("Oil only moves 15.8% -> 12.7%, a 1.24x span. A mild exponent opens " +
+             "it to roughly 1.4x so the rain chamber reads as thinner on a low-grade " +
+             "run without pretending the difference is dramatic.")]
+    public float oilResponse = 1.6f;
+
     [Header("Fibre purity tint")]
     public float purityFloorPct   = 72f;
     public float purityCeilingPct = 93f;
@@ -80,6 +113,17 @@ public class Stage4OrderBinding : MonoBehaviour
         if (charDrum0 == null) charDrum0 = FindT("EL_Char_Drum_0");
         if (charDrum1 == null) charDrum1 = FindT("EL_Char_Drum_1");
 
+        // FindInactivePS, not FindPS. Four of these five live under V2_GasCutaway,
+        // which is switched OFF until the cutaway trigger fires, and GameObject.Find
+        // skips inactive objects - so FindPS returns null and the stream is silently
+        // never scaled. Scaling them here is still correct: the emission module keeps
+        // the value, so it is already right when the cutaway turns them on.
+        if (cycloneCharFall == null) cycloneCharFall = FindInactivePS("V2GC_PS_CycCharFall");
+        if (cycloneCharDrop == null) cycloneCharDrop = FindInactivePS("V2_PS_CharDrop");
+        if (oilRain    == null) oilRain    = FindInactivePS("V2_PS_OilRain");
+        if (oilDrain   == null) oilDrain   = FindInactivePS("PF_13_OilDrain");
+        if (koDroplets == null) koDroplets = FindInactivePS("V2GC_PS_KODroplets");
+
         // No order: leave every authored value exactly as it is.
         if (!OrderContext.HasOrder) return;
 
@@ -98,6 +142,17 @@ public class Stage4OrderBinding : MonoBehaviour
         ScaleStream(charToDrum0, charK);
         ScaleStream(charToDrum1, charK);
 
+        // Cyclone fines are char, so they ride the same factor as the drums.
+        ScaleStream(cycloneCharFall, charK);
+        ScaleStream(cycloneCharDrop, charK);
+
+        float oilK = Mathf.Clamp(
+            Mathf.Pow(Mathf.Max(split.OilPct, 0.1f) / Mathf.Max(referenceOilPct, 0.1f), oilResponse),
+            minFactor, maxFactor);
+        ScaleStream(oilRain,    oilK);
+        ScaleStream(oilDrain,   oilK);
+        ScaleStream(koDroplets, oilK);
+
         // ---- fibre colour by purity ----
         // Less fibre AND dirtier fibre is the honest story of a low-grade run.
         float pure = Mathf.InverseLerp(purityFloorPct, purityCeilingPct, m.FiberPurityPct);
@@ -115,6 +170,7 @@ public class Stage4OrderBinding : MonoBehaviour
         // the scene would show heavy char flowing into the drums while the sign next to
         // it read 6%, which is worse than having no number at all.
         if (drivePercentLabels) RewritePercentLabels(split);
+        if (driveTemperatureLabels) RewriteTemperatureLabels(m);
     }
 
     [Header("Output labels")]
@@ -147,6 +203,39 @@ public class Stage4OrderBinding : MonoBehaviour
         }
     }
 
+    [Tooltip("Three Stage 4 signs quote 600 C - the design case - as fixed text. The " +
+             "kiln setpoint is the planner's headline control (550/580/600 on the " +
+             "presets, 400-700 on a custom order), so on any other run these signs " +
+             "contradict both the order panel and the kiln the viewer just watched.")]
+    public bool driveTemperatureLabels = true;
+
+    /// <summary>Rewrites the kiln setpoint into the three signs that quote it.
+    ///
+    /// Only the FIRST three-digit number in each label is replaced, which is what makes
+    /// this safe on the two awkward ones:
+    ///   "... / 600 C  .  0% OXYGEN"      -> the 0% is single-digit, untouched
+    ///   "... N2 PURGED . 600->50 C"      -> the 50 is two-digit, untouched
+    /// The condenser's 45 C is a fixed equipment setpoint, not an order setting, so it
+    /// is deliberately not in this list. Nor is the kiln drum's 1.5 RPM.</summary>
+    static void RewriteTemperatureLabels(ProcessModel m)
+    {
+        int setpoint = Mathf.RoundToInt(m.TempC);
+        var labels = FindObjectsByType<TMPro.TextMeshPro>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        foreach (var t in labels)
+        {
+            if (t == null || string.IsNullOrEmpty(t.text)) continue;
+            string up = t.text.ToUpperInvariant();
+            bool quotesKilnTemp = up.Contains("ANOXIC PYROLYSIS ZONE")
+                               || up.Contains("DISCHARGE HOOD")
+                               || up.Contains("WATER-JACKETED SCREW");
+            if (!quotesKilnTemp) continue;
+
+            // count-limited Replace is an instance method, not a static one
+            var rx = new System.Text.RegularExpressions.Regex(@"\d{3}");
+            t.text = rx.Replace(t.text, setpoint.ToString(), 1);
+        }
+    }
+
     static ParticleSystem FindPS(string n)
     {
         var go = GameObject.Find(n);
@@ -156,6 +245,17 @@ public class Stage4OrderBinding : MonoBehaviour
     {
         var go = GameObject.Find(n);
         return go != null ? go.transform : null;
+    }
+
+    /// <summary>Like FindPS, but sees objects that are switched off. The gas-train
+    /// effects live under V2_GasCutaway and are inactive until the cutaway trigger
+    /// fires, so GameObject.Find cannot reach them.</summary>
+    static ParticleSystem FindInactivePS(string n)
+    {
+        var all = FindObjectsByType<ParticleSystem>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        for (int i = 0; i < all.Length; i++)
+            if (all[i] != null && all[i].gameObject.name == n) return all[i];
+        return null;
     }
 
     static void ScaleStream(ParticleSystem ps, float k)
