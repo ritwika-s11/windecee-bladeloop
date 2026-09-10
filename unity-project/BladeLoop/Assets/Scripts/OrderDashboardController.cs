@@ -1692,6 +1692,26 @@ public class OrderDashboardController : MonoBehaviour
             TourRunner.StartRun();
         });
 
+        // Straight to the numbers, for a planner who does not want to sit through the
+        // tour. Secondary styling on purpose: watching the run is still the headline
+        // action, this is the shortcut past it.
+        //
+        // OutcomeReportPanel.Show() is an OVERLAY, not a scene - it builds a
+        // DontDestroyOnLoad canvas at sorting order 1200 and slides across whatever is
+        // behind it, so it needs nothing loaded first and owns its own exit back to the
+        // menu. Two things it does on the way in are safe from here and were checked:
+        // OrderPanel.Teardown() no-ops when no tour panel exists, and the
+        // TourControls.Suppress() it calls is undone by TourSceneSequencer the next
+        // time a tour starts.
+        //
+        // Commit() first, exactly as WATCH THIS RUN does: the report reads
+        // OrderContext.Active and .Model, and Commit is the only thing that writes them.
+        FixedBtn(rt, "report", "RUN REPORT  →", 0.720f, 0.985f, 0.252f, 46f, false, () =>
+        {
+            Commit();
+            OutcomeReportPanel.Show();
+        });
+
         PaintPlan();
     }
 
