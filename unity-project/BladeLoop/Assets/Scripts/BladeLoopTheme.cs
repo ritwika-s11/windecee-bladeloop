@@ -1,5 +1,4 @@
 using UnityEngine;
-using System.Collections.Generic;
 using TMPro;
 
 /// <summary>
@@ -55,20 +54,31 @@ public static class BladeLoopTheme
     {
         if (paletteReady) return;
 
-        Bone     = Hex("EDE8DF");
-        Muted    = Hex("8A8177");
-        Faint    = Hex("6E665C");
-        Oxide    = Hex("C2603A");
-        Rule     = Hex("2A2520");
-        RuleSoft = Hex("221E1A");
-        Panel    = Hex("12100D");
-        SkyWarm  = Hex("1A1713");
+        // Revamped 8 Sep. THIS IS NOW THE SINGLE SOURCE - MainMenuController reads
+        // from here rather than keeping a private copy, so the home page and Custom
+        // Order cannot drift into looking like two different products.
+        //
+        // Deep, slightly cool base so the warm stream colours read as emitted rather
+        // than painted; three separated surface steps; one vivid accent. The previous
+        // warm-charcoal scheme put the page, the panels and the near-black char block
+        // within a few points of each other, leaving the data no ground to stand on.
+        Bone     = Hex("F2F4F7");   // primary text
+        Muted    = Hex("9BA4B0");   // secondary
+        Faint    = Hex("5F6A77");   // labels, units
+        Oxide    = Hex("FF6B35");   // the one accent
+        Rule     = Hex("23272E");   // hairline
+        RuleSoft = Hex("1A1D22");
+        Panel    = Hex("0A0B0D");   // page
+        SkyWarm  = Hex("11141A");   // raised surface
 
-        StreamFibre = Hex("E4DCCD");   // reclaimed glass fibre, off-white
-        StreamOil   = Hex("C99A3E");   // pyrolysis oil, amber
-        StreamGas   = Hex("6B8F62");   // syngas
-        StreamChar  = Hex("2E2823");   // carbon char, near black
-        StreamLoss  = Hex("5A524A");   // fugitive dust and residue
+        // Material-true, each lifted enough to hold against the deeper base. Char
+        // especially: at #2E2823 it was invisible, which lost the most important
+        // comparison in the whole application.
+        StreamFibre = Hex("EFE9DB");   // reclaimed glass fibre, off-white
+        StreamOil   = Hex("E0A63F");   // pyrolysis oil, amber
+        StreamGas   = Hex("74B36C");   // syngas
+        StreamChar  = Hex("46403A");   // carbon char
+        StreamLoss  = Hex("6B7480");   // fugitive dust and residue
 
         paletteReady = true;
     }
@@ -130,61 +140,94 @@ public static class BladeLoopTheme
         InitFonts();
     }
 
-    // ---- rounded surfaces ----------------------------------------------------
+    // ---- depth ---------------------------------------------------------------
 
-    static readonly Dictionary<int, Sprite> roundedCache = new Dictionary<int, Sprite>();
+    static Sprite fadeSprite;
 
     /// <summary>
-    /// A white 9-sliced sprite with rounded corners, for use with Image.type =
-    /// Sliced. Tint it with Image.color as usual.
+    /// A vertical alpha ramp: opaque at the top, transparent at the bottom. Tint it
+    /// with Image.color and stretch it to whatever height you need.
     ///
-    /// WHY THIS EXISTS. Every surface built from a bare Image is a hard-edged
-    /// rectangle, and a screen made entirely of hard rectangles reads as a form
-    /// however good the type and spacing are. uGUI has no corner radius, so the
-    /// standard answer is a sliced sprite - generated here rather than shipped as
-    /// an asset so it needs no import, no meta file and no one else's approval.
+    /// WHY THIS AND NOT ROUNDED CORNERS. The home page header states the case
+    /// plainly - "rounded reads consumer app; square reads instrument" - and this
+    /// application is an engineering tool being shown to engineers. So depth comes
+    /// from VALUE rather than from SHAPE: a light hairline along the top edge of a
+    /// raised surface, a barely-there wash down its face. That is how a physical
+    /// instrument panel reads under a light from above, and it elevates a dark UI
+    /// without softening it into something else.
     ///
-    /// Cached per radius: a handful of small textures for the whole application.
-    /// Anti-aliased on the diagonal, so it holds up when the sprite is scaled.
+    /// One 1x64 texture for the whole application.
     /// </summary>
-    public static Sprite Rounded(int radius)
+    public static Sprite VerticalFade()
     {
-        radius = Mathf.Clamp(radius, 1, 48);
-        Sprite cached;
-        if (roundedCache.TryGetValue(radius, out cached) && cached != null) return cached;
+        if (fadeSprite != null) return fadeSprite;
 
-        // Two-pixel middle band is all a sliced sprite needs; the corners carry the shape.
-        int size = radius * 2 + 2;
-        var tex = new Texture2D(size, size, TextureFormat.RGBA32, false)
+        const int h = 64;
+        var tex = new Texture2D(1, h, TextureFormat.RGBA32, false)
         {
             filterMode = FilterMode.Bilinear,
             wrapMode   = TextureWrapMode.Clamp,
             hideFlags  = HideFlags.HideAndDontSave
         };
 
-        var px = new Color32[size * size];
-        for (int y = 0; y < size; y++)
+        var px = new Color32[h];
+        for (int y = 0; y < h; y++)
         {
-            for (int x = 0; x < size; x++)
-            {
-                // Distance past the corner arc, in pixels. Negative inside.
-                float dx = Mathf.Max(radius - x - 0.5f, x + 0.5f - (size - radius));
-                float dy = Mathf.Max(radius - y - 0.5f, y + 0.5f - (size - radius));
-                float d  = (dx > 0f && dy > 0f) ? Mathf.Sqrt(dx * dx + dy * dy) - radius
-                                                : Mathf.Max(dx, dy) - radius;
-                // One pixel of coverage falloff gives a clean edge at any scale.
-                float a = Mathf.Clamp01(0.5f - d);
-                px[y * size + x] = new Color32(255, 255, 255, (byte)(a * 255f));
-            }
+            // y = 0 is the BOTTOM of a Unity texture, so the ramp runs upward.
+            float t = y / (float)(h - 1);
+            // Eased rather than linear: a straight ramp reads as a banded gradient,
+            // a curved one reads as light falling off.
+            float a = t * t;
+            px[y] = new Color32(255, 255, 255, (byte)(a * 255f));
         }
         tex.SetPixels32(px);
         tex.Apply(false, true);
 
-        var sprite = Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f),
-                                   100f, 0, SpriteMeshType.FullRect,
-                                   new Vector4(radius, radius, radius, radius));
-        sprite.hideFlags = HideFlags.HideAndDontSave;
-        roundedCache[radius] = sprite;
-        return sprite;
+        fadeSprite = Sprite.Create(tex, new Rect(0, 0, 1, h), new Vector2(0.5f, 0.5f), 100f);
+        fadeSprite.hideFlags = HideFlags.HideAndDontSave;
+        return fadeSprite;
     }
+
+    static Sprite dashSprite;
+
+    /// <summary>
+    /// A horizontal dashed rule: two pixels on, two off, tiling forever. Use it on an
+    /// Image with type = Tiled and a height of 1, tinted to whatever alpha you want.
+    ///
+    /// WHY A TEXTURE AND NOT A ROW OF LITTLE IMAGES. A dashed underline under a 13pt
+    /// letterspaced label needs its dashes on exact pixel boundaries or they alias into
+    /// a smear that reads as dirt on the screen rather than as an affordance. A point-
+    /// filtered 4x1 texture tiled by the UI system lands every dash on a whole pixel,
+    /// and costs one draw call instead of thirty GameObjects per label.
+    ///
+    /// THE POINT OF IT: it marks a term as having a definition behind it, using the one
+    /// convention every data tool already shares, without borrowing the underline of a
+    /// hyperlink - these are not links and must not offer to navigate anywhere.
+    /// </summary>
+    public static Sprite DashedRule()
+    {
+        if (dashSprite != null) return dashSprite;
+
+        const int w = 4;
+        var tex = new Texture2D(w, 1, TextureFormat.RGBA32, false)
+        {
+            filterMode = FilterMode.Point,      // no bilinear smear between dash and gap
+            wrapMode   = TextureWrapMode.Repeat,
+            hideFlags  = HideFlags.HideAndDontSave
+        };
+        tex.SetPixels32(new[]
+        {
+            new Color32(255, 255, 255, 255),
+            new Color32(255, 255, 255, 255),
+            new Color32(255, 255, 255, 0),
+            new Color32(255, 255, 255, 0)
+        });
+        tex.Apply(false, true);
+
+        dashSprite = Sprite.Create(tex, new Rect(0, 0, w, 1), new Vector2(0.5f, 0.5f), 100f,
+                                   0, SpriteMeshType.FullRect, Vector4.zero);
+        dashSprite.hideFlags = HideFlags.HideAndDontSave;
+        return dashSprite;
+    }
+
 }
