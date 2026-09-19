@@ -6,10 +6,32 @@
 # This template is maintained from the gitattributes/gitattributes repository
 # and distributed under MIT License.
 
-# Define macros (only works in top-level gitattributes files)
-[attr]lfs               filter=lfs diff=lfs merge=lfs -text
-[attr]unity-json        eol=lf linguist-language=json
-[attr]unity-yaml        merge=unityyamlmerge eol=lf linguist-language=yaml
+# Macro definitions removed - they were dead, and noisy.
+#
+# The template's own note above says it: macros only work in a TOP-LEVEL
+# .gitattributes. This file is at unity-project/BladeLoop/, so git rejected all
+# three on every single command:
+#
+#   [attr]lfs ... not allowed: unity-project/BladeLoop/.gitattributes:10
+#
+# Sixteen lines of that per git command, drowning real output. They were never
+# in effect, so removing them changes nothing about how any file is handled.
+#
+# DO NOT "fix" this by moving them to the repo-root .gitattributes. That would
+# switch them ON, and they are not safe to switch on now:
+#
+#   * unity-yaml carries eol=lf, which would rewrite ~500 files in one commit
+#     (390 .mat, 79 .asset, 15 .unity, plus .anim/.controller/.playable).
+#   * the lfs macro is applied to ~40 binary extensions from line 74 down.
+#     Turning it on would migrate already-committed binaries into LFS, and
+#     git-lfs is not installed on every machine on this team.
+#
+# LFS is handled by the repo-root .gitattributes, which tracks *.blend and
+# *.fbx explicitly and does work. Leave that alone.
+#
+# The unity-json / unity-yaml attribute names below are now undefined, exactly
+# as they effectively were before. Anyone wanting real Unity YAML merging
+# should raise it as its own change, after submission.
 
 # Optionally collapse Unity YAML files on GitHub diffs
 # [attr]unity-yaml        merge=unityyamlmerge text linguist-language=yaml linguist-generated
