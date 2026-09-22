@@ -169,7 +169,7 @@ public class OutcomeReportPanel : MonoBehaviour
 
         float c1 = BuildOrderCol (cx,                       colW, top, hasOrder);
         float c2 = BuildPlantCol (cx + (colW + ColGap),     colW, top, m, r);
-        float c3 = BuildOutputCol(cx + (colW + ColGap) * 2f, colW, top, s);
+        float c3 = BuildOutputCol(cx + (colW + ColGap) * 2f, colW, top, s, r.OutputSplit());
 
         float after = Mathf.Max(c1, Mathf.Max(c2, c3)) + 34f;
 
@@ -264,23 +264,36 @@ public class OutcomeReportPanel : MonoBehaviour
     float BuildPlantCol(float x, float w, float y, ProcessModel m, ProcessModel r)
     {
         y = Head(x, w, y, "HOW THE PLANT WAS SET");
-        Setting(x, w, ref y, "Temperature", m.TempC,          r.TempC,          "0",   " °C");
-        Setting(x, w, ref y, "Retention",   m.RetentionMin,   r.RetentionMin,   "0.#", " min");
-        Setting(x, w, ref y, "Feed rate",   m.FeedKgH,        r.FeedKgH,        "0",   " kg/h");
-        Setting(x, w, ref y, "Particle",    m.ParticleSizeMm, r.ParticleSizeMm, "0.#", " mm");
-        return y;
+        Setting(x, w, ref y, "Temperature", m.TempC,          r.TempC,          "0",   " °C",   150f);
+        Setting(x, w, ref y, "Retention",   m.RetentionMin,   r.RetentionMin,   "0.#", " min",   10f);
+        Setting(x, w, ref y, "Feed rate",   m.FeedKgH,        r.FeedKgH,        "0",   " kg/h", 2500f);
+        Setting(x, w, ref y, "Particle",    m.ParticleSizeMm, r.ParticleSizeMm, "0.#", " mm",    18f);
+
+        y += 4f;
+        var note = Label(body, "DevNote",
+            "Each bar runs from the design case at the centre. Longer means further off spec.",
+            13f, BladeLoopTheme.Faint, BladeLoopTheme.Sans, x, y, w, 40f);
+        note.textWrappingMode = TextWrappingModes.Normal;
+        return y + 42f;
     }
 
-    float BuildOutputCol(float x, float w, float y, ProcessModel.Split s)
+    /// <summary>Same five bars as the downloaded report, each with its design-case tick,
+    /// so the screen and the HTML tell the same story rather than two different ones.</summary>
+    float BuildOutputCol(float x, float w, float y, ProcessModel.Split s, ProcessModel.Split d)
     {
         y = Head(x, w, y, "WHAT THE PLANT MADE");
         string[] names = { "Glass fibre", "Pyrolysis oil", "Syngas", "Carbon char", "Loss" };
         float[]  pct   = { s.GlassPct, s.OilPct, s.SyngasPct, s.CharPct, s.LossPct };
+        float[]  dpct  = { d.GlassPct, d.OilPct, d.SyngasPct, d.CharPct, d.LossPct };
         var cols = BladeLoopTheme.StreamColours;
 
+        // Scale across both series, or a design tick can land past the end of its track
+        // on any run that under-performs the design case.
         float widest = 0f;
-        for (int i = 0; i < pct.Length; i++) widest = Mathf.Max(widest, pct[i]);
+        for (int i = 0; i < pct.Length; i++) widest = Mathf.Max(widest, Mathf.Max(pct[i], dpct[i]));
         if (widest <= 0f) widest = 1f;
+
+        float trackX = x + 138f, trackW = w - 138f - 70f;
 
         for (int i = 0; i < names.Length; i++)
         {
@@ -289,13 +302,22 @@ public class OutcomeReportPanel : MonoBehaviour
             Label(body, "SV" + i, pct[i].ToString("0.0") + "%", 15f, BladeLoopTheme.Bone,
                   BladeLoopTheme.MonoBold, x + w - 62f, y, 62f, 22f);
 
-            float trackX = x + 138f, trackW = w - 138f - 70f;
             Bar(trackX, y + 7f, trackW, 8f, BladeLoopTheme.Rule);
             Bar(trackX, y + 7f, Mathf.Max(2f, trackW * (pct[i] / widest)), 8f, cols[i]);
+            // Drawn taller than the track so it reads over both the near-white fibre
+            // fill and the near-black char fill.
+            Bar(trackX + trackW * (dpct[i] / widest) - 1f, y + 4f, 2f, 14f, BladeLoopTheme.Bone);
             y += 30f;
         }
 
         y += 6f;
+        var tickNote = Label(body, "TickNote",
+            "The pale tick on each bar is the design case — where that stream sits with all "
+            + "four settings on spec.",
+            13f, BladeLoopTheme.Faint, BladeLoopTheme.Sans, x, y, w, 40f);
+        tickNote.textWrappingMode = TextWrappingModes.Normal;
+        y += 42f;
+
         var note = Label(body, "LossNote",
             "Loss is feed that never becomes product — fines carried off with the gas, dust, "
             + "and residue left in the plant. Near 1.5% on spec, up to 10% as the feed coarsens.",
@@ -307,10 +329,19 @@ public class OutcomeReportPanel : MonoBehaviour
     float BuildQualityCol(float x, float w, float y, ProcessModel m)
     {
         y = Head(x, w, y, "FIBRE QUALITY");
-        Row(x, w, ref y, "Purity",            m.FiberPurityPct.ToString("0.0") + "%");
-        Row(x, w, ref y, "Tensile retention", m.TensileRetentionPct.ToString("0.0") + "%");
-        Row(x, w, ref y, "Efficiency",        m.EfficiencyPct + "%");
-        return y;
+        QualityBar(x, w, ref y, "Purity", m.FiberPurityPct,
+                   OrderContext.MidPurity,  OrderContext.HighPurity);
+        QualityBar(x, w, ref y, "Tensile retention", m.TensileRetentionPct,
+                   OrderContext.MidTensile, OrderContext.HighTensile);
+        Row(x, w, ref y, "Efficiency", m.EfficiencyPct + "%");
+
+        y += 4f;
+        var note = Label(body, "QNote",
+            "Ticks are the mid and high thresholds. Each bar takes the grade that measure "
+            + "alone would earn — the shorter one is what capped this run.",
+            13f, BladeLoopTheme.Faint, BladeLoopTheme.Sans, x, y, w, 40f);
+        note.textWrappingMode = TextWrappingModes.Normal;
+        return y + 42f;
     }
 
     float BuildCostCol(float x, float w, float y, bool hasOrder, ProcessModel m)
@@ -335,8 +366,15 @@ public class OutcomeReportPanel : MonoBehaviour
         MakeButton("Btn_Menu", "Back to menu", rx, by, bw, bh, false, BackToMenu);
         MakeButton("Btn_Save", "Save report",  rx - (bw + gap), by, bw, bh, true, SaveReport);
 
+        // STARTS AT THE SECOND COLUMN, not the left margin. The quality block now ends
+        // with a note explaining the threshold ticks, and that note occupies the
+        // bottom-left corner this used to sit in - a collision that stays invisible
+        // until someone actually presses Save and the path appears underneath it.
+        float sx = Margin + (ScreenW() - Margin * 2f - ColGap * 2f) / 3f + ColGap;
+        float sw = (rx - (bw + gap)) - sx - 24f;
+
         savedNote = Label(body, "SavedNote", "", 13.5f, BladeLoopTheme.Faint, BladeLoopTheme.Sans,
-                          Margin, ScreenH() - by - bh + 14f, ScreenW() - Margin * 2f - (bw * 2f + gap + 40f), 40f);
+                          sx, ScreenH() - by - bh + 14f, sw, 40f);
         savedNote.textWrappingMode = TextWrappingModes.Normal;
     }
 
@@ -430,7 +468,13 @@ public class OutcomeReportPanel : MonoBehaviour
         y += 28f;
     }
 
-    void Setting(float x, float w, ref float y, string k, float actual, float design, string fmt, string unit)
+    /// <summary>A setting, its design value, the signed gap, and a centre-zero deviation
+    /// bar. <paramref name="span"/> is the model's own deviation denominator for this
+    /// input (ProcessModel.DevTemp and friends), so a half-width bar is a full-strength
+    /// penalty. MIRRORED, like the palette in OutcomeReport: those denominators are not
+    /// public constants, so if they change in ProcessModel, change them here too.</summary>
+    void Setting(float x, float w, ref float y, string k, float actual, float design,
+                 string fmt, string unit, float span)
     {
         Label(body, "SK_" + k, k, 14.5f, BladeLoopTheme.Muted, BladeLoopTheme.Sans, x, y, w * 0.5f, 22f);
         var v = Label(body, "SV_" + k, actual.ToString(fmt) + unit, 15.5f, BladeLoopTheme.Bone,
@@ -448,7 +492,41 @@ public class OutcomeReportPanel : MonoBehaviour
               onSpec ? BladeLoopTheme.StreamGas : BladeLoopTheme.Oxide,
               BladeLoopTheme.Sans, x + w * 0.5f, y, w * 0.5f, 18f);
         dt.alignment = TextAlignmentOptions.TopRight;
-        y += 27f;
+        y += 24f;
+
+        // centre-zero deviation bar
+        float half = w * 0.5f;
+        Bar(x, y, w, 6f, BladeLoopTheme.Rule);
+        float u = Mathf.Clamp(d / Mathf.Max(span, 0.0001f), -1f, 1f);
+        float len = Mathf.Abs(u) * half;
+        if (len > 1f)
+            Bar(u >= 0f ? x + half : x + half - len, y, len, 6f,
+                onSpec ? BladeLoopTheme.StreamGas : BladeLoopTheme.Oxide);
+        Bar(x + half, y - 2f, 1f, 10f, BladeLoopTheme.Faint);   // the design centre line
+        y += 22f;
+    }
+
+    /// <summary>One quality measure on a 0-100 scale with the two grade thresholds ticked
+    /// on it. Coloured by the tier THAT MEASURE ALONE would earn: a grade needs both to
+    /// clear, so when the two bars differ in colour the shorter one is what held the run
+    /// back - which is the part a reader can act on.</summary>
+    void QualityBar(float x, float w, ref float y, string k, float value, float midBar, float highBar)
+    {
+        Label(body, "QK_" + k, k, 14.5f, BladeLoopTheme.Muted, BladeLoopTheme.Sans, x, y, w * 0.6f, 22f);
+        var v = Label(body, "QV_" + k, value.ToString("0.0") + "%", 15.5f, BladeLoopTheme.Bone,
+                      BladeLoopTheme.MonoBold, x + w * 0.6f, y, w * 0.4f, 22f);
+        v.alignment = TextAlignmentOptions.TopRight;
+        y += 24f;
+
+        Color tier = value >= highBar ? BladeLoopTheme.StreamGas
+                   : value >= midBar  ? BladeLoopTheme.Oxide
+                                      : BladeLoopTheme.Faint;
+
+        Bar(x, y, w, 8f, BladeLoopTheme.Rule);
+        Bar(x, y, Mathf.Max(2f, w * Mathf.Clamp01(value / 100f)), 8f, tier);
+        Bar(x + w * (midBar  / 100f) - 1f, y - 3f, 2f, 14f, BladeLoopTheme.Bone);
+        Bar(x + w * (highBar / 100f) - 1f, y - 3f, 2f, 14f, BladeLoopTheme.Bone);
+        y += 26f;
     }
 
     void Bar(float x, float y, float w, float h, Color c)

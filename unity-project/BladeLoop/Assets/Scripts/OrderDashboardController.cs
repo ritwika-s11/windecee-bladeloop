@@ -686,9 +686,14 @@ public class OrderDashboardController : MonoBehaviour
                   + "material but takes longer. Every position on the rail is the right answer for somebody.";
             aL = "FIBRE PER HOUR"; aV = $"{p.fibreKgH:N0} kg/h";
             bL = "OF EVERY TONNE"; bV = $"{p.yieldFrac * 100f:0.0}%";
+            // The Low/Mid collapse, stated as the measured fact it is. Fibre output
+            // peaks at 6 mm, which is already precast-concrete quality, so the coarser
+            // settings a cement works would unlock produce LESS fibre per hour and waste
+            // more material — beaten on both counts, so never worth offering.
             note = (mode != Mode.Constraint && grade == Grade.Low)
-                 ? "Low grade offers the same options as precast concrete. Running dirtier than this costs "
-                 + "more than it gains."
+                 ? "Same options as precast concrete. Fibre output peaks while the fibre is still "
+                 + "precast quality, so running dirtier than this gives you less fibre per hour AND "
+                 + "wastes more material — there is nothing better down there to offer."
                  : $"All {frontier.Count} positions on the rail are optimal. Moving the handle trades one "
                  + "consequence for the other — never for nothing.";
         }
@@ -1078,19 +1083,22 @@ public class OrderDashboardController : MonoBehaviour
         // Both blocks pushed up: the card now takes the column's full slack, and at
         // 0.62/0.30 the content sat in the middle with 90 units of nothing above it and
         // another 70 below.
-        if (mode == Mode.Buyer || mode == Mode.Supply) BuyerRow(rt, 0.630f);
+        // All three modes ask who is buying. Constraint used to skip this, which left
+        // `grade` carrying a stale value from whichever mode the user visited before -
+        // and that stale value is what Commit() wrote into the order.
+        BuyerRow(rt, 0.630f);
 
-        float sy = (mode == Mode.Constraint) ? 0.560f : 0.330f;
+        float sy = 0.330f;
 
         if (mode == Mode.Buyer)
             BigSlider(rt, sy, "TONNES OF RECOVERED FIBRE", 1000f, 10000f, true, orderTonnes,
-                      v => { orderTonnes = v; Refresh(); }, () => $"{orderTonnes:N0} t");
+                      "t", v => { orderTonnes = v; Refresh(); });
         else if (mode == Mode.Supply)
             BigSlider(rt, sy, "BLADES YOU HAVE", 50f, 1500f, true, blades,
-                      v => { blades = v; Refresh(); }, () => $"{blades:N0}");
+                      "blades", v => { blades = v; Refresh(); });
         else
             BigSlider(rt, sy, "FINEST YOUR SHREDDER GOES", 1f, 20f, false, shredMm,
-                      v => { shredMm = Mathf.Round(v * 2f) / 2f; Refresh(); }, () => $"{shredMm:0.#} mm");
+                      "mm", v => { shredMm = Mathf.Round(v * 2f) / 2f; Refresh(); });
 
         derived = Label(rt, "d", "", TypeBody, BladeLoopTheme.Faint,
                         TextAlignmentOptions.TopLeft, BladeLoopTheme.Sans);
@@ -1155,6 +1163,68 @@ public class OrderDashboardController : MonoBehaviour
                           TextAlignmentOptions.Center, BladeLoopTheme.Sans);
             Anchor(u.rectTransform, 0.04f, 0.10f, 0.96f, 0.44f);
         }
+
+        // The bar this buyer sets, and the shredder setting that clears it. Without it
+        // the only place the user ever learns a limit exists is the dead-end message on
+        // the next step - which tells them to grind finer without saying how much finer.
+        // In Constraint mode the user has already told us their shredder, so we can say
+        // now that it is too coarse for this buyer rather than letting them press FIND
+        // THE OPTIONS and meet a dead end.
+        bool tooCoarse = mode == Mode.Constraint && grade != Grade.Low
+                                                 && shredMm > CoarsestFor(grade) + 0.001f;
+
+        var spec = Label(rt, "spec", BuyerSpec(grade), TypeMicro,
+                         tooCoarse ? BladeLoopTheme.Oxide : BladeLoopTheme.Faint,
+                         TextAlignmentOptions.Left, BladeLoopTheme.Sans);
+        spec.textWrappingMode = TextWrappingModes.NoWrap;
+        Anchor(spec.rectTransform, 0.012f, y - 0.070f, 0.985f, y - 0.012f);
+    }
+
+    /// <summary>
+    /// The coarsest shredder setting at which the plant can still make this buyer's
+    /// grade, rounded DOWN to the 0.5 mm the constraint slider actually moves in.
+    ///
+    /// For any particle size the most favourable feed is the set-point, 6,500 kg/h,
+    /// clamped to that size's own ceiling: below the cap it is the DEVIATION from
+    /// OptFeed that costs purity, not the rate. Temperature and retention are held at
+    /// their set-points for the same reason OrderSolver holds them there. Scanning
+    /// coarse to fine and stopping at the first size that grades out gives the ceiling
+    /// directly, without reaching into the solver's private grid.
+    /// </summary>
+    static float CoarsestFor(Grade g)
+    {
+        var probe = new ProcessModel
+        {
+            TempC        = ProcessModel.OptTemp,
+            RetentionMin = ProcessModel.OptRetention
+        };
+
+        for (float p = 20f; p >= 1f - 0.001f; p -= 0.5f)
+        {
+            probe.ParticleSizeMm = p;
+            probe.FeedKgH = Mathf.Clamp(ProcessModel.OptFeed, 4000f, OrderSolver.MaxFeed(p));
+            if (OrderContext.GradeOf(probe.FiberPurityPct, probe.TensileRetentionPct) <= g)
+                return p;
+        }
+        return 0f;
+    }
+
+    /// <summary>What this buyer will and will not take, in one line. Answers the
+    /// question the dead-end message raises but cannot answer - "fine enough for
+    /// WHAT?" - at the point where the buyer is chosen rather than after the run
+    /// has already failed.</summary>
+    static string BuyerSpec(Grade g)
+    {
+        if (g == Grade.Low)
+            return "Cement works takes whatever comes out — every shredder setting on the dial works.";
+
+        float purity  = g == Grade.High ? OrderContext.HighPurity  : OrderContext.MidPurity;
+        float tensile = g == Grade.High ? OrderContext.HighTensile : OrderContext.MidTensile;
+        float coarse  = CoarsestFor(g);
+
+        return $"{BuyerName(g)} needs {purity:0}% purity and {tensile:0}% strength — "
+             + (coarse > 0f ? $"the plant reaches that at {coarse:0.#} mm or finer."
+                            : "no setting on the dial reaches that.");
     }
 
     static string BuyerName(Grade g) =>
@@ -1185,8 +1255,19 @@ public class OrderDashboardController : MonoBehaviour
 
     void ComputeFrontier()
     {
+        // CONSTRAINT MODE NOW RESPECTS THE BUYER TOO. It used to accept every plan
+        // (`m => true`), which meant the one mode that fixes a shredder size was also
+        // the one mode where the quality bar did nothing - and because it never asked
+        // who was buying, `grade` held whatever had been picked in a previous mode and
+        // got written into the order anyway.
+        //
+        // This can now return an EMPTY frontier - a 15 mm shredder genuinely cannot
+        // make composite-grade fibre - and that is the honest answer. StepMatters
+        // already renders that case.
         frontier = mode == Mode.Constraint
-                 ? OrderSolver.FrontierWhere(m => true, shredMm)
+                 ? OrderSolver.FrontierWhere(
+                       m => OrderContext.GradeOf(m.FiberPurityPct, m.TensileRetentionPct) <= grade,
+                       shredMm)
                  : OrderSolver.SolveFrontier(grade);
 
         edited = null;
@@ -1200,23 +1281,29 @@ public class OrderDashboardController : MonoBehaviour
     {
         if (frontier.Count == 0)
         {
-            var e = Label(rt, "e", "No plan in the plant's envelope reaches that. Try a coarser target.",
+            // Now genuinely reachable: Constraint mode filters by the buyer's bar, and a
+            // coarse shredder cannot reach a high one at any feed rate. The old copy
+            // said "try a coarser target", which is the wrong advice here - coarser
+            // grinding is what caused it - so the dead end names its own way out.
+            string why = mode == Mode.Constraint
+                ? $"A {shredMm:0.#} mm shredder cannot reach {BuyerName(grade).ToLower()} quality at any "
+                + "feed rate — the pieces are too big to decompose all the way through. "
+                + "Grind finer, or sell to a buyer with a lower bar."
+                : "No plan in the plant's envelope reaches that. Try a buyer with a lower bar.";
+
+            var e = Label(rt, "e", why,
                           TypeBody, BladeLoopTheme.Oxide, TextAlignmentOptions.TopLeft, BladeLoopTheme.Sans);
             e.textWrappingMode = TextWrappingModes.Normal;
             Anchor(e.rectTransform, 0.012f, 0.15f, 0.8f, 0.7f);
             return;
         }
 
-        // Low grade's frontier is identical to mid's. Saying so is better than
-        // letting the user wonder why nothing changed.
-        if (mode != Mode.Constraint && grade == Grade.Low)
-        {
-            var n = Label(rt, "same", "Same options as precast concrete — running dirtier than this "
-                                    + "costs more than it gains, so there is never a reason to choose it.",
-                          TypeMicro, BladeLoopTheme.Faint, TextAlignmentOptions.TopLeft, BladeLoopTheme.Sans);
-            n.textWrappingMode = TextWrappingModes.Normal;
-            Anchor(n.rectTransform, 0.012f, 0.72f, 0.72f, 0.80f);
-        }
+        // The "low grade gives the same options as mid" explanation used to be printed
+        // here as well as in the guide panel. It was anchored at 0.72..0.80, which was
+        // clear space in the card's ORIGINAL layout and is now straight through the two
+        // headline figures - it only ever showed for a Low-grade buyer, so every audit
+        // run against Mid missed it. The guide panel carries the same sentence with room
+        // to breathe, so the duplicate is gone rather than relocated.
 
         railIndex = Mathf.Clamp(railIndex, 0, frontier.Count - 1);
         var p = frontier[railIndex];
@@ -1536,8 +1623,21 @@ public class OrderDashboardController : MonoBehaviour
                      ? blades * OrderContext.BladeMassTonnes * (m.OutputSplit().GlassKgH / m.FeedKgH)
                      : mode == Mode.Buyer ? orderTonnes : 4000f;
 
-        var achieved = OrderContext.GradeOf(m.FiberPurityPct, m.TensileRetentionPct);
-        OrderContext.SetOrder(new Order("", BuyerName(achieved), achieved, tonnes), m);
+        // THE ORDER RECORDS WHAT WAS ASKED FOR, NOT WHAT CAME OUT.
+        //
+        // This used to store the ACHIEVED grade as the target, which made the order a
+        // description of the result rather than a request. Three things followed:
+        // the run report said "asked for HIGH" when the user asked for MID and merely
+        // over-delivered; the buyer type was rewritten to whoever buys the achieved
+        // grade; and because target was set equal to achieved every time,
+        // OrderContext.MeetsTarget was true by construction - so "Target missed" could
+        // never fire from this screen even after the sliders were dragged to ruin the
+        // fibre. Verified: asked HIGH, set 460 °C / 18 mm, produced LOW, verdict
+        // "ORDER FILLED".
+        //
+        // AchievedGrade is computed separately from the model, so the report can now
+        // compare the two honestly in both directions.
+        OrderContext.SetOrder(new Order("", BuyerName(grade), grade, tonnes), m);
     }
 
     void StepPlan(RectTransform rt)
@@ -1555,6 +1655,19 @@ public class OrderDashboardController : MonoBehaviour
                              TextAlignmentOptions.Center, BladeLoopTheme.MonoBold);
         planBadgeTxt.characterSpacing = 2f;
         Anchor(planBadgeTxt.rectTransform, 0f, 0f, 1f, 1f);
+
+        // The badge states the grade the fibre COMES OUT AT, which is not always the
+        // grade that was ordered - and where they differ the badge reads like the app
+        // ignored the buyer. A cement works (low grade) is the standing example: fibre
+        // output peaks at 6 mm, which is already precast quality, so the best plan for
+        // that order over-delivers and the badge says MID GRADE. Correct, and
+        // unexplained. This line says what the grade means for the order.
+        planBadgeNote = Label(rt, "badgeNote", "", TypeMicro, BladeLoopTheme.Muted,
+                              TextAlignmentOptions.Right, BladeLoopTheme.Mono);
+        planBadgeNote.characterSpacing = 1.2f;
+        // Right-aligned and hung UNDER the badge. planBig's rect runs to x 0.74, so the
+        // box starts clear of it at 0.75 rather than sharing the line.
+        Anchor(planBadgeNote.rectTransform, 0.66f, 0.836f, 0.985f, 0.882f);
 
         // ---- four sliders, still editable, now with a reason ----
         sT = Slid(rt, "KILN TEMPERATURE", 400f, 700f, true,  0.012f, 0.47f, 0.70f, out vT);
@@ -1653,9 +1766,13 @@ public class OrderDashboardController : MonoBehaviour
             Anchor(d.rectTransform, 0.27f, ry, 0.455f, ry + 0.046f);
             legendSub.Add(d);
 
+            // Ends at 0.70, not 0.985: the RUN REPORT button occupies 0.720..0.985 in
+            // this band, and a destination string that ran the full width would sit
+            // underneath it. Nothing collides at today's wording, but the longest of
+            // these is already two thirds of the way there.
             var dest = Label(rt, "ds" + s, Destination(s), 13f, BladeLoopTheme.Faint,
                              TextAlignmentOptions.Left, BladeLoopTheme.Sans);
-            Anchor(dest.rectTransform, 0.480f, ry, 0.985f, ry + 0.046f);
+            Anchor(dest.rectTransform, 0.480f, ry, 0.700f, ry + 0.046f);
 
             // Hovering the ROW does the same thing as hovering the block. The Loss
             // sliver is three per cent of a 195-unit bar - six pixels - so if the block
@@ -1901,7 +2018,7 @@ public class OrderDashboardController : MonoBehaviour
     static readonly int[] LegendSrc = { 4, 3, 2, 1, 0 };
 
     Slider sT, sR, sF, sP;
-    TMP_Text vT, vR, vF, vP, planBig, planBadgeTxt, quality;
+    TMP_Text vT, vR, vF, vP, planBig, planBadgeTxt, planBadgeNote, quality;
     Image planBadge, bar, feedWall;
     GameObject snapBtn;
     readonly List<Image> segs = new List<Image>();
@@ -1976,6 +2093,19 @@ public class OrderDashboardController : MonoBehaviour
                         : g == Grade.Mid  ? BladeLoopTheme.Oxide : BladeLoopTheme.Faint;
         planBadgeTxt.text = OrderContext.GradeLabel(g);
 
+        // Grade is ordered High(0) < Mid(1) < Low(2), so a SMALLER value is better
+        // fibre. g < grade means the plan over-delivers, which is a good outcome and
+        // was previously indistinguishable on screen from the app having ignored the
+        // buyer entirely.
+        if (planBadgeNote != null)
+        {
+            string asked = "ORDERED " + OrderContext.GradeLabel(grade);
+            planBadgeNote.text  = g < grade ? asked + "  ·  EXCEEDED"
+                                : g > grade ? asked + "  ·  MISSED"
+                                            : asked + "  ·  MET";
+            planBadgeNote.color = g > grade ? BladeLoopTheme.Oxide : BladeLoopTheme.Muted;
+        }
+
         bool off;
         Verdict(m, out off);
         if (snapBtn != null) snapBtn.SetActive(off);
@@ -1998,16 +2128,32 @@ public class OrderDashboardController : MonoBehaviour
         float kg = m.OutputSplit().GlassKgH;
         float yd = kg / m.FeedKgH;
 
+        // TWO DIFFERENT TOLERANCES, AND THEY ARE NOT INTERCHANGEABLE.
+        //
+        // "No worse on this axis" may only forgive float noise. The old test forgave
+        // 0.5 kg/h there, which sounds tiny but is WIDER than the gap between adjacent
+        // rail positions: the frontier is sampled every 0.1 mm, so neighbours sit about
+        // 0.1 kg/h apart. The rail's own top plan therefore came up "beaten" by the plan
+        // one notch along, which buys 0.15 points of yield with 0.09 kg/h of fibre -
+        // precisely the trade the rail exists to offer. The screen then announced a
+        // better plan and printed the gain as "0 kg/h more fibre".
+        //
+        // "Better enough to interrupt the user" is a separate, much larger number, and
+        // it is what the sentence below is allowed to quote.
+        const float EpsKg = 0.05f;     // kg/h - float noise only
+        const float EpsYd = 1e-5f;
+        const float MinKg = 1f;        // kg/h - smallest gain worth reporting
+        const float MinYd = 0.0005f;   // 0.05 of a percentage point
+
         OrderSolver.Plan? beats = null;
         float bestGain = 0f;
         foreach (var p in frontier)
         {
-            if (p.fibreKgH >= kg - 0.5f && p.yieldFrac >= yd - 1e-5f &&
-                (p.fibreKgH > kg + 0.5f || p.yieldFrac > yd + 1e-5f))
-            {
-                float gain = (p.fibreKgH - kg) / Mathf.Max(kg, 1f) + (p.yieldFrac - yd);
-                if (gain > bestGain) { bestGain = gain; beats = p; }
-            }
+            if (p.fibreKgH < kg - EpsKg || p.yieldFrac < yd - EpsYd) continue;   // worse somewhere
+            if (p.fibreKgH <= kg + MinKg && p.yieldFrac <= yd + MinYd) continue; // not better enough to say
+
+            float gain = (p.fibreKgH - kg) / Mathf.Max(kg, 1f) + (p.yieldFrac - yd);
+            if (gain > bestGain) { bestGain = gain; beats = p; }
         }
 
         var g = OrderContext.GradeOf(m.FiberPurityPct, m.TensileRetentionPct);
@@ -2022,8 +2168,22 @@ public class OrderDashboardController : MonoBehaviour
         {
             offFrontier = true;
             var b = beats.Value;
-            return $"There is a better plan: {b.fibreKgH - kg:N0} kg/h more fibre AND "
-                 + $"{(b.yieldFrac - yd) * 100f:0.0}% more from every tonne. Nothing is gained here.";
+            float dKg = b.fibreKgH - kg;
+            float dYd = (b.yieldFrac - yd) * 100f;
+
+            // Say only what is actually true. The dominance test above admits plans
+            // that win on one axis and tie on the other, so a fixed "A AND B" sentence
+            // was printing a gain of zero half the time.
+            if (dKg > MinKg && dYd > MinYd * 100f)
+                return $"The rail already holds a plan with {dKg:N0} kg/h more fibre AND "
+                     + $"{dYd:0.0}% more out of every tonne. This setting loses on both counts.";
+
+            if (dKg > MinKg)
+                return $"The rail already holds a plan with {dKg:N0} kg/h more fibre for the "
+                     + "same share of every tonne. This setting gives up speed for nothing.";
+
+            return $"The rail already holds a plan that gets {dYd:0.0}% more out of every tonne "
+                 + "at the same fibre rate. This setting wastes material for nothing.";
         }
 
         return "This is one of the best plans available for what you asked. Moving the sliders "
@@ -2085,7 +2245,7 @@ public class OrderDashboardController : MonoBehaviour
     }
 
     void BigSlider(RectTransform rt, float y, string label, float min, float max, bool whole,
-                   float start, UnityEngine.Events.UnityAction<float> onChange, System.Func<string> fmt)
+                   float start, string unit, UnityEngine.Events.UnityAction<float> onChange)
     {
         // Same control language as the frontier rail: a shallow groove, a thin accent
         // fill, and a blade-and-plate grip. The previous version was a 30-unit solid
@@ -2096,13 +2256,60 @@ public class OrderDashboardController : MonoBehaviour
         // names.
         TipIfKnown(Micro(rt, label, 0.012f, y + 0.13f), label);
 
-        var val = Label(rt, "bv", fmt(), TypeHuge, BladeLoopTheme.Bone,
-                        TextAlignmentOptions.Right, BladeLoopTheme.MonoBold);
-        Anchor(val.rectTransform, 0.74f, y + 0.045f, 0.985f, y + 0.155f);
+        // ---- the number, typeable ------------------------------------------
+        //
+        // A slider alone cannot express "exactly 4,250 t": at this range one pixel is
+        // about 15 tonnes. The box and the slider drive the SAME value - type for
+        // precision, drag to explore - and the slider stays as the control that cannot
+        // produce an invalid number.
+        //
+        // The unit lives in its own label so the box contains a parseable number and
+        // nothing else. Parsing "4,000 t" back out of a formatted string is where this
+        // kind of field usually breaks.
+        var fieldGo = new GameObject("numField", typeof(RectTransform), typeof(Image), typeof(TMP_InputField));
+        fieldGo.transform.SetParent(rt, false);
+        var fieldRt = (RectTransform)fieldGo.transform;
+        Anchor(fieldRt, 0.70f, y + 0.045f, 0.90f, y + 0.155f);
+        var fieldBg = fieldGo.GetComponent<Image>();
+        fieldBg.color = new Color(1f, 1f, 1f, 0.05f);
+
+        var underline = Img(fieldRt, "ul", BladeLoopTheme.Rule);
+        Anchor(underline.rectTransform, 0f, 0f, 1f, 0.045f);
+        underline.raycastTarget = false;
+
+        var viewport = Rect(fieldRt, "TextArea");
+        Anchor(viewport, 0f, 0f, 1f, 1f);
+        viewport.offsetMin = new Vector2(10f, 2f);
+        viewport.offsetMax = new Vector2(-10f, -2f);
+        viewport.gameObject.AddComponent<RectMask2D>();
+
+        var fieldTxt = Label(viewport, "Text", "", TypeHuge, BladeLoopTheme.Bone,
+                             TextAlignmentOptions.Right, BladeLoopTheme.MonoBold);
+        fieldTxt.richText = false;
+        Anchor(fieldTxt.rectTransform, 0f, 0f, 1f, 1f);
+
+        var field = fieldGo.GetComponent<TMP_InputField>();
+        field.textViewport   = viewport;
+        field.textComponent  = fieldTxt;
+        field.fontAsset      = BladeLoopTheme.MonoBold;
+        field.pointSize      = TypeHuge;
+        field.caretColor     = BladeLoopTheme.Oxide;
+        field.customCaretColor = true;
+        field.caretWidth     = 2;
+        field.selectionColor = new Color(BladeLoopTheme.Oxide.r, BladeLoopTheme.Oxide.g,
+                                         BladeLoopTheme.Oxide.b, 0.32f);
+        field.contentType    = whole ? TMP_InputField.ContentType.IntegerNumber
+                                     : TMP_InputField.ContentType.DecimalNumber;
+        field.restoreOriginalTextOnEscape = true;
+        field.SetTextWithoutNotify(NumText(start, whole));
+
+        var unitLbl = Label(rt, "bu", unit, TypeEyebrow, BladeLoopTheme.Muted,
+                            TextAlignmentOptions.Left, BladeLoopTheme.Mono);
+        Anchor(unitLbl.rectTransform, 0.912f, y + 0.045f, 0.985f, y + 0.150f);
 
         var go = new GameObject("bs", typeof(RectTransform), typeof(Slider));
         go.transform.SetParent(rt, false);
-        AnchorIn(rt, (RectTransform)go.transform, 0.012f, y + 0.078f, 0.70f, y + 0.106f, 0f, 1f);
+        AnchorIn(rt, (RectTransform)go.transform, 0.012f, y + 0.078f, 0.66f, y + 0.106f, 0f, 1f);
 
         var bg = Img((RectTransform)go.transform, "bg", BladeLoopTheme.RuleSoft);
         Anchor(bg.rectTransform, 0f, 0f, 1f, 1f); bg.raycastTarget = true;
@@ -2127,8 +2334,39 @@ public class OrderDashboardController : MonoBehaviour
         s.fillRect = fill.rectTransform; s.handleRect = h.rectTransform; s.targetGraphic = h;
         s.minValue = min; s.maxValue = max; s.wholeNumbers = whole;
         s.SetValueWithoutNotify(start);
-        s.onValueChanged.AddListener(v => { onChange(v); val.text = fmt(); });
+
+        // Dragging writes the box; typing writes the slider. SetTextWithoutNotify and
+        // SetValueWithoutNotify break what would otherwise be an endless round trip.
+        s.onValueChanged.AddListener(v =>
+        {
+            onChange(v);
+            field.SetTextWithoutNotify(NumText(v, whole));
+        });
+
+        // onEndEdit, NOT onValueChanged: clamping per keystroke fights the user, and
+        // "1" on the way to "1500" would be yanked to the minimum before they finish.
+        field.onEndEdit.AddListener(txt =>
+        {
+            float parsed;
+            if (!float.TryParse(txt.Replace(",", "").Trim(),
+                                System.Globalization.NumberStyles.Float,
+                                System.Globalization.CultureInfo.InvariantCulture, out parsed))
+            {
+                // Empty or nonsense: put back what the slider still holds.
+                field.SetTextWithoutNotify(NumText(s.value, whole));
+                return;
+            }
+
+            float clamped = Mathf.Clamp(parsed, min, max);
+            if (whole) clamped = Mathf.Round(clamped);
+            s.value = clamped;                              // fires onChange -> rewrites the box
+            field.SetTextWithoutNotify(NumText(s.value, whole));
+        });
     }
+
+    /// <summary>The number alone, no unit, grouped for reading. Parsed back by stripping
+    /// the separators, so the two directions stay symmetrical.</summary>
+    static string NumText(float v, bool whole) => whole ? v.ToString("N0") : v.ToString("0.#");
 
     Slider Slid(RectTransform rt, string label, float min, float max, bool whole,
                 float x0, float x1, float y, out TMP_Text val)
