@@ -77,7 +77,17 @@ public class TourUISubmitGuard : MonoBehaviour
 
             // Anything already selected would still highlight and would still take a
             // stray Enter, so let it go too.
-            if (es.currentSelectedGameObject != null) es.SetSelectedGameObject(null);
+            //
+            // EXCEPT a text field. A TMP_InputField only receives keystrokes while it
+            // is the EventSystem's selected object, so clearing the selection every
+            // frame makes typing into one impossible - the caret never appears and the
+            // field looks dead. That is exactly what happened to the number box on the
+            // Custom Order screen. Buttons are still released, which is the whole point
+            // of this guard; a focused field is released the moment the user clicks off
+            // it, by the EventSystem's own rules.
+            var sel = es.currentSelectedGameObject;
+            if (sel != null && sel.GetComponent<TMPro.TMP_InputField>() == null)
+                es.SetSelectedGameObject(null);
         }
     }
 }

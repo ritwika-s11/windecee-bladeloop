@@ -96,7 +96,7 @@ public static class OutcomeReport
         sb.Append("<div class=\"cols\">");
         AppendOrderColumn(sb, m, hasOrder);
         AppendPlantColumn(sb, m, refM);
-        AppendOutputColumn(sb, s);
+        AppendOutputColumn(sb, s, refM.OutputSplit());
         sb.Append("</div>");
 
         // ---- campaign + end use ---------------------------------------------
@@ -179,24 +179,46 @@ public static class OutcomeReport
     static void AppendPlantColumn(StringBuilder sb, ProcessModel m, ProcessModel r)
     {
         sb.Append("<section class=\"col\"><h2>How the plant was set</h2>");
-        SettingRow(sb, "Temperature", m.TempC,          r.TempC,          "0",  " °C");
-        SettingRow(sb, "Retention",   m.RetentionMin,   r.RetentionMin,   "0.#", " min");
-        SettingRow(sb, "Feed rate",   m.FeedKgH,        r.FeedKgH,        "0",  " kg/h");
-        SettingRow(sb, "Particle",    m.ParticleSizeMm, r.ParticleSizeMm, "0.#", " mm");
-        sb.Append("<p class=\"note\">Compared against the plant's design case. ")
-          .Append("Deviation from it is what moves every number in the next column.</p>");
+        // The divisors are the model's own deviation denominators (ProcessModel.DevTemp
+        // and friends), so a full-width bar is a full-strength penalty rather than an
+        // arbitrary scale. MIRRORED like the palette above: they are not public
+        // constants, so if ProcessModel's denominators change, change these too.
+        SettingRow(sb, "Temperature", m.TempC,          r.TempC,          "0",   " °C",  150f);
+        SettingRow(sb, "Retention",   m.RetentionMin,   r.RetentionMin,   "0.#", " min",  10f);
+        SettingRow(sb, "Feed rate",   m.FeedKgH,        r.FeedKgH,        "0",   " kg/h", 2500f);
+        SettingRow(sb, "Particle",    m.ParticleSizeMm, r.ParticleSizeMm, "0.#", " mm",   18f);
+        sb.Append("<p class=\"note\">Each bar runs from the design case at the centre. ")
+          .Append("Longer means further off spec, scaled by how far that setting is ")
+          .Append("allowed to drift before the model treats it as fully deviated. ")
+          .Append("Deviation is what moves every number in the next column.</p>");
         sb.Append("</section>");
     }
 
-    static void AppendOutputColumn(StringBuilder sb, ProcessModel.Split s)
+    /// <summary>
+    /// The five streams, each against its design-case share.
+    ///
+    /// The bar is the actual split; the pale tick on it is where the design case sits.
+    /// Showing actual alone answers "what came out" but not "was that good", which is
+    /// the question a reader of a RUN REPORT is actually holding - and the design
+    /// figures were already computed, just never displayed.
+    ///
+    /// A tick rather than a second bar: doubling the bars would double the height of
+    /// the busiest block on the page to carry a number that only matters as a
+    /// comparison. The tick is drawn taller than the track so it stays visible over
+    /// both the near-white fibre fill and the near-black char fill.
+    /// </summary>
+    static void AppendOutputColumn(StringBuilder sb, ProcessModel.Split s, ProcessModel.Split d)
     {
         sb.Append("<section class=\"col wide\"><h2>What the plant made</h2>");
         string[] names = { "Reclaimed glass fibre", "Pyrolysis oil", "Syngas", "Carbon char", "Loss" };
         float[]  pct   = { s.GlassPct, s.OilPct, s.SyngasPct, s.CharPct, s.LossPct };
         float[]  kgh   = { s.GlassKgH, s.OilKgH, s.SyngasKgH, s.CharKgH, s.LossKgH };
+        float[]  dpct  = { d.GlassPct, d.OilPct, d.SyngasPct, d.CharPct, d.LossPct };
 
+        // Scale across BOTH series, or a design tick could land past the end of its
+        // own track on any run that under-performs the design case.
         float widest = 0f;
-        for (int i = 0; i < pct.Length; i++) widest = Mathf.Max(widest, pct[i]);
+        for (int i = 0; i < pct.Length; i++) widest = Mathf.Max(widest, Mathf.Max(pct[i], dpct[i]));
         if (widest <= 0f) widest = 1f;
 
         for (int i = 0; i < names.Length; i++)
@@ -204,10 +226,17 @@ public static class OutcomeReport
             sb.Append("<div class=\"bar\"><div class=\"blab\">").Append(names[i]).Append("</div>");
             sb.Append("<div class=\"btrack\"><div class=\"bfill\" style=\"width:")
               .Append((pct[i] / widest * 100f).ToString("0.#"))
-              .Append("%;background:").Append(StreamCols[i]).Append("\"></div></div>");
+              .Append("%;background:").Append(StreamCols[i]).Append("\"></div>");
+            sb.Append("<div class=\"bmark\" style=\"left:")
+              .Append((dpct[i] / widest * 100f).ToString("0.#"))
+              .Append("%\" title=\"design ").Append(dpct[i].ToString("0.0")).Append("%\"></div></div>");
             sb.Append("<div class=\"bval\">").Append(pct[i].ToString("0.0")).Append("%</div>");
             sb.Append("<div class=\"bkg\">").Append(kgh[i].ToString("#,0")).Append(" kg/h</div></div>");
         }
+        sb.Append("<p class=\"note\"><span class=\"legtick\"></span>&nbsp;marks the design case &mdash; ")
+          .Append("where each stream sits when all four settings are on spec. ")
+          .Append("Fibre below its tick, or char above its own, means the kiln is not ")
+          .Append("decomposing the feed completely.</p>");
         sb.Append("<p class=\"note\"><b>Loss</b> is feed that never becomes any product &mdash; ")
           .Append("fines carried off with the gas, dust, and residue left inside the plant. ")
           .Append("It sits near 1.5% when the plant is on spec and climbs toward 10% as the ")
@@ -220,9 +249,18 @@ public static class OutcomeReport
         sb.Append("<div class=\"cols\">");
 
         sb.Append("<section class=\"col\"><h2>Fibre quality</h2>");
-        Row(sb, "Purity",            m.FiberPurityPct.ToString("0.0") + "%");
-        Row(sb, "Tensile retention", m.TensileRetentionPct.ToString("0.0") + "%");
-        Row(sb, "Efficiency",        m.EfficiencyPct + "%");
+        QualityBar(sb, "Purity", m.FiberPurityPct,
+                   OrderContext.MidPurity,  OrderContext.HighPurity);
+        QualityBar(sb, "Tensile retention", m.TensileRetentionPct,
+                   OrderContext.MidTensile, OrderContext.HighTensile);
+        Row(sb, "Efficiency", m.EfficiencyPct + "%");
+        sb.Append("<p class=\"note\">Ticks mark the grade thresholds &mdash; <b>mid</b> at ")
+          .Append(OrderContext.MidPurity.ToString("0")).Append("% purity / ")
+          .Append(OrderContext.MidTensile.ToString("0")).Append("% strength, <b>high</b> at ")
+          .Append(OrderContext.HighPurity.ToString("0")).Append("% / ")
+          .Append(OrderContext.HighTensile.ToString("0")).Append("%. ")
+          .Append("A bar is coloured by the grade <i>that measure alone</i> would earn, so when ")
+          .Append("the two differ the shorter one is what held the run back.</p>");
         sb.Append("</section>");
 
         sb.Append("<section class=\"col wide\"><h2>What the run costs</h2>");
@@ -244,26 +282,70 @@ public static class OutcomeReport
 
     // ------------------------------------------------------------------ atoms --
 
+    /// <summary>
+    /// One quality measure on a 0-100 scale with the two grade thresholds ticked on it.
+    ///
+    /// WHY THIS EARNS ITS SPACE. The report opens with a verdict - "produced MID GRADE" -
+    /// and then never says how close the run came to the grade above, or which of the two
+    /// measures decided it. Both are already known; nothing displayed them. Three bare
+    /// percentages became two bars that answer "how far off were we, and because of what".
+    ///
+    /// The scale is a literal 0-100 because both values ARE percentages, so bar length is
+    /// the number itself rather than a rescaling the reader has to decode.
+    ///
+    /// Each bar is coloured by the tier THAT MEASURE ALONE would earn. Grade needs both to
+    /// clear, so when purity is green and strength is orange the binding constraint is
+    /// visible at a glance - which is the actionable part.
+    /// </summary>
+    static void QualityBar(StringBuilder sb, string label, float value, float midBar, float highBar)
+    {
+        string tier = value >= highBar ? "hi" : value >= midBar ? "mid" : "lo";
+
+        sb.Append("<div class=\"qrow\"><div class=\"qhead\"><span class=\"qlab\">").Append(label)
+          .Append("</span><span class=\"qval\">").Append(value.ToString("0.0")).Append("%</span></div>");
+        sb.Append("<div class=\"qtrack\"><div class=\"qfill ").Append(tier)
+          .Append("\" style=\"width:").Append(Mathf.Clamp(value, 0f, 100f).ToString("0.#")).Append("%\"></div>");
+        sb.Append("<div class=\"qtick\" style=\"left:").Append(midBar.ToString("0.#"))
+          .Append("%\" title=\"mid grade: ").Append(midBar.ToString("0")).Append("%\"></div>");
+        sb.Append("<div class=\"qtick\" style=\"left:").Append(highBar.ToString("0.#"))
+          .Append("%\" title=\"high grade: ").Append(highBar.ToString("0")).Append("%\"></div>");
+        sb.Append("</div></div>");
+    }
+
     static void Row(StringBuilder sb, string k, string v)
     {
         sb.Append("<div class=\"row\"><span class=\"k\">").Append(k)
           .Append("</span><span class=\"v\">").Append(v).Append("</span></div>");
     }
 
-    /// <summary>A setting beside its design value, with the signed gap. Reads
-    /// "on spec" at zero rather than "+0", matching the in-app panel.</summary>
-    static void SettingRow(StringBuilder sb, string k, float actual, float design, string fmt, string unit)
+    /// <summary>A setting beside its design value, with the signed gap and a
+    /// centre-zero deviation bar. Reads "on spec" at zero rather than "+0", matching
+    /// the in-app panel.</summary>
+    static void SettingRow(StringBuilder sb, string k, float actual, float design,
+                           string fmt, string unit, float span)
     {
         float d = actual - design;
-        string delta = Mathf.Abs(d) < 0.05f
-            ? "on spec"
-            : (d > 0f ? "+" : "−") + Mathf.Abs(d).ToString(fmt) + unit;
-        string cls = Mathf.Abs(d) < 0.05f ? "d ok" : "d off";
+        bool onSpec = Mathf.Abs(d) < 0.05f;
+        string delta = onSpec ? "on spec" : (d > 0f ? "+" : "−") + Mathf.Abs(d).ToString(fmt) + unit;
 
         sb.Append("<div class=\"row\"><span class=\"k\">").Append(k)
           .Append("</span><span class=\"v\">").Append(actual.ToString(fmt)).Append(unit)
-          .Append("</span><span class=\"").Append(cls).Append("\">").Append(delta).Append("</span></div>")
+          .Append("</span><span class=\"").Append(onSpec ? "d ok" : "d off").Append("\">")
+          .Append(delta).Append("</span></div>")
           .Append("<div class=\"dsg\">design ").Append(design.ToString(fmt)).Append(unit).Append("</div>");
+
+        // Centre-zero bar. Half-width is a full deviation, so the fill can never
+        // escape its track however far the user has dragged a slider.
+        float u = Mathf.Clamp(d / Mathf.Max(span, 0.0001f), -1f, 1f);
+        float half = Mathf.Abs(u) * 50f;
+        float left = u >= 0f ? 50f : 50f - half;
+
+        sb.Append("<div class=\"dvtrack\"><div class=\"dvzero\"></div>");
+        if (half > 0.15f)                       // below this it renders as a smudge on the centre line
+            sb.Append("<div class=\"dvfill").Append(onSpec ? " ok" : "")
+              .Append("\" style=\"left:").Append(left.ToString("0.#"))
+              .Append("%;width:").Append(half.ToString("0.#")).Append("%\"></div>");
+        sb.Append("</div>");
     }
 
     static void AppendCss(StringBuilder sb)
@@ -309,8 +391,37 @@ public static class OutcomeReport
 
         sb.Append(".bar{display:flex;align-items:center;gap:10px;padding:6px 0}");
         sb.Append(".blab{flex:0 0 150px;font-size:13px;color:").Append(CMuted).Append("}");
-        sb.Append(".btrack{flex:1;height:9px;background:").Append(CRule).Append(";border-radius:2px;overflow:hidden}");
-        sb.Append(".bfill{height:100%}");
+        // NOT overflow:hidden any more - the design tick is deliberately taller than
+        // the track so it stays legible over the near-white fibre fill and the
+        // near-black char fill alike, and hiding the overflow would clip it back to
+        // invisibility on exactly those two rows.
+        sb.Append(".btrack{position:relative;flex:1;height:9px;background:").Append(CRule).Append(";border-radius:2px}");
+        sb.Append(".bfill{height:100%;border-radius:2px}");
+        sb.Append(".bmark{position:absolute;top:-3px;width:2px;height:15px;margin-left:-1px;background:")
+          .Append(CBone).Append("}");
+        sb.Append(".legtick{display:inline-block;width:2px;height:10px;vertical-align:-1px;background:")
+          .Append(CBone).Append("}");
+
+        // quality against the grade thresholds
+        sb.Append(".qrow{margin:0 0 15px}");
+        sb.Append(".qhead{display:flex;align-items:baseline;gap:10px;margin-bottom:5px}");
+        sb.Append(".qlab{flex:1;color:").Append(CMuted).Append(";font-size:13.5px}");
+        sb.Append(".qval{font-variant-numeric:tabular-nums;font-weight:600;font-size:15px}");
+        sb.Append(".qtrack{position:relative;height:9px;background:").Append(CRule).Append(";border-radius:2px}");
+        sb.Append(".qfill{height:100%;border-radius:2px;background:").Append(CFaint).Append("}");
+        sb.Append(".qfill.hi{background:").Append(CGood).Append("}");
+        sb.Append(".qfill.mid{background:").Append(COxide).Append("}");
+        sb.Append(".qtick{position:absolute;top:-3px;width:2px;height:15px;margin-left:-1px;background:")
+          .Append(CBone).Append("}");
+
+        // centre-zero deviation bars in the settings column
+        sb.Append(".dvtrack{position:relative;height:6px;background:").Append(CRule)
+          .Append(";border-radius:2px;margin:0 0 12px}");
+        sb.Append(".dvzero{position:absolute;left:50%;top:-2px;width:1px;height:10px;background:")
+          .Append(CFaint).Append("}");
+        sb.Append(".dvfill{position:absolute;top:0;height:100%;background:").Append(COxide)
+          .Append(";border-radius:2px}");
+        sb.Append(".dvfill.ok{background:").Append(CGood).Append("}");
         sb.Append(".bval{flex:0 0 52px;text-align:right;font-variant-numeric:tabular-nums;font-weight:600;font-size:13.5px}");
         sb.Append(".bkg{flex:0 0 82px;text-align:right;color:").Append(CFaint)
           .Append(";font-size:12px;font-variant-numeric:tabular-nums}");
@@ -323,7 +434,12 @@ public static class OutcomeReport
         sb.Append(".page{padding:0;max-width:none}");
         sb.Append(".verdict{background:#f4f2ee}");
         sb.Append(".k,.sub,h2{color:#5a5248}.dsg,.note,.none,footer,.bkg{color:#7a7268}");
-        sb.Append(".btrack{background:#e2ded6}");
+        sb.Append(".btrack,.dvtrack,.qtrack{background:#e2ded6}");
+        // The design tick and the legend swatch are near-white on screen, which is
+        // invisible on paper. Flip them, and darken the centre line with them.
+        sb.Append(".bmark,.legtick,.qtick{background:#1a1a1a}");
+        sb.Append(".qlab{color:#5a5248}");
+        sb.Append(".dvzero{background:#8a8278}");
         sb.Append(".cols{page-break-inside:avoid}}");
 
         sb.Append("</style>");
