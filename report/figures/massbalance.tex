@@ -1,0 +1,31 @@
+% Mass balance, high-grade design case.
+% Every figure verified against ProcessModel.OutputSplit(). If the model
+% changes, re-check these before trusting them.
+\begin{tikzpicture}[
+  font=\small,
+  box/.style={draw=black!55, rounded corners=1pt, align=left,
+              inner sep=5pt, text width=46mm},
+  src/.style={box, fill=black!3, text width=34mm},
+  mid/.style={box, fill=black!12, text width=38mm},
+  arr/.style={-{Stealth[length=5pt]}, draw=black!55}]
+
+\node[src] (feed)
+  {\textbf{Feedstock}\\[2pt]\scriptsize Shredded blade material\\[2pt]
+   \small 6\,500\,kg/h};
+
+\node[mid, right=13mm of feed] (kiln)
+  {\textbf{Pyrolysis kiln}\\[2pt]
+   \scriptsize 600\,\textdegree C \ $\cdot$ \ 35\,min \ $\cdot$ \ 2\,mm\\[2pt]
+   \scriptsize No oxygen --- decomposition,\\[-2pt]\scriptsize not combustion};
+
+\node[box, right=17mm of kiln, yshift= 26mm] (fib)  {\textbf{Glass fibre}\hfill 69.0\,\%\\[2pt]\scriptsize 4\,482\,kg/h \ $\cdot$\ sold by grade};
+\node[box, right=17mm of kiln, yshift= 13mm] (oil)  {\textbf{Pyrolysis oil}\hfill 15.8\,\%\\[2pt]\scriptsize 1\,024\,kg/h \ $\cdot$\ sold as fuel};
+\node[box, right=17mm of kiln]               (gas)  {\textbf{Syngas}\hfill 7.9\,\%\\[2pt]\scriptsize 512\,kg/h \ $\cdot$\ fires the kiln};
+\node[box, right=17mm of kiln, yshift=-13mm] (char) {\textbf{Carbon char}\hfill 5.9\,\%\\[2pt]\scriptsize 384\,kg/h \ $\cdot$\ cement co-processing};
+\node[box, right=17mm of kiln, yshift=-26mm] (loss) {\textbf{Loss}\hfill 1.5\,\%\\[2pt]\scriptsize 98\,kg/h \ $\cdot$\ unrecovered};
+
+\draw[arr] (feed) -- (kiln);
+\foreach \t in {fib,oil,gas,char,loss}
+  \draw[arr] (kiln.east) to[out=0,in=180] (\t.west);
+
+\end{tikzpicture}

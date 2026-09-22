@@ -1,0 +1,108 @@
+\section{User Documentation}
+
+\subsection{Minimum Software Requirements}
+
+BladeLoop is a standalone Windows application. It needs Windows~10 or later on a 64-bit machine, a graphics adapter supporting DirectX~11, and roughly \SI{2}{GB} of free disk space for the unpacked build. No runtime, framework or supporting software has to be present: the build ships with everything it needs.
+
+A mouse with a scroll wheel is a requirement rather than a preference. Explore mode orbits the camera on left-drag and zooms on scroll, and a trackpad without scroll gestures leaves the zoom unreachable. Sound is optional, the narration is subtitled throughout but the run is written to be heard, and the subtitles carry the words rather than the emphasis.
+
+\subsection{Installation and Configuration}
+
+There is no installer. The application is distributed as a folder containing \texttt{BladeLoop.exe} and its data directory; unpack it anywhere and run the executable. The two must stay together --- moving the executable out of its folder leaves it unable to find its data. Because the build is unsigned, Windows may show a SmartScreen warning the first time it runs, which is cleared through
+\emph{More info} $\rightarrow$ \emph{Run anyway}.
+
+Nothing needs to be configured. The application stores no settings, requires no account and writes nothing to disk except the run report, and then only when the user asks for it. Uninstalling is deleting the folder.
+
+It launches fullscreen at the desktop resolution. \textsc{alt}+\textsc{enter} switches to a window, which can then be resized freely; the interface re-flows to whatever it is given. The guided run is composed for a landscape frame, though the camera shots assume a wide viewport, and in a narrow window the order panel takes a share of the width that leaves little for the plant.
+
+\subsection{Scene Description}
+
+The application is built from three kinds of scene. The \textbf{home page} and \textbf{Custom Order} screens are interface: they collect an order and set the plant. The \textbf{How It Works} screen explains the process without running anything. The \textbf{guided run} is five scenes played in sequence, each one stage of the plant, cut together so the material is followed from the wind farm to the separated products rather than the equipment being toured.
+
+\begin{table}[htbp]
+  \centering
+  \caption{Stages of the guided run.}
+  \label{tab:stages}
+  \begin{tabular}{llr}
+    \toprule
+    Stage & Subject & Duration \\
+    \midrule
+    1 & Wind farm and decommissioning & \SI{23.8}{s} \\
+    -- & Transport (pass-through)      & \SI{9.6}{s} \\
+    2 & Shredding                      & \SI{30.4}{s} \\
+    3 & Rotary kiln                    & \SI{33.6}{s} \\
+    4 & Separation and by-products     & \SI{46.7}{s} \\
+    \midrule
+    & Total & \SI{144.1}{s} \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+The run is continuous: stages hand off to one another without returning to a menu, and the transport segment between the wind farm and the shredder is a pass-through rather than a stage in its own right. Total running time is a little over two minutes.
+
+\subsection{Process Scene Details --- Navigation and User Interface}
+
+\subsubsection{Placing an order}
+
+Everything the plant does follows from an order, and the home page offers two ways to place one: run a worked example, or build an order from scratch.
+
+\paragraph{Worked examples.}
+Three preset orders sit on the home page, one per grade. They are not three arbitrary demonstrations --- each is the same decommissioned wind farm sold to a different customer, which is what makes them worth comparing.
+
+\begin{table}[htbp]
+  \centering
+  \caption{The three worked examples. All three consume the same feedstock ---
+           approximately \SI{6990}{t} of blade material, \num{619} blades from
+           \num{206} turbines --- and differ only in who is buying.}
+  \label{tab:presets}
+  \begin{tabular}{llrrrrr}
+    \toprule
+    Buyer & Grade & Order & Temp. & Retention & Feed & Particle \\
+    \midrule
+    Composite manufacturer & High & \SI{4800}{t} & \SI{600}{\textdegree C} & \SI{35}{min} & \SI{6500}{kg/h} & \SI{2}{mm} \\
+    Precast concrete producer & Mid & \SI{4100}{t} & \SI{580}{\textdegree C} & \SI{35}{min} & \SI{8000}{kg/h} & \SI{8}{mm} \\
+    Cement works & Low & \SI{3250}{t} & \SI{550}{\textdegree C} & \SI{35}{min} & \SI{8800}{kg/h} & \SI{16}{mm} \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+The tonnages differ because the grades differ: coarser settings recover less fibre per tonne of blade, so the same farm yields less product when it is run for cement co-processing than when it is run for structural reuse. Selecting a card places the order and starts the run immediately.
+
+\paragraph{Custom Order.}
+The Custom Order screen builds an order in four steps --- \textsc{what you know}, \textsc{your numbers}, \textsc{what matters to you}, \textsc{your plan} --- with one question open at a time and completed steps collapsed to a single line. Steps can be reopened; nothing is committed until the last one.
+
+The first step asks what the user already has, because different users arrive knowing different things. \emph{I know my buyer} suits someone selling to a specific customer and works backwards from the grade that customer needs. \emph{I have material} suits a yard full of blades and no order yet. \emph{I have a constraint} suits an operator whose shredder only goes so fine, and works forwards from the equipment to what it can produce. All three converge on the same place: a plan --- a set of four plant settings --- that the run will then execute.
+
+The plans offered at the last step are drawn from a frontier of non-dominated options: settings that no other setting beats on both the grade reached and the time taken. A slider moves along that frontier, trading days against quality, and the consequences of each position are shown as it moves. Any plan can also be edited directly, at which point it leaves the frontier and becomes whatever the user made it.
+
+\subsubsection{Watching the run}
+
+\paragraph{The order panel.}
+A panel occupies the right of the frame throughout the run and is the part of the screen that is not a video. It tracks the four settings and the five output streams, and it fills in progressively: each setting appears as the run reaches the equipment that decides it, so particle size arrives at the shredder and temperature at the kiln rather than all four being present from the start. Alongside each value the panel shows the design case as a reference mark, so a setting can be read as a distance from the design point rather than as a bare number.
+
+\paragraph{Explore mode.}
+Pressing \textsc{space} or \textsc{p} at any point pauses the run and hands the camera over. The view can then be orbited by dragging with the left mouse button and zoomed with the scroll wheel, pivoted on whatever the shot was framing when it was paused. Pressing the same key resumes, and the camera returns to the composed shot.
+
+Pausing stops the entire scene, not just the camera: the timeline, the narration and every script-driven animation --- kiln rotation, conveyors, the airlock cycle --- hold their positions, so the paused frame is a frozen plant rather than a still plant with machinery running in it. Some equipment can also be opened while paused, where a cutaway view exists for it.
+
+\paragraph{Subtitles and navigation.}
+Narration is subtitled throughout, at the foot of the frame. Three controls sit over the run: \textsc{menu} at the top left returns to the home page, \textsc{skip intro} at the top right jumps past the opening stages to the plant itself, and \textsc{previous} and \textsc{next stage} step between stages. The stage controls grey out where there is nowhere to go --- there is nothing before the wind farm and nothing after separation --- rather than disappearing, so the frame does not reflow as the run progresses. Pressing \textsc{escape} leaves the
+run and returns to the home page.
+
+\subsubsection{Reading the outcome}
+
+When the last stage ends, the order panel expands from its column to fill the frame and becomes the run report. It opens with the verdict --- \emph{order filled} or \emph{target missed} --- and then sets out, in five parts, what the run did:
+
+\begin{itemize}
+  \item \textbf{The order}: the buyer, the grade requested and the tonnage.
+  \item \textbf{How the plant was set}: the four settings, each shown against
+        its design value.
+  \item \textbf{What the plant made}: the five output streams as shares and as
+        mass flows, each with the design-case share marked for comparison.
+  \item \textbf{Fibre quality}: purity, tensile retention, the grade reached and
+        the process efficiency.
+  \item \textbf{What the run costs}: blade material consumed, blades, turbines
+        and campaign length.
+\end{itemize}
+
+The report is the answer to the question the application asks on the home page, and it is deliberately not a score. A run that misses its target has still produced something, and the report says who buys it. The whole report can be saved as a single self-contained HTML file, which opens in any browser and needs nothing from the application to read.

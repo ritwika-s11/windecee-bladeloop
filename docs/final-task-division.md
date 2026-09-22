@@ -19,7 +19,7 @@ working from what was said in the review.
 | 1 | Mid/Low solver collapse | **Akshat** | Measure first. Touches `OrderSolver.cs` |
 | 2 | Charts in the outcome report | **Akshat** | `OutcomeReport.cs`, standalone HTML |
 | 3 | Space / Explore mode — Transport | **Sharan** | Scene has none of the components |
-| 4 | Space / Explore mode — Stage 3 entry | **Sharan** | Not "unset" — see the handover below |
+| ~~4~~ | ~~Space / Explore mode — Stage 3 entry~~ | — | **ALREADY FIXED** on main in PR #59. Do not redo |
 | 5 | World-space label typography | **Anirban** | His item from the testing round |
 | 6 | Windows executable — build and test | **Anirban** | Only Windows machine on the team |
 | 7 | Tensile retention vs literature | **Hari** | 90% claimed vs 30–45% published |
@@ -132,7 +132,28 @@ target), `ExploreHintChip` and `PauseFramePreserver`, copying the values from
 `ClickablePart`s, so `ExploreClickRaycaster` is not needed; `OrderPanel` already checks for
 working click targets and drops the "click any part" sentence by itself.
 
-### Task 4 — Stage 3 jumps to a bad angle
+### Task 4 — Stage 3 jumps to a bad angle — **ALREADY FIXED, DO NOT REDO**
+
+> **Correction, 20 Sep.** This was fixed on 10 Sep in PR #59 (`fix/testing-round`), commit
+> *"Stage 3: hold the frame on pause instead of jumping to the orbit rig's fixed target"*.
+> `PauseFramePreserver.cs` runs at execution order −100 and, on the frame the story pauses,
+> re-points the orbit rig at a pivot on the camera's own forward axis — taking the distance
+> from the live camera and the subject from `ActiveVirtualCamera.LookAt`. It also widens
+> `minDistance`/`maxDistance`/`minPitch`/`maxPitch` so none of them clamp the current pose.
+>
+> That is both of the changes proposed below, already done, and done better — it even
+> handles the one-frame race where `StoryModeController` sets `IsPaused` at order 0, after
+> `ExploreOrbitCamera` has already latched its pivot.
+>
+> **Sharan: do not change `InitFromCamera`.** A second component writing `orbit.target`
+> would fight `PauseFramePreserver` for the pivot. Only Task 3 (Transport) is still open.
+>
+> The analysis below is kept because it explains the *original* fault and is still the right
+> description of what `ExploreOrbitCamera` does on its own — it is just no longer live in
+> the four stages that have `PauseFramePreserver`. Transport does not have it, which is one
+> more thing to copy across in Task 3.
+
+**Original analysis, for background only:**
 
 `ExploreOrbitCamera` in Stage 3 is fully wired:
 
@@ -181,17 +202,17 @@ sentence — but it is worth knowing before someone reports it as a sixth bug.
 Your own item from the testing round. It overlaps the Stage 4 polishing Ritwika did, so
 check with her before starting so you are not both in the same labels.
 
-## 6 · Windows executable — Anirban
+## 6 · Windows executable — Anirban — **DONE, 20 Sep**
 
-You have the only Windows machine. Build the player and run a full pass:
+Built and tested on Unity 6000.4.7f1. 250 MB, zero errors and zero warnings, launches
+clean. All five stages run; Custom Order and the RUN REPORT shortcut both work; **Save
+report writes the HTML and opens it in the browser** — that path had never executed outside
+the editor, so this closes the last untested code path in the project.
 
-- All five stages, both from the worked examples and from Custom Order.
-- The run report at the end, and the **Save report** button. On Windows it writes an
-  `.html` to the Desktop and opens it in the browser — that path has been tested in the
-  editor but not in a built player.
-- Both the tour ending and the **RUN REPORT** shortcut on the Custom Order screen.
-
-Report the Unity version you built with and anything that differs from the Mac editor.
+**One thing everyone should know:** the Windows build falls back to **Direct3D 11** on
+Anirban's machine (Unity declines D3D12 on AMD integrated graphics). So he is rendering
+through a different backend than the Macs. If a visual ever differs between his screenshots
+and ours, suspect that first.
 
 ---
 

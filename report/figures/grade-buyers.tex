@@ -1,0 +1,37 @@
+% Grade tiers and their buyers.
+% Thresholds from OrderContext: High >= 90 purity / 85 tensile,
+% Mid >= 78 / 70, Low below that. Keep in step with Section 1.3.
+\begin{tikzpicture}[
+  font=\small,
+  box/.style={draw=black!55, rounded corners=1pt, align=center,
+              inner sep=5pt, text width=42mm, minimum height=15mm},
+  top/.style={box, fill=black!8, text width=58mm},
+  arr/.style={-{Stealth[length=5pt]}, draw=black!55}]
+
+\node[top] (src)
+  {\textbf{Recovered glass fibre}\\[2pt]
+   \scriptsize graded on purity and tensile retention};
+
+\node[box, below=16mm of src, xshift=-52mm] (hi)
+  {\textbf{High grade}\\[2pt]
+   \scriptsize $\geq$\,90\,\% pure \ $\cdot$ \ $\geq$\,85\,\% strength\\[3pt]
+   \scriptsize Structural composite parts};
+
+\node[box, below=16mm of src] (mid)
+  {\textbf{Mid grade}\\[2pt]
+   \scriptsize $\geq$\,78\,\% pure \ $\cdot$ \ $\geq$\,70\,\% strength\\[3pt]
+   \scriptsize Reinforcing filler, precast concrete};
+
+\node[box, below=16mm of src, xshift=52mm] (lo)
+  {\textbf{Low grade}\\[2pt]
+   \scriptsize below those thresholds\\[3pt]
+   \scriptsize Cement co-processing};
+
+\node[top, below=16mm of mid] (rev)
+  {\textbf{Revenue}\\[2pt]
+   \scriptsize gate fee for taking the blade (primary)\\[-1pt]
+   \scriptsize recovered material sold on (secondary)};
+
+\foreach \t in {hi,mid,lo} \draw[arr] (src) -- (\t);
+\foreach \f in {hi,mid,lo} \draw[arr] (\f) -- (rev);
+\end{tikzpicture}
