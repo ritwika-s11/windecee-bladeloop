@@ -1,0 +1,66 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{amsmath}
+\usepackage[hidelinks]{hyperref}
+\usepackage{caption}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{eurosym}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{positioning,arrows.meta}
+
+% Deeper numbering, as in the reference report (2.4.1.1)
+\setcounter{secnumdepth}{4}
+\titleformat{\paragraph}[hang]{\normalfont\bfseries}{\theparagraph}{1em}{}
+\setlist{nosep,leftmargin=1.4em}
+
+% siunitx is available on Overleaf but not in the local check environment.
+% These two macros give the same output with no package dependency, so the
+% document compiles identically in both places. If you prefer real siunitx,
+% add \usepackage{siunitx} and delete this block - the \SI calls are compatible.
+\newcommand{\SI}[2]{#1\,#2}
+\newcommand{\si}[1]{#1}
+\newcommand{\percent}{\%}
+\newcommand{\celsius}{\textdegree C}
+\newcommand{\kilogram}{kg}\newcommand{\gram}{g}\newcommand{\hour}{h}
+\newcommand{\per}{/}\newcommand{\metre}{m}\newcommand{\second}{s}
+\newcommand{\milli}{m}\newcommand{\kilo}{k}
+\newcommand{\SIrange}[3]{#1--#2\,#3}
+\newcommand{\num}[1]{#1}
+
+\title{\textbf{BladeLoop}\\[2mm]
+\large Thermal Co-Processing of Decommissioned Wind Turbine Blades\\
+\normalsize (Visualization of Process Engineering Applications)}
+
+\author{%
+Ritwika Sen \and Anirban Maji \and Akshat Daruka \and Sharan Murali \and
+Anjani Lohith Kosana \and Hari Krishna Kondam}
+
+\date{Digital Engineering Project, Summer Semester 2026\\
+Otto-von-Guericke-Universit\"at Magdeburg\\[3mm]
+\small Advisors: Dr.-Ing.\ David Broneske (Department of Computer Science)\\
+\small Dr.-Ing.\ Nicole Vorhauer (Institute of Process Engineering)}
+
+\begin{document}
+\maketitle
+\thispagestyle{empty}
+\newpage
+
+\tableofcontents
+\newpage
+
+\input{sections/01-introduction}
+\input{sections/02-user-documentation}
+\input{sections/03-developer-documentation}
+\input{sections/04-conclusion}
+
+\bibliographystyle{unsrt}
+\bibliography{refs}
+
+\end{document}

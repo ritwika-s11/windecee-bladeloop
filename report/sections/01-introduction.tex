@@ -1,0 +1,253 @@
+\section{Introduction}
+
+\subsection{Motivation}
+
+Europe's first large generation of wind turbines is reaching the end of its life. Of the 290\,GW installed across Europe today, around 80\,GW will pass its theoretical operational lifetime by 2030, and the blades are the part that cannot simply be melted down and reused. WindEurope estimates annual blade waste will rise from roughly 20,000 tonnes in 2025 to about 55,000 tonnes by 2030, concentrated in the established markets of Germany and Spain \cite{windeurope}.
+
+Until recently that material went to landfill. That route is closing. Germany has restricted the land-filling of composite waste, and the European wind industry adopted a self-imposed landfill ban that took effect on 1 January 2026 \cite{windeuropeban}. Disposing of a blade without carbon-fibre content costs on the order of 200 to 1,400 euros per tonne~\cite{envecon}. The waste has not gone away; it has become an obligation with a price attached.
+
+That obligation is what creates the plant. Thermal co-processing --- pyrolysis in an oxygen-starved kiln turns a disposal liability into four recoverable streams: glass fibre, oil, gas and char. Plants of this kind are being built because the material has to go somewhere and landfill is no longer an option~\cite{noblade}.
+
+Our starting point was the operators of those plants. A plant that must run, against orders from real buyers with real quality requirements, needs a way to decide how to run and that decision is not obvious from the chemistry alone. We set out to build something that shows it: take the order, set the plant, see what you made.
+
+\subsection{Goals}
+
+Regulation settles whether blades are recycled; it says nothing about how well. A plant built to satisfy a landfill ban still has to decide, every time an order arrives, how hard to run --- and that decision determines whether the recovered fibre is clean enough to sell into composites or only good enough to burn. The obligation is fixed. What comes out of it is not.
+
+The aim was an interactive application, built for a plant operator rather than a chemist, that makes the consequences of a planning decision visible. It had to do four things.
+\begin{enumerate}
+  \item \textbf{Accept an order.} How much recovered material is wanted, how clean it has to be and work out settings for the plant that meet it.
+
+  \item \textbf{Show the whole process.} From the wind farm to the separated outputs, as one continuous run, visualizing the entire process.
+
+  \item \textbf{Make the trade-off visible.} Running the plant harder fills an order sooner but produces poorer material; running it gently costs time and blade stock. Neither is wrong. Which one is right depends on who is buying, and the application had to show that rather than assert it.
+
+  \item \textbf{Report what actually happened.} Whether the run met what it was aiming at, what it consumed, and where every output ends up --- in a form the user can keep.
+\end{enumerate}
+
+All four exist for the same reason: so that an operator can see what a
+decision will cost before committing to it, rather than after.
+
+\subsection{Process Description}
+
+A wind turbine blade is glass fibre held in a cured thermoset resin. The
+choice is deliberate, it gives a structure that survives twenty years of fatigue loading and it is also what makes the blade difficult at end of
+life. A thermoplastic can be melted and reformed. A thermoset cannot: the
+resin is cross-linked, and heating it does not soften it back into something workable. The fibre inside is still valuable, but it cannot be separated mechanically without destroying it.
+
+Thermal co-processing separates the two by decomposing the resin rather than melting it. The shredded blade material is held in a rotary kiln in the near-absence of oxygen, at a temperature the operator chooses: this model spans \SI{400}{\textdegree C} to \SI{700}{\textdegree C}, then ~\cite{bladegas} before the period. Without oxygen the resin cannot burn; starved of it, the polymer chains break apart instead, and the organic fraction leaves the solid as vapour. What remains in the drum is the glass fibre it was holding, together with whatever carbon the decomposition did not carry away.
+
+Four streams come out of the process. The recovered \textbf{glass fibre} is the product the plant is run for. The vapour driven off is cooled, and the heavy fraction condenses as \textbf{pyrolysis oil} while the light fraction stays gaseous as \textbf{syngas}. The remainder is \textbf{carbon char} --- a solid carbon residue that decomposition left behind, separated from the fibre downstream by air classification~\cite{bladegas}, since char is light and fibre is not. A small fraction of the feed is lost entirely as fugitive dust and moisture.
+
+\begin{figure}[htbp]
+  \centering
+  \resizebox{\textwidth}{!}{\input{figures/massbalance}}
+  \caption{Output streams for the high-grade design case
+           (\SI{600}{\textdegree C}, \SI{35}{min}, \SI{2}{mm} particle,
+           \SI{6500}{kg/h} feed). Fibre purity is \SI{93.0}{\%} and tensile
+           retention \SI{90.0}{\%}; the latter is a declared design constant
+           rather than a literature-calibrated figure, discussed in
+           Section~\ref{sec:assumptions}.}
+  \label{fig:massbalance}
+\end{figure}
+
+Char is worth paying attention to, because it is the visible signal of an
+incomplete process. Resin that breaks down fully leaves as oil and gas; resin that does not leaves as carbon on the fibre. A rising char fraction therefore means the kiln did not finish the job, and it is accompanied by exactly the effects one would expect --- less recovered fibre, and fibre that is less clean.
+
+Four settings determine how completely that decomposition happens.
+\textbf{Kiln temperature} sets how vigorously the resin cracks; too cool and it does not fully break down, too hot and the glass itself is damaged.
+\textbf{Retention time} is how long material stays in the drum --- residence time in a continuous process, not a batch cycle. 
+\textbf{Feed rate} sets throughput, and is bounded above by how quickly material can actually be heated through. 
+\textbf{Particle size} governs heat transfer into each fragment, and in this model it is the most influential of the four: a coarse
+particle does not reach temperature at its centre within the retention time available, so its interior is never properly processed regardless of how the kiln is set.
+
+These settings are not independent, and they cannot all be optimised at once. Running hotter and faster moves more material per hour but degrades the fibre and drives up char. Running gently protects quality at the cost of throughput, which means more days and more blade stock consumed per tonne of product. There is no configuration that is best on every axis, which is why the application treats the choice as a trade-off rather than an optimisation with a single answer.
+
+What decides which compromise is acceptable is the buyer. Recovered fibre is graded on two measures: \textbf{purity}, the fraction that is glass rather than residual carbon, and \textbf{tensile retention}, the proportion of original strength the fibre still carries. Three tiers follow, and each has a real market. Fibre at \SI{90}{\%} purity and \SI{85}{\%} tensile retention or better is clean and strong enough to return to structural composite parts. Below that, from \SI{78}{\%} and \SI{70}{\%}, it is no longer structural but sells as reinforcing filler for precast concrete~\cite{beauson2025}. Below that again it goes to cement co-processing, where the glass substitutes for raw silica in the kiln feed and any remaining organic content burns in place of coal~\cite{envecon}.
+
+\begin{figure}[htbp]
+  \centering
+  \resizebox{0.95\textwidth}{!}{\input{figures/grade-buyers}}
+  \caption{Recovered fibre is graded, not passed or failed: each tier has a
+           different buyer.}
+  \label{fig:grades}
+\end{figure}
+
+This is the point on which the whole application turns. A run that misses the top tier has not failed; it has produced something a different customer will buy. An order specifies which tier it needs, and the settings that reach it follow from there.
+
+\subsection{The Modelled Plant}
+
+The application models a complete plant rather than a single apparatus, and the equipment it shows is the process design supplied by the chemical
+engineering side of the team, built as 3D geometry and brought into the
+application stage by stage. What follows is the material path through it.
+
+\paragraph{Reception and size reduction.}
+Blades arrive cut into sections, having been reduced on site to something a lorry can carry, and are fed onto a conveyor into a twin-shaft shredder. The two shafts counter-rotate, biting inward so that material is drawn down into the gap between them rather than thrown back out of the mouth. The shredder is where particle size is set --- the single most influential parameter in the process. Then its output is carried on a belt to the kiln feed.
+
+\paragraph{Feed and airlock.}
+Material cannot simply be tipped into the kiln, because the kiln's defining condition is the absence of oxygen. It enters instead through a feed tower fitted with a \textbf{rotary airlock valve}, which passes solids through while sealing against air. Below the valve a drop duct carries the charge into the kiln's feed housing. The airlock runs a repeating cycle --- accumulate, drop, purge --- so that at no point is there an open path from the room into the drum.
+
+\paragraph{Pyrolysis.}
+The \textbf{rotary kiln} is the centre of the plant: a slowly turning drum, modelled at \SI{1.5}{rpm}, heated externally by a burner ring and held under a nitrogen atmosphere. Rotation is what gives the process its retention time, tumbling material along the drum rather than letting it sit. The application divides the drum into the three zones the decomposition passes through --- \textbf{preheat}, \textbf{melting} and \textbf{char cracking} --- and offers a cutaway view, so the charge inside can be seen rather than inferred from the outside of a cylinder.
+
+\paragraph{Discharge and solids handling.}
+At the far end, the \textbf{discharge hood} performs the first separation
+without any machinery at all: solids are too heavy to rise and fall out of the stream, while vapour climbs away. The solids leave down a \textbf{water-jacketed screw conveyor}, nitrogen-purged and cooling the
+material from process temperature to around \SI{50}{\textdegree C}, because hot recovered fibre meeting air would oxidise and undo the work of the kiln. A second rotary airlock releases the cooled solids without admitting air behind them.
+
+\paragraph{Air classification.}
+The cooled solids are still a mixture of glass fibre and carbon char, and the two are separated by weight in a rising airstream: fibre is dense and drops out, char is light and is carried on. The fibre is collected and boxed; the char is drummed off separately.
+
+\paragraph{The gas train.}
+The vapour takes a longer path. A \textbf{gas-to-air heat exchanger} recovers some of its heat to preheat burner air. A \textbf{gas cyclone separator} spins out entrained char dust, which falls to its own bin --- a second, finer char stream distinct from the coarse char drummed off at the classifier. What remains is cooled in a \textbf{water-cooled condenser} to about \SI{45}{\textdegree C}, where the heavy fraction rains out as pyrolysis oil and is drawn off through a \textbf{gas--liquid separator}. The remaining non-condensable gas is drawn on by an \textbf{induced draft fan} and returned to the kiln burners~\cite{akesson,bladegas}, so part of the plant's own process heat is supplied by what it produces.
+
+The five stages of the application follow this path in order --- wind farm, transport, shredding, kiln, separation --- so that the guided run traces the material rather than touring the equipment.
+
+\subsection{Formulae and Calculations}
+\label{sec:formulae}
+
+The process model takes the four settings an operator controls and returns a closed mass balance, two quality measures and a grade. It is a surrogate model: fast enough to evaluate on every frame of an animation, which a full process simulation is not.
+
+\subsubsection{Deviation from the design point}
+
+Each setting has a design value, and what drives the model is not the setting itself but how far it sits from that value. Writing $T$ for kiln temperature, $t_r$ for retention time, $\dot{m}_f$ for feed rate and $d_p$ for particle size, with design values $\SI{600}{\textdegree C}$, $\SI{35}{min}$, $\SI{6500}{kg/h}$ and $\SI{2}{mm}$:
+
+\begin{align}
+  D_T   &= \min\!\left(\frac{|T - 600|}{150},\, 1\right) &
+  D_{t}  &= \min\!\left(\frac{|t_r - 35|}{10},\, 1\right) \\[2pt]
+  D_{\dot{m}} &= \min\!\left(\frac{|\dot{m}_f - 6500|}{2500},\, 1\right) &
+  D_{d}  &= \min\!\left(\frac{\max(d_p - 2,\, 0)}{18},\, 1\right)
+\end{align}
+
+The particle term is deliberately one-sided. Material finer than the design point is not penalised --- a smaller fragment heats through more readily, not less, so only coarseness counts against the process.
+
+These combine into a single weighted deviation:
+
+\begin{equation}
+  D = \min\bigl(0.30\,D_T + 0.22\,D_{t} + 0.16\,D_{\dot{m}} + 0.32\,D_{d},\; 1\bigr)
+  \label{eq:D}
+\end{equation}
+
+Particle size carries the heaviest weight, slightly above temperature. Process efficiency is reported as $(1 - D) \times 100$, so the design case runs at \SI{100}{\%} by construction.
+
+\subsubsection{Losses}
+
+A fraction of the feed never becomes any product --- fugitive dust past the baghouse, moisture flash-off, and residue adhering to internal surfaces. It sits at a small baseline and climbs mainly with coarseness:
+
+\begin{equation}
+  f_{\text{loss}} = 0.015 + 0.085\,\bigl(0.75\,D_{d} + 0.25\,D\bigr),
+  \qquad 0.015 \le f_{\text{loss}} \le 0.10
+  \label{eq:loss}
+\end{equation}
+
+That is \SI{1.5}{\%} at the design case, rising to a capped \SI{10}{\%} at the worst reachable settings.
+
+\subsubsection{Output split}
+
+Losses are taken off the feed first; the remainder is shared between the four product streams. Their proportions at the design case follow the reference figures supplied by the process engineering side --- fibre 70, oil 16, syngas 8, char 6~\cite{akesson} and move with deviation:
+
+\begin{align}
+  g &= \operatorname{clamp}(70 - 26D - 12D_{d},\; 30,\; 72) \\
+  o &= \operatorname{clamp}(16 - 6D,\; 4,\; 17) \\
+  s &= \operatorname{clamp}(8 - 2D,\; 3,\; 9) \\
+  c &= \operatorname{clamp}(6 + 24D + 12D_{d},\; 6,\; 42)
+  \label{eq:props}
+\end{align}
+
+Fibre and char move in opposite directions and are the only two that respond to particle size directly: resin that fails to decompose leaves as carbon on the fibre rather than as oil or gas. Normalising over $\Sigma = g+o+s+c$ and applying the recovered fraction gives the mass flows:
+
+\begin{equation}
+  \dot{m}_i = \dot{m}_f \,(1 - f_{\text{loss}})\, \frac{i}{\Sigma},
+  \qquad i \in \{g,\, o,\, s,\, c\}
+  \label{eq:flows}
+\end{equation}
+
+The balance is closed by construction: the four product streams and the loss stream sum to the feed rate exactly, which the implementation asserts on every evaluation.
+
+\subsubsection{Product quality}
+
+Two measures describe the recovered fibre:
+
+\begin{align}
+  \text{purity} &= \operatorname{clamp}(93 - 17D - 19D_{d},\; 45,\; 93) \\
+  \text{tensile retention} &= \operatorname{clamp}(90 - 36D_{d} - 11D_T - 9D_{t},\; 28,\; 90)
+  \label{eq:quality}
+\end{align}
+
+Tensile retention does not depend on feed rate at all, and is dominated by particle size: its coefficient is more than three times that of temperature. This is the model's strongest statement that what damages recovered fibre is principally incomplete heating of coarse fragments, rather than the kiln being hot.
+
+Purity here is a project definition rather than a published standard: the mass fraction of recovered material that is fibre, as against adhered char and resin residue. No standard expresses recovered fibre quality this way~\cite{pas101}, and the report uses the term only in that sense.
+
+\subsubsection{Grade}
+
+The two measures together place the output in one of three tiers, and both conditions must hold:
+
+\begin{equation}
+  \text{grade} =
+  \begin{cases}
+    \text{High} & \text{purity} \ge 90 \ \text{and}\ \text{tensile} \ge 85\\
+    \text{Mid}  & \text{purity} \ge 78 \ \text{and}\ \text{tensile} \ge 70\\
+    \text{Low}  & \text{otherwise}
+  \end{cases}
+  \label{eq:grade}
+\end{equation}
+
+\subsubsection{Campaign length}
+
+Retention time is \emph{residence} time, not a batch cycle. The kiln is
+continuous, so the material held inside it at any instant is
+$\dot{m}_f \, t_r = \SI{6500}{kg/h} \times \SI{0.583}{h} = \SI{3792}{kg}$, and the time to fill an order follows from the hourly fibre rate rather than from $t_r$:
+
+\begin{equation}
+  t_{\text{campaign}} = \frac{m_{\text{order}}}{\dot{m}_g}
+  = \frac{\SI{4800}{t}}{\SI{4.482}{t/h}} = \SI{1071}{h} \approx 44.6\ \text{days}
+  \label{eq:campaign}
+\end{equation}
+
+This assumes continuous operation. At a more realistic \SI{85}{\%}
+availability the same order takes 52.5 days.
+
+\subsection{Assumptions and Their Basis}
+\label{sec:assumptions}
+
+The model in Section~\ref{sec:formulae} is a surrogate: a set of response curves fast enough to evaluate on every frame of an animation, fitted to behave the way the process behaves rather than derived from reaction kinetics. That choice buys interactivity and costs fidelity, and it is worth being explicit about where the cost falls.
+
+\paragraph{Purity is our own definition.}
+Of the two quality measures the application reports, only one can be checked against published work. Tensile retention is widely measured and widely reported. Purity, as we use it, the mass fraction of recovered material that is fibre rather than adhered char and resin residue --- has no published counterpart. The nearest comparable grading standard, PAS~101, governs container cullet glass and says nothing about composite-derived fibre~\cite{pas101}. So the purity half of every threshold in
+Equation~\ref{eq:grade} is a project convention: internally consistent, usable for ranking one run against another, and not to be read as an industry figure.
+
+\paragraph{Where the quality ceilings come from.}
+The design case returns \SI{93}{\%} purity and \SI{90}{\%} tensile retention, and those ceilings were set deliberately rather than chosen for roundness. An earlier version of the model peaked at \SI{99}{\%} and \SI{100}{\%}, which amounts to claiming that thermal recovery does the fibre no harm at all. It does. Reviewing the literature in August 2026, the process engineering side of the team found recovered-fibre tensile retention spread across roughly \SIrange{72}{93}{\%}: ordinary single-step pyrolysis of real blade waste lands near \SI{72}{\%}~\cite{microwave}, a two-step route at \SI{425}{\textdegree C}
+followed by \SI{475}{\textdegree C} oxidation reaches
+\SI{76}{\%}~\cite{koh2021}, a two-temperature-step process improves on its single-step baseline by up to \SI{19}{\%}~\cite{twostep}, and only carefully optimised conditions approach \SI{93}{\%}~\cite{frpreview}. The ceilings were re-anchored to the top of that range, so the design case now represents best-in-class recovery rather than perfect recovery. The slopes were scaled by the same factor, so the shape of every response curve is unchanged --- only the anchor moved.
+
+The same review found the grade thresholds themselves too generous. They had been set at \SI{95}{\%} purity and \SI{95}{\%} tensile retention for high grade, a bar above almost every published result. They were lowered to \SI{90}{\%} and \SI{85}{\%}, which is where the thresholds in Equation~\ref{eq:grade} come from.
+
+\paragraph{The process we depict and the numbers we quote.}
+This is the assumption we are least comfortable with, and it is better stated than discovered. The figures above come from specialised routes --- microwave pyrolysis, potassium-hydroxide-assisted two-step treatment, molten-salt-assisted recovery~\cite{moltensalt}. What the application depicts is a conventional rotary kiln followed by air classification, and that is the route for which the more pessimistic figures in the literature apply: where recovered fibre is cleaned of char oxidatively, tensile retention measured against virgin fibre falls a great deal further, to somewhere between a third and a half of original
+strength~\cite{feih2011,feih2015,conditioning2014}. The damage there is done largely by the cleaning step rather than by the heating.
+
+So the model is anchored to what the best recovery processes achieve, while the plant on screen is a conventional one. A stricter model would either depict a different plant or report lower numbers. We have kept the anchoring and named the gap, because the application's purpose is to show how a planning decision moves the outputs and the direction and relative magnitude of every response survive the re-anchoring, even where the absolute values sit optimistically.
+
+\paragraph{Gas-only firing is close to break-even.}
+Stage~4 of the guided run states that the recovered gas fires the kiln while the oil is sold on. Pyrolysis oil from blade waste carries
+\SIrange{34}{36}{MJ/kg}~\cite{akesson}, which makes selling it the right
+decision; the gas fraction is dominated by carbon dioxide and carbon monoxide and carries far less. Published gas calorific values for blade pyrolysis convert to roughly \SIrange{15}{20}{MJ/kg} on a mass
+basis~\cite{bladegas,torres}. Against the kiln's estimated heat demand, that puts gas-only firing between \num{0.73} and \num{1.13} times what the kiln needs, depending on which end of the published range is taken and which grade is being run. The claim is therefore plausible rather than proven, and the low grade is the most marginal case. This reflects real uncertainty in the published figures for this material, not a flaw in the plant design.
+
+\paragraph{Campaign length assumes continuous operation.}
+Equation~\ref{eq:campaign} divides an order by the hourly fibre rate and reports the result directly, which assumes the plant runs without interruption. Real plants do not. At a more representative \SI{85}{\%} availability every campaign length in the application is roughly a sixth longer --- the \num{4800}-tonne order shown becomes \num{52.5} days rather than \num{44.6}. The application reports the continuous figure because it is the one that follows from the settings the user chose, and adding an availability factor would obscure the relationship the screen exists to show.
+
+\paragraph{The feedstock is treated as one material.}
+A single composition enters the kiln, and it does not vary. Real decommissioned blades do: resin systems differ between manufacturers and between generations of the same manufacturer, the material has spent two decades weathering, and a blade section arrives with balsa or foam core, bonded-in steel root fixings, paint and leading-edge protection still attached. Any of those changes what the kiln produces, and a plant taking mixed blade stock would see run-to-run variation that this model has no way to express. The four settings are the only thing that
+moves the outputs, which is a considerable simplification of what determines them.
+
+\paragraph{The four settings are treated as independent.}
+The application lets each of the four be set without reference to the others, and a real plant could not. Feed rate and retention time are coupled through the drum: for a kiln of fixed volume and inclination, pushing more material through per hour shortens the time any of it spends inside, so the highest feed rate and the longest retention time cannot be selected together. The model permits it. The simplification is deliberate as the application exists to show what each
+lever does, and a user who cannot move one lever without the others moving underneath them cannot see that --- but it means some of the reachable settings describe a plant that could not be built to that specification.
+
+\paragraph{Feed rate and particle size are bounded by the design, not by
+physics.}
+The ranges the sliders offer --- \SIrange{400}{700}{\textdegree C},
+\SIrange{25}{45}{min}, \SIrange{4000}{9000}{kg/h}, \SIrange{0.5}{20}{mm} --- describe the plant as designed rather than the limits
+of the chemistry. Settings outside them are not represented, and the model should not be read as predicting what would happen there.

@@ -1,0 +1,131 @@
+\section{Developer Documentation}
+
+\subsection{Tool Suite}
+
+The application is built in \textbf{Unity 6} (6000.4.7f1) against the Universal Render Pipeline. Four Unity packages carry most of the weight: \textbf{Cinemachine~3} for the camera work, \textbf{Timeline} for the choreography of each stage, the \textbf{Input System} for keyboard and mouse handling, and \textbf{TextMesh~Pro} for all typography. Everything is written in C\#; there is no visual scripting in the shipped code.
+
+Geometry is modelled in \textbf{Blender} and exported to FBX. The source
+\texttt{.blend} files are kept in the repository alongside the exports, so a piece of equipment can be revised without reconstructing it from the imported mesh. Narration was recorded and edited externally and enters the project as audio clips placed on Timeline tracks.
+
+The chemical engineering side of the team worked in \textbf{DWSIM} for process modelling and \textbf{OpenLCA} for impact assessment. Neither runs inside the application, their role was to establish the reference figures that Section~\ref{sec:formulae} is fitted to, and those figures enter the codebase as constants rather than as a live link.
+
+Source control is \textbf{Git}, hosted on GitHub, with Git~LFS for binary
+assets. Work was organised as one branch per feature with review before merge, which matters more than usual here for the reason set out in
+Section~\ref{sec:scenemerge}.
+
+\subsection{Class Hierarchy}
+
+There are around seventy C\# files and roughly \num{15000} lines. They fall into six groups, and the division that matters most is the first one: the process model knows nothing about Unity.
+
+\begin{table}[htbp]
+  \centering
+  \caption{The six layers, and what each is allowed to know about.}
+  \label{tab:layers}
+  \begin{tabular}{p{3.4cm}p{4.2cm}p{6.2cm}}
+    \toprule
+    Layer & Principal classes & Responsibility \\
+    \midrule
+    Process model &
+      \texttt{ProcessModel}, \texttt{PlantModel}, \texttt{OrderSolver} &
+      The equations of Section~\ref{sec:formulae} and the search for settings
+      that meet an order. Plain C\#, no Unity types, independently testable. \\
+    \addlinespace
+    Shared state &
+      \texttt{OrderContext} &
+      The current order, the current plan and the last run's results. Static,
+      so it survives scene loads without a carrier object. \\
+    \addlinespace
+    Screens &
+      \texttt{MainMenuController}, \texttt{OrderDashboardController},
+      \texttt{HowItWorksController} &
+      The three interface scenes. Each builds its own layout in code at
+      runtime. \\
+    \addlinespace
+    Run control &
+      \texttt{TourRunner}, \texttt{TourSceneSequencer},
+      \texttt{StoryModeController}, \texttt{TourControls},
+      \texttt{SubtitleTrack} &
+      Sequencing the five stages, pausing, subtitles and the controls
+      overlaid on the run. \\
+    \addlinespace
+    Order-driven binders &
+      \texttt{KilnOrderBinding}, \texttt{Stage4OrderBinding},
+      \texttt{ShredOutputSizer}, \texttt{KilnShellGrade},
+      \texttt{SeparationController} &
+      The bridge: read the order, change what the scene shows. Discussed in
+      Section~\ref{sec:binders}. \\
+    \addlinespace
+    Scene animation &
+      \texttt{KilnRotator}, \texttt{ConveyorBeltScroller},
+      \texttt{AirlockDoorCycle}, \texttt{WorkerPatrol} and some thirty others &
+      Small single-purpose behaviours that move one thing. Deliberately
+      unaware of the order. \\
+    \addlinespace
+    Output &
+      \texttt{OrderPanel}, \texttt{OutcomeReport},
+      \texttt{OutcomeReportPanel} &
+      The live panel during the run and the report at the end. \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+Two decisions in that table are worth defending.
+
+\textbf{The process model has no Unity dependency.} \texttt{ProcessModel} is a plain class with float properties, and it can be evaluated without a scene, a camera or a running game. That is what made it possible to check the constants against the reference figures by running the model directly, and to verify that the mass balance closes on every evaluation rather than hoping it does.
+
+\textbf{\texttt{OrderContext} is static rather than a singleton
+\texttt{MonoBehaviour}.} The conventional Unity pattern for cross-scene state is an object marked \texttt{DontDestroyOnLoad}, which requires that some scene create it, that no scene create it twice, and that every consumer find it. A static class needs none of that: the home page writes to it, five stage scenes read from it, and nothing has to be wired in the inspector. The cost is that it cannot be inspected while the game runs, which is a fair trade for state this small.
+
+\subsection{Implementation Specifics}
+
+\subsubsection{Scene files cannot be merged}
+\label{sec:scenemerge}
+
+A Unity scene is a YAML file of serialised objects keyed by generated file IDs. Two developers editing the same scene produce two files that Git will cheerfully merge line by line into something Unity cannot open --- and the failure is not a conflict marker in a source file but a corrupted scene, sometimes one that opens and is subtly wrong rather than one that refuses to load.
+
+This is a well-known Unity problem, and the usual answers did not fit a project of this size and duration. So the rule was simply that \textbf{every scene has one owner}, and only that person edits it. What made the rule survivable was building interface in code rather than in the editor: \texttt{MainMenuController}, \texttt{OrderDashboardController} and \texttt{OrderPanel} construct their entire layouts at runtime, so the scene asset holds almost nothing and the layout lives in a C\# file that merges normally. Several components bootstrap themselves through \texttt{[RuntimeInitializeOnLoadMethod]} and are therefore present in no
+scene at all.
+
+The consequence for anyone extending the project is that adding a button is a code change, not an editor change, and looking for the interface in the scene hierarchy will not find it.
+
+\subsubsection{Order-driven visuals}
+\label{sec:binders}
+
+Nothing in the guided run is prerecorded. The same five scenes play for every order, and what differs is what they show --- which is arranged through a consistent pattern.
+
+Each stage carries a \emph{binder}: a component that reads
+\texttt{OrderContext} once, computes what the scene should look like, and writes that into the scene's animation components. \texttt{ShredOutputSizer} sets the size and spacing of the fragments on the belt from the particle size. \texttt{KilnOrderBinding} and \texttt{TemperatureRampAnimator} drive the kiln's
+emissive glow from the temperature, across the hundred and thirteen renderers that make up the drum, its burner ring and its housing.
+\texttt{Stage4OrderBinding} sets the emission rates of the oil, syngas and char particle streams from the computed output split, and rewrites the temperature labels on the equipment so they agree with the run.
+
+The point of the pattern is that the thirty-odd small animation behaviours know nothing about orders. \texttt{KilnRotator} turns a drum; it does not know why. That keeps the parts that had to be edited by several people over several months simple, and concentrates order-awareness in six binder classes that one person maintained.
+
+\subsubsection{Problems encountered}
+
+Five faults are worth recording, because each was found late, none produced an error message, and the reason each was hard to see is more instructive than the fix.
+
+\paragraph{Choreography written in absolute seconds.}
+This one recurred five separate times, in five unrelated places, and is the single most expensive mistake in the project. Animation phases were written as absolute times --- open the door at \SI{3}{s}, start the purge at \SI{4.6}{s} --- which is correct until the sequence they belong to is retimed. When Stage~4 was shortened from \SI{86}{s} to \SI{46.7}{s}, everything keyed to absolute seconds silently desynchronised: doors opened after the camera had moved on, a cutaway revealed an interior that was no longer there. Nothing threw an exception; the scene simply stopped telling the truth.
+
+The fix, applied everywhere it applied, is to express every phase as a
+\emph{fraction} of the sequence it belongs to, so retiming carries the
+choreography with it. In \texttt{AirlockDoorCycle} the three phases became $3/6$, $4/6$ and $4.6/6$ of the cycle length --- written as exact divisions rather than as decimals, because rounding $4/6$ to \num{0.6667} moved two boundary frames, which a sweep of twelve hundred samples caught and inspection would not have.
+
+\paragraph{Two components writing the same property.}
+The kiln's shell colour was driven by \texttt{TemperatureRampAnimator} at
+default execution order, and by \texttt{KilnOrderBinding} at order~60. Unity runs them in that order, so the second silently overwrote the first every frame and the shell stopped responding to temperature. Nothing was wrong with either class in isolation, which is why it survived review: the bug existed only in the relationship between them. It was found by a team member watching the kiln in play mode and noticing it did not change --- a test that would never have caught
+it, because the value was correct right up until it was overwritten. The fix was to make the ordering explicit through \texttt{[DefaultExecutionOrder]} across the whole family of components rather than to let it fall out of defaults.
+
+\paragraph{\texttt{GameObject.Find} does not see inactive objects.}
+Several particle systems in Stage~4 begin disabled and are enabled when the run reaches them. Looking them up with \texttt{GameObject.Find} returns \texttt{null}, and a null check that quietly skips the missing object turns the whole feature into a no-op that logs nothing. The stream appeared to be wired and did nothing. Every lookup of this kind now goes through \texttt{FindObjectsByType} with \texttt{FindObjectsInactive.Include}.
+
+\paragraph{Pausing a Timeline by setting its speed to zero stops the audio.}
+Explore mode pauses the run, and the obvious implementation --- set the playable graph's speed to zero --- worked for everything visible and broke the narration. Audio cannot play at zero rate, so Timeline stopped the voice-over source rather than pausing it, and never rescheduled it on resume: the narration went silent for the rest of the stage. \texttt{PlayableDirector.Pause()} and \texttt{Resume()} are the supported path and keep audio scheduling intact. Pausing correctly also turned out to need \texttt{Time.timeScale} and the Cinemachine brain handled separately, because the script-driven animations and
+the camera run on clocks the director does not own.
+
+\paragraph{\texttt{Renderer.material} and \texttt{Renderer.sharedMaterial}.}
+Reading \texttt{renderer.material} instantiates a per-object copy;
+\texttt{sharedMaterial} returns the project asset itself. Writing to the latter at runtime edits the asset on disk --- in the editor the change persists after play mode ends, so a debugging session can permanently alter the project's materials without any indication that it has. The heat ramp writes to \texttt{material} for exactly this reason, and the distinction is noted at the line where it matters.
+
+\paragraph{What these have in common.}
+None of the five produced an error. Every one of them was a component doing precisely what it was told, in a context where that was the wrong thing which is the characteristic failure mode of a system assembled from small independent behaviours. The defence that worked was not more testing but fewer implicit relationships: explicit execution order, choreography expressed relative to its container, and lookups that state what they expect to find.
