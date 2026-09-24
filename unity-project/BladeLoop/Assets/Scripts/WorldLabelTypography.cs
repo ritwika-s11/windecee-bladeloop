@@ -230,8 +230,46 @@ public class WorldLabelTypography : MonoBehaviour
              "overlap should hide anything.")]
     [Range(0f, 0.1f)] public float overlapPadding = 0.003f;
 
+    [Tooltip("When two labels collide, step the farther one up or down a line instead of " +
+             "deleting it.\n\n" +
+             "Hiding was the original behaviour and it is too blunt for Stage 3: three " +
+             "headings name three kiln zones, and losing one loses a third of the " +
+             "explanation. There is empty frame above and below them, so there is somewhere " +
+             "to put it. Hiding is still the fallback when there is not.")]
+    public bool nudgeInsteadOfHiding = true;
+
+    [Tooltip("One step, in viewport units. The headings measure about 0.063 tall, so 0.075 " +
+             "clears a full line with a little air.")]
+    [Range(0.02f, 0.25f)] public float nudgeStep = 0.075f;
+
+    [Tooltip("Tried as +1, -1, +2, -2, ... so a label moves the shortest distance that " +
+             "clears, and never off the edge of frame.")]
+    [Range(1, 5)] public int maxNudgeSteps = 3;
+
     [Tooltip("Off to compare against the authored look without recompiling.")]
     public bool apply = true;
+
+    [Tooltip("Write to the log whenever a label is hidden, and what hid it. A player build " +
+             "writes Player.log, so this is readable after the fact without attaching " +
+             "anything - which is the only way to tell a hidden label from a faded one " +
+             "when all you have is a screenshot.")]
+    public bool diagnose = true;
+
+    /// <summary>Does this rect collide with anything already placed this frame?</summary>
+    bool Clashes(Rect r)
+    {
+        for (int i = 0; i < keptRects.Count; i++)
+            if (keptRects[i].Overlaps(r)) return true;
+        return false;
+    }
+
+    /// <summary>First line of a label's text, for logging.</summary>
+    static string OneLine(TMP_Text t)
+    {
+        if (t == null || string.IsNullOrEmpty(t.text)) return "(empty)";
+        int nl = t.text.IndexOf('\n');
+        return nl > 0 ? t.text.Substring(0, nl) : t.text;
+    }
 
     // ---------------------------------------------------------------- injection ----
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
@@ -457,16 +495,65 @@ public class WorldLabelTypography : MonoBehaviour
             // stripe floating on their own.
             // ScreenSafeLabel may already have faded this one out; leave it alone.
             if (!r.enabled) { SetChildren(t.transform, false); continue; }
-            if (!ScreenRect(cam, r, out Rect rect)) continue;
+            if (!ScreenRect(cam, t, out Rect rect)) continue;
 
             rect.xMin -= overlapPadding; rect.xMax += overlapPadding;
             rect.yMin -= overlapPadding; rect.yMax += overlapPadding;
 
-            bool clash = false;
-            for (int i = 0; i < keptRects.Count && !clash; i++)
-                if (keptRects[i].Overlaps(rect)) clash = true;
+            // STEP IT ASIDE BEFORE HIDING IT.
+            //
+            // On the wide shots the three kiln headings genuinely do collide - they name
+            // points 2.9 m apart along one drum, read from 12 to 20 m away, and the words
+            // are wider than the gaps. Measured on vCam_S3_01_WideReveal:
+            //
+            //     ZONE 3 CHAR CRACK   x 0.254 - 0.431
+            //     ZONE 2 MELTING      x 0.390 - 0.526     overlaps ZONE 3 by 0.041
+            //     ZONE 1 PREHEAT      x 0.520 - 0.662     overlaps ZONE 2 by 0.006
+            //
+            // So this is not a false positive to be tuned away - the padding has already
+            // been cut twice chasing that idea. The labels really are on top of each other,
+            // and hiding one costs a whole kiln zone. Moving it up or down a line costs
+            // nothing: there is empty frame directly above and below.
+            //
+            // Nearest keeps the authored height; the ones behind it step off it.
+            bool clash = Clashes(rect);
+            int step = 0;
 
-            if (clash) r.enabled = false;          // a nearer label already owns this space
+            var ssl2 = t.GetComponent<ScreenSafeLabel>();
+            if (clash && nudgeInsteadOfHiding && ssl2 != null)
+            {
+                // Viewport height of one nudge, converted to world units at this label's
+                // depth: the frustum is 2*depth*tan(fov/2) tall there.
+                float depth = cam.WorldToViewportPoint(t.transform.position).z;
+                float frustum = 2f * Mathf.Max(depth, 0.01f) *
+                                Mathf.Tan(cam.fieldOfView * 0.5f * Mathf.Deg2Rad);
+
+                for (int s = 1; s <= maxNudgeSteps && clash; s++)
+                {
+                    for (int sign = 1; sign >= -1 && clash; sign -= 2)
+                    {
+                        var moved = rect;
+                        moved.y += sign * s * nudgeStep;
+                        if (moved.yMin < 0.02f || moved.yMax > 0.98f) continue;  // off frame
+                        if (Clashes(moved)) continue;
+                        rect = moved;
+                        step = sign * s;
+                        clash = false;
+                    }
+                }
+
+                if (step != 0)
+                    t.transform.position += cam.transform.up * (step * nudgeStep * frustum);
+            }
+
+            if (clash)
+            {
+                r.enabled = false;                 // nowhere to put it - a nearer label wins
+                // Say so in the log. Chasing this by eye through a build cost several
+                // rounds; a build writes a Player.log, so let it write down what it did.
+                if (diagnose && Time.frameCount % 120 == 0)
+                    Debug.Log($"[WorldLabelTypography] hid '{OneLine(t)}' - overlaps a nearer label.");
+            }
             else keptRects.Add(rect);
 
             SetChildren(t.transform, r.enabled);
@@ -576,19 +663,42 @@ public class WorldLabelTypography : MonoBehaviour
         }
     }
 
-    /// <summary>The label's bounds projected into viewport space. False if behind the camera.</summary>
-    static bool ScreenRect(Camera cam, Renderer r, out Rect rect)
+    /// <summary>
+    /// The WORDS projected into viewport space. False if behind the camera.
+    ///
+    /// This used to project the renderer's world bounds - Renderer.bounds, an
+    /// AXIS-ALIGNED box in WORLD space. For a billboarded label that is the wrong shape
+    /// twice over: the box circumscribes a quad that is rotated to face the camera, and
+    /// then all eight of its corners are projected and unioned. Measured against the
+    /// actual text quad on Stage 3's headings, it over-reported the width by up to 2.8x
+    /// and the height by about 1.6x:
+    ///
+    ///     vCam_S3_11   ZONE 1 PREHEAT   AABB 0.917 wide   text 0.325 wide   x2.82
+    ///     vCam_S3_10   ZONE 1 PREHEAT   AABB 0.265 wide   text 0.182 wide   x1.46
+    ///     vCam_S3_08   ZONE 1 PREHEAT   AABB 0.162 wide   text 0.132 wide   x1.22
+    ///
+    /// So labels were being hidden for colliding with space their neighbour was not
+    /// occupying. Hiding one is a heavy penalty - each of Stage 3's three names a
+    /// different kiln zone - so the test has to be the words themselves.
+    ///
+    /// textBounds is in the label's LOCAL frame, and the label is a flat quad, so four
+    /// corners at z=0 describe it exactly.
+    /// </summary>
+    static bool ScreenRect(Camera cam, TMP_Text t, out Rect rect)
     {
         rect = default;
-        var b = r.bounds;
+        var b = t.textBounds;
+        if (b.size.x < 1e-5f) return false;
+
+        var tr = t.transform;
         float x0 = 9f, x1 = -9f, y0 = 9f, y1 = -9f;
         bool any = false;
-        for (int i = 0; i < 8; i++)
+        for (int i = 0; i < 4; i++)
         {
-            var corner = new Vector3((i & 1) == 0 ? b.min.x : b.max.x,
-                                     (i & 2) == 0 ? b.min.y : b.max.y,
-                                     (i & 4) == 0 ? b.min.z : b.max.z);
-            var vp = cam.WorldToViewportPoint(corner);
+            var local = new Vector3((i & 1) == 0 ? b.min.x : b.max.x,
+                                    (i & 2) == 0 ? b.min.y : b.max.y,
+                                    0f);
+            var vp = cam.WorldToViewportPoint(tr.TransformPoint(local));
             if (vp.z <= 0f) continue;
             any = true;
             x0 = Mathf.Min(x0, vp.x); x1 = Mathf.Max(x1, vp.x);

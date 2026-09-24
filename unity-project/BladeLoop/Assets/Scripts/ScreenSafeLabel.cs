@@ -90,7 +90,31 @@ public class ScreenSafeLabel : MonoBehaviour
             return;
         }
 
-        float dist = vp.z;
+        // TWO DIFFERENT MEASURES, AND THEY ARE NOT INTERCHANGEABLE.
+        //
+        // vp.z is the depth along the camera's FORWARD axis, not the distance to the
+        // label. For anything off the centre of frame the two diverge badly, because
+        // vp.z is the distance times the cosine of the angle off-axis.
+        //
+        // The original code used vp.z for both jobs. For the scale that is correct -
+        // perspective foreshortening really does go with depth, so vp.z is what holds a
+        // label at a constant size on screen. For the FADE it is wrong, and measurably so.
+        // Stage 3's kiln cameras look along the drum, which puts the zone headings far
+        // off-axis:
+        //
+        //     vCam_S3_08   ZONE 1 PREHEAT   really 8.6 m away, read as 5.5 m -> alpha 0.49
+        //     vCam_S3_10   ZONE 1 PREHEAT   really 5.8 m away, read as 3.9 m -> alpha 0.00
+        //     vCam_S3_09   ZONE 1 PREHEAT   really 6.7 m away, read as 4.6 m -> alpha 0.03
+        //
+        // So the headings were being faded for being off to the side of frame rather than
+        // for being close, and because the angle changes as the shot moves, they fade in
+        // and out DURING the shot. That is the "sometimes two, sometimes three" - they were
+        // never switching, they were sitting at partial alpha.
+        //
+        // The fade asks "is the camera close enough that this heading is just clutter?".
+        // That question is about distance, so it gets distance.
+        float depth = vp.z;
+        float dist  = Vector3.Distance(anchor, cam.transform.position);
 
         // Fade out once the camera is close enough that the label is just clutter, and
         // again once it is far enough away that this machine is not what the shot is about.
@@ -100,8 +124,9 @@ public class ScreenSafeLabel : MonoBehaviour
         SetAlpha(a);
         if (a <= 0.001f) return;
 
-        // Constant apparent size: counteract perspective foreshortening.
-        float k = Mathf.Clamp(dist / Mathf.Max(referenceDistance, 0.01f), minScale, maxScale);
+        // Constant apparent size: counteract perspective foreshortening. DEPTH, not
+        // distance - see above.
+        float k = Mathf.Clamp(depth / Mathf.Max(referenceDistance, 0.01f), minScale, maxScale);
         transform.localScale = baseScale * k;
 
         // Only rescue it when it would actually be clipped; otherwise leave the authored
