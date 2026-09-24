@@ -43,6 +43,26 @@ public class ExploreOrbitCamera : MonoBehaviour
     float spinYaw, spinPitch;      // leftover velocity after release
     bool initialised;
 
+    // True only when the pointer is over an INTERACTIVE control (a Selectable such as a
+    // button). Passive UI - the floating scene text labels, which ship with raycastTarget
+    // left on - must NOT block camera drag. IsPointerOverGameObject() treated those labels
+    // as blockers, which cut orbit out mid-drag over the reactor (Stage 3 especially).
+    bool PointerOverInteractiveUI(UnityEngine.InputSystem.Mouse mouse)
+    {
+        var es = EventSystem.current;
+        if (es == null) return false;
+        var ped = new UnityEngine.EventSystems.PointerEventData(es) { position = mouse.position.ReadValue() };
+        _uiHits.Clear();
+        es.RaycastAll(ped, _uiHits);
+        foreach (var h in _uiHits)
+        {
+            if (h.gameObject == null) continue;
+            if (h.gameObject.GetComponentInParent<UnityEngine.UI.Selectable>() != null) return true; // real control
+        }
+        return false;
+    }
+    readonly System.Collections.Generic.List<UnityEngine.EventSystems.RaycastResult> _uiHits = new System.Collections.Generic.List<UnityEngine.EventSystems.RaycastResult>();
+
     void InitFromCamera(Transform cam)
     {
         Vector3 offset = cam.position - target.position;
@@ -73,14 +93,10 @@ public class ExploreOrbitCamera : MonoBehaviour
         if (!initialised) InitFromCamera(cam.transform);
 
         var mouse = Mouse.current;
-        if (mouse == null) return;
-
-        bool overUI = EventSystem.current != null && EventSystem.current.IsPointerOverGameObject();
+        bool overUI = mouse != null && PointerOverInteractiveUI(mouse);
 
         // Drag moves the *target* angle; the live angle eases toward it below.
-        // Applying the raw mouse delta straight to yaw/pitch made every hand
-        // tremor land as a hard step, which is what read as notchy.
-        if (mouse.leftButton.isPressed && !overUI)
+        if (mouse != null && mouse.leftButton.isPressed && !overUI)
         {
             Vector2 d = mouse.delta.ReadValue();
             float dy = d.x * orbitSpeed;
@@ -110,7 +126,7 @@ public class ExploreOrbitCamera : MonoBehaviour
         // (every click an identical jump) and trackpads barely move at all.
         // Anything large is treated as one discrete detent; anything small is
         // treated as a proportional gesture.
-        float scroll = mouse.scroll.ReadValue().y;
+        float scroll = mouse != null ? mouse.scroll.ReadValue().y : 0f;
         if (Mathf.Abs(scroll) > 0.001f && !overUI)
         {
             float notches = Mathf.Abs(scroll) >= 20f ? Mathf.Sign(scroll) : scroll / 20f;
