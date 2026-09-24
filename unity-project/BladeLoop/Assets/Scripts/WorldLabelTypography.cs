@@ -73,6 +73,15 @@ public class WorldLabelTypography : MonoBehaviour
     /// <summary>False in de-overlap-only scenes: no font swap, no plates, no resizing.</summary>
     bool restyle = true;
 
+    [Header("De-overlap-only scenes")]
+    [Tooltip("Lower ScreenSafeLabel's near-fade in those scenes, so a heading is not deleted " +
+             "just for being close to the camera. Overlap is now detected by testing overlap, " +
+             "so the distance rule it used as a proxy is redundant.")]
+    public bool relaxNearFade = true;
+    [Tooltip("Distance below which a label still fades. Small: only when the camera is " +
+             "practically inside the equipment.")]
+    public float nearFade = 1.2f;
+
     [Header("Face")]
     [Tooltip("Leave empty to use BladeLoopTheme.Sans (IBM Plex Sans Regular).\n\n" +
              "Sans, not Mono. Mono was tried and sets about 20% wider per character, which " +
@@ -258,6 +267,39 @@ public class WorldLabelTypography : MonoBehaviour
                 FindObjectsByType<TextMeshPro>(FindObjectsInactive.Include, FindObjectsSortMode.None));
             managed = thin.ToArray();
             addBackingPlate = false;
+
+            // Relax ScreenSafeLabel's NEAR FADE.
+            //
+            // Stage 3's zone headings are authored with hideNearerThan 4.5 and fadeBand 2,
+            // so anything within 6.5 m vanishes. ZONE 2 MELTING sits at the middle of the
+            // drum, which makes it the closest label to almost every kiln camera:
+            //
+            //     vCam_S3_10_CutawayInterior   5.2 m   faded
+            //     vCam_S3_11_GlassFibersClose  5.2 m   faded
+            //     vCam_S3_09_BurnersUnder      6.0 m   faded
+            //     vCam_S3_07_Zone2_Melting     6.5 m   faded   <- the shot ABOUT zone 2
+            //
+            // So the middle heading is missing from the stage, and has been since long
+            // before the de-overlap pass existed. I wrote that fade to stop the three
+            // headings piling up on close shots, which was the right problem and the wrong
+            // tool - it deletes the label the shot is about. Overlap is now handled by
+            // testing actual overlap, so the distance rule is redundant and only harmful.
+            if (relaxNearFade)
+            {
+                int relaxed = 0;
+                foreach (var t in managed)
+                {
+                    if (t == null) continue;
+                    var ssl = t.GetComponent<ScreenSafeLabel>();
+                    if (ssl == null || ssl.hideNearerThan <= nearFade) continue;
+                    ssl.hideNearerThan = nearFade;
+                    ssl.fadeBand = Mathf.Min(ssl.fadeBand, 0.8f);
+                    relaxed++;
+                }
+                if (relaxed > 0)
+                    Debug.Log($"[WorldLabelTypography] relaxed the near-fade on {relaxed} label(s) to {nearFade} m.");
+            }
+
             Debug.Log($"[WorldLabelTypography] de-overlap only: watching {managed.Length} label(s).");
             return;
         }
