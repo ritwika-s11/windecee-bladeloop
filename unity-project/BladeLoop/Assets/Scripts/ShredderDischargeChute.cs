@@ -85,6 +85,13 @@ public class ShredderDischargeChute : MonoBehaviour
     public float cheekHeight = 0.38f;
     public float plateThickness = 0.07f;
 
+    [Header("Conveyor legs")]
+    [Tooltip("Shorten the conveyor support legs that currently stand through the belt. " +
+             "Three of the four do, and the highest reads as a dark cube among the granules.")]
+    public bool trimConveyorLegs = true;
+    [Tooltip("Gap left between the top of each leg and the underside of the belt.")]
+    public float legClearance = 0.04f;
+
     [Tooltip("Off to see the scene as authored.")]
     public bool apply = true;
 
@@ -173,6 +180,7 @@ public class ShredderDischargeChute : MonoBehaviour
                 new Vector3(0.14f, legAt.y, 0.14f));
 
         AimFallout(panEnd, panLip, br);
+        TrimConveyorLegs();
 
         Debug.Log($"[ShredderDischargeChute] pan {panBack:0.##}->{panEnd:0.##}, " +
                   $"chute {chuteStart:0.##}->{chuteEnd:0.##}, flat plate hidden: {hideFlatPlate}.");
@@ -263,6 +271,71 @@ public class ShredderDischargeChute : MonoBehaviour
         var col = go.GetComponent<Collider>();
         if (col != null) Destroy(col);          // set dressing; nothing should collide with it
         if (mat != null) go.GetComponent<Renderer>().sharedMaterial = mat;
+    }
+
+    /// <summary>
+    /// Shortens the conveyor's support legs so they stop under the belt instead of
+    /// standing through it.
+    ///
+    /// Three of the four legs on S2_FeedConveyor_ToKiln finish ABOVE the belt surface:
+    ///
+    ///     Leg_1   -0.038 m from the belt plane   (clear)
+    ///     Leg_2   +0.043 m                       (through)
+    ///     Leg_3   +0.124 m                       (through)
+    ///     Leg_4   +0.206 m                       (through)
+    ///
+    /// A 0.18 x 0.18 dark post standing proud of the belt reads, from the story camera, as
+    /// a small dark cube sitting among the pale granules - which is what it was reported as.
+    /// It is not a granule at all, and no amount of recolouring the belt load was ever going
+    /// to remove it. Anirban spotted it.
+    ///
+    /// Worth recording WHY it was missed: the belt is tilted 35 degrees, so clearance has to
+    /// be measured along the belt's own normal, not vertically. Comparing leg-top height
+    /// against belt height says every leg is comfortably clear, and every leg is not.
+    ///
+    /// Each offending leg is shortened from the top, keeping its foot on the ground, so the
+    /// structure still reads as supported.
+    /// </summary>
+    void TrimConveyorLegs()
+    {
+        if (!trimConveyorLegs) return;
+
+        Transform belt = null;
+        foreach (var t in FindObjectsByType<Transform>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            if (t.gameObject.name == "Belt" && t.parent != null && t.parent.name == "S2_FeedConveyor_ToKiln")
+                belt = t;
+        if (belt == null) return;
+
+        Vector3 plane = belt.position, n = belt.up;
+        float halfThick = belt.localScale.y * 0.5f;
+        float wanted = -(halfThick + legClearance);          // target signed distance
+        float upDot = Mathf.Abs(Vector3.Dot(Vector3.up, n));  // legs are vertical; belt is not
+        if (upDot < 0.01f) return;
+
+        int trimmed = 0;
+        foreach (var t in FindObjectsByType<Transform>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+        {
+            if (!t.gameObject.name.StartsWith("Leg_")) continue;
+            if (t.parent == null || t.parent.name != "S2_FeedConveyor_ToKiln") continue;
+            var r = t.GetComponent<Renderer>();
+            if (r == null) continue;
+
+            Vector3 top = new Vector3(r.bounds.center.x, r.bounds.max.y, r.bounds.center.z);
+            float d = Vector3.Dot(top - plane, n);
+            if (d <= wanted) continue;                        // already clear
+
+            // Convert the overshoot along the belt normal into a vertical shortening.
+            float dropY = (d - wanted) / upDot;
+            var s = t.localScale;
+            float newY = Mathf.Max(s.y - dropY, 0.05f);
+            float actual = s.y - newY;
+            t.localScale = new Vector3(s.x, newY, s.z);
+            t.position -= new Vector3(0f, actual * 0.5f, 0f);   // foot stays put
+            trimmed++;
+        }
+
+        if (trimmed > 0)
+            Debug.Log($"[ShredderDischargeChute] trimmed {trimmed} conveyor leg(s) back below the belt.");
     }
 
     static Transform Find(string name)

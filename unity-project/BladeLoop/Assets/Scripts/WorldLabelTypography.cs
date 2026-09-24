@@ -52,7 +52,26 @@ using UnityEngine.SceneManagement;
 [DefaultExecutionOrder(150)]
 public class WorldLabelTypography : MonoBehaviour
 {
-    const string SceneName = "Stage4_V2";
+    /// <summary>Scenes that get the full treatment: font, plates, screen-constant sizing.</summary>
+    static readonly string[] RestyleScenes = { "Stage4_V2" };
+
+    /// <summary>
+    /// Scenes that get the DE-OVERLAP ONLY.
+    ///
+    /// Stage 3's four zone headings already have ScreenSafeLabel and their own look, which
+    /// Ritwika owns - restyling them is not mine to do. But they overprint each other on
+    /// the wide shots: ZONE 1 PREHEAT, ZONE 2 MELTING and ZONE 3 CHAR CRACK sit along one
+    /// drum, so from anywhere off-axis they collapse into each other and none of the three
+    /// can be read.
+    ///
+    /// The de-overlap pass is scene-agnostic - it only hides a label whose screen rect
+    /// collides with a nearer one - so it solves that without touching a single authored
+    /// value.
+    /// </summary>
+    static readonly string[] DeOverlapOnlyScenes = { "Stage3_StoryMode" };
+
+    /// <summary>False in de-overlap-only scenes: no font swap, no plates, no resizing.</summary>
+    bool restyle = true;
 
     [Header("Face")]
     [Tooltip("Leave empty to use BladeLoopTheme.Sans (IBM Plex Sans Regular).\n\n" +
@@ -211,15 +230,32 @@ public class WorldLabelTypography : MonoBehaviour
 
     static void OnLoaded(Scene s, LoadSceneMode mode)
     {
-        if (s.name != SceneName) return;
+        bool full = System.Array.IndexOf(RestyleScenes, s.name) >= 0;
+        bool thin = System.Array.IndexOf(DeOverlapOnlyScenes, s.name) >= 0;
+        if (!full && !thin) return;
         if (FindAnyObjectByType<WorldLabelTypography>() != null) return;
-        new GameObject("~WorldLabelTypography").AddComponent<WorldLabelTypography>();
+
+        var c = new GameObject("~WorldLabelTypography").AddComponent<WorldLabelTypography>();
+        c.restyle = full;
     }
 
     // -------------------------------------------------------------------- apply ----
     void Start()
     {
         if (!apply) return;
+
+        // De-overlap-only scene: collect the labels and stop. No font swap, no plates, no
+        // resizing - Stage 3's headings keep every authored value, they just stop
+        // overprinting each other.
+        if (!restyle)
+        {
+            var thin = new System.Collections.Generic.List<TextMeshPro>(
+                FindObjectsByType<TextMeshPro>(FindObjectsInactive.Include, FindObjectsSortMode.None));
+            managed = thin.ToArray();
+            addBackingPlate = false;
+            Debug.Log($"[WorldLabelTypography] de-overlap only: watching {managed.Length} label(s).");
+            return;
+        }
 
         // Sans, not Mono. Mono sets roughly 20% wider per character, and these labels sit
         // on backing plates that were sized around the original LiberationSans. Wider text
