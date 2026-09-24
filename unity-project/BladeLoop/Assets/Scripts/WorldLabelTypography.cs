@@ -212,9 +212,14 @@ public class WorldLabelTypography : MonoBehaviour
              "machine is the one the shot is on.")]
     public bool deOverlap = true;
 
-    [Tooltip("Padding around each label's screen rect, in viewport units, so survivors are " +
-             "not left touching.")]
-    [Range(0f, 0.1f)] public float overlapPadding = 0.012f;
+    [Tooltip("Padding around each label's screen rect, in viewport units.\n\n" +
+             "Small on purpose. At 0.012 the inflated rects touched even when the words " +
+             "clearly did not: in Stage 3 the middle heading, ZONE 2 MELTING, was hidden " +
+             "although there was an obvious gap for it between ZONE 1 and ZONE 3.\n\n" +
+             "Hiding a label is a heavy penalty - each of Stage 3's three names a different " +
+             "kiln zone, so losing one costs more than letting two sit close. Only genuine " +
+             "overlap should hide anything.")]
+    [Range(0f, 0.1f)] public float overlapPadding = 0.003f;
 
     [Tooltip("Off to compare against the authored look without recompiling.")]
     public bool apply = true;
