@@ -330,7 +330,24 @@ public class WorldLabelTypography : MonoBehaviour
 
     void LateUpdate()
     {
-        if (!deOverlap || managed == null || managed.Length == 0) return;
+        if (managed == null || managed.Length == 0) return;
+
+        // Plates for labels that were not active when Start ran.
+        //
+        // Three of the sixteen - LIGHT VAPOUR RISES, HEAVY FIBRES FALL and ANOXIC
+        // PYROLYSIS ZONE - are switched on later by the timeline, on the beat they
+        // describe. An inactive TextMeshPro has no layout, so its textBounds are zero and
+        // MakePlate bails; building plates once in Start left those three as bare white
+        // text among thirteen plated ones, which is exactly how it shipped.
+        //
+        // Cheap: it only looks at labels that still have no plate, and each one is dealt
+        // with the first frame it becomes visible.
+        if (addBackingPlate)
+            foreach (var t in managed)
+                if (t != null && t.gameObject.activeInHierarchy && t.transform.Find("~Plate") == null)
+                    MakePlate(t);
+
+        if (!deOverlap) return;
         var cam = Camera.main;
         if (cam == null) return;
 
@@ -390,8 +407,26 @@ public class WorldLabelTypography : MonoBehaviour
 
         if (plateMat == null)
         {
-            var sh = Shader.Find("Universal Render Pipeline/Unlit");
-            if (sh == null) return;
+            // Take the shader off Assets/Resources/PlateUnlit.mat rather than asking
+            // Shader.Find for it.
+            //
+            // Shader.Find only resolves in a player build if something already references
+            // that shader; nothing in the project used URP/Unlit, so the build stripped it
+            // and this returned null. In the editor it looked perfect - in a build there
+            // were no plates, no accent rules, and because the outline and face dilate are
+            // off on the grounds that the plates carry the contrast, the labels would have
+            // shipped as bare white text over the kiln. Caught by Ritwika on review.
+            //
+            // That material exists to keep the shader compiled in. Reading the shader from
+            // it means this cannot fail even if the asset is later renamed away from the
+            // name Shader.Find expects.
+            var src = Resources.Load<Material>("PlateUnlit");
+            var sh = src != null ? src.shader : Shader.Find("Universal Render Pipeline/Unlit");
+            if (sh == null)
+            {
+                Debug.LogWarning("[WorldLabelTypography] URP/Unlit unavailable - no backing plates.");
+                return;
+            }
             plateMat = new Material(sh);
             plateMat.SetColor("_BaseColor", plateColor);
             // Transparent surface. Set by hand because a material made from the shader at

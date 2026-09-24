@@ -400,8 +400,23 @@ public class ShredOutputSizer : MonoBehaviour
             var go = Instantiate(src.gameObject, beltHolder);
             go.name = "BeltChip_" + i;
             go.SetActive(true);
+
+            // EVERY renderer on the clone, not just the root one.
+            //
+            // All twenty source granules share M_Granule, which is dark brown
+            // (0.35, 0.28, 0.20) - the cardboard colour these had before they were
+            // recoloured as glass fibre. A chip is only pale because Recolour ran on it,
+            // so any renderer that misses that call stays brown and rides the belt as a
+            // dark lump among white ones. That is what showed up in testing.
+            //
+            // Recolouring the whole hierarchy removes the class of fault rather than one
+            // instance of it, and costs nothing: today every source has exactly one renderer.
             var rend = go.GetComponent<Renderer>();
-            if (rend != null) rend.enabled = true;
+            foreach (var rr in go.GetComponentsInChildren<Renderer>(true))
+            {
+                rr.enabled = true;
+                Recolour(rr, rng);
+            }
 
             float jitter = 1f + ((float)rng.NextDouble() * 2f - 1f) * sizeJitter;
             go.transform.localScale = src.localScale * scaleMul * jitter;
@@ -409,8 +424,6 @@ public class ShredOutputSizer : MonoBehaviour
                 (float)rng.NextDouble() * 360f,
                 (float)rng.NextDouble() * 360f,
                 (float)rng.NextDouble() * 360f);
-
-            Recolour(rend, rng);
 
             beltPieces.Add(go.transform);
 
