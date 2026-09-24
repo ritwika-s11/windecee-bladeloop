@@ -55,18 +55,19 @@ public class WorldLabelTypography : MonoBehaviour
     const string SceneName = "Stage4_V2";
 
     [Header("Face")]
-    [Tooltip("Leave empty to use BladeLoopTheme.MonoBold.\n\n" +
-             "Mono, not Sans. The first pass used SansBold and it read chunky and juvenile: " +
-             "IBM Plex Sans sets visually larger than LiberationSans at the same point size, " +
-             "so the labels grew as well as thickened. The product's own voice - every panel " +
-             "header on the Custom Order screen - is small uppercase MONO with wide tracking. " +
-             "These are instrument labels on a plant; they should look stencilled, not shouted.")]
+    [Tooltip("Leave empty to use BladeLoopTheme.Sans (IBM Plex Sans Regular).\n\n" +
+             "Sans, not Mono. Mono was tried and sets about 20% wider per character, which " +
+             "overflowed the backing plates and made the labels look detached from the " +
+             "machinery. SansBold was tried before that and read heavy. Regular Sans is close " +
+             "enough in width to the LiberationSans this was authored against that everything " +
+             "still fits, while matching the brand face the rest of the UI uses.")]
     public TMP_FontAsset font;
 
     [Tooltip("Relative to the authored size.\n\n" +
-             "Back to 1.0. Shrinking to 0.82 cost about a fifth of the pixels each glyph " +
-             "had to render into, and on a world-space label read from several metres away " +
-             "that is most of the blur. Sharpness here is pixel coverage, not point size.")]
+             "Shrinking this below 1 costs pixel coverage, and on a world-space label read " +
+             "from several metres away that reads as blur rather than as smaller text - " +
+             "sharpness here is pixel coverage, not point size. 1.18 is authored size plus " +
+             "a little, which is where it looked right on screen.")]
     [Range(0.5f, 1.6f)] public float fontSizeScale = 1.18f;
 
     [Tooltip("Letter-spacing. Wide tracking on short uppercase strings is what makes " +
@@ -84,13 +85,13 @@ public class WorldLabelTypography : MonoBehaviour
              "world-space text resolve cleanly at a distance.")]
     public bool useFullDistanceFieldShader = true;
 
-    [Tooltip("Weight gain. Zero now: the mono face already carries enough stroke, and " +
-             "dilating it was most of why the first attempt looked heavy.")]
+    [Tooltip("Weight gain. Zero: the face already carries enough stroke, and dilating it " +
+             "was most of why the first attempt looked heavy.")]
     [Range(0f, 0.4f)] public float faceDilate = 0f;
 
     [Header("Outline")]
     [Tooltip("ZERO now, and that is the point.\n\n" +
-             "TMP grows an outline INWARD from the glyph edge as well as outward. On a mono " +
+             "TMP grows an outline INWARD from the glyph edge as well as outward. On a text " +
              "face with thin strokes, read small and at a distance, an outline eats the " +
              "stroke it is meant to protect and the letterform turns to mush. These labels " +
              "already sit on dark backing plates, so they have all the contrast they need - " +
@@ -124,9 +125,9 @@ public class WorldLabelTypography : MonoBehaviour
     [Tooltip("Hold each label at the size it has when the camera is this far away.\n\n" +
              "THIS IS THE SIZE DIAL. Every label is normalised to its apparent size at this " +
              "distance, so: SMALLER number = bigger labels on screen, larger number = smaller.\n\n" +
-             "14 was too far - it locked them to how small they looked from across the plant. " +
-             "8 is roughly a shot's working distance, which is the size they were designed to " +
-             "be read at.")]
+             "14 was too far - it locked them to how small they looked from across the plant, " +
+             "and 8 overshot the other way. 11 is roughly a shot's working distance, which is " +
+             "the size they were designed to be read at.")]
     public float referenceDistance = 11f;
 
     [Tooltip("Lower clamp on the distance scaling.\n\n" +
@@ -146,12 +147,13 @@ public class WorldLabelTypography : MonoBehaviour
              "from the words GAS CYCLONE SEPARATOR.")]
     public float hideNearerThan = 0.8f;
 
-    [Tooltip("Fade a label out beyond this distance, so only the machines near the camera " +
-             "are named.\n\n" +
-             "Sixteen labels along one plant means that from most angles half of them line " +
-             "up behind each other. Held at constant screen size they converge and overprint " +
-             "- which is the overlapping mess at the top of frame. 9 m keeps roughly the " +
-             "nearest one to three, so a label arrives as the camera reaches its equipment.")]
+    [Tooltip("Fade a label out beyond this distance.\n\n" +
+             "INFINITY, i.e. OFF, and deliberately so. This was the first attempt at the " +
+             "overlap problem and measuring killed it: at 9 m it still left 6 to 12 labels " +
+             "competing on the close shots, and stripped BOTH wide establishing shots to " +
+             "nothing, because how far a machine is says nothing about whether it is the " +
+             "subject. The de-overlap pass below replaced it. Left exposed in case a future " +
+             "scene wants a hard far cutoff.")]
     public float hideFartherThan = Mathf.Infinity;
 
     [Header("Backing plate")]
