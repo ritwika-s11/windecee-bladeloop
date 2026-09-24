@@ -98,10 +98,13 @@ public class WorldLabelTypography : MonoBehaviour
              "a little, which is where it looked right on screen.")]
     [Range(0.5f, 1.6f)] public float fontSizeScale = 1.18f;
 
-    [Tooltip("Letter-spacing. Wide tracking on short uppercase strings is what makes " +
-             "technical labelling read as engineering rather than as a caption. Eased off " +
-             "slightly, because tracking also spreads glyphs over more screen for the same " +
-             "pixel budget.")]
+    [Tooltip("Letter-spacing. ZERO - no extra tracking at all.\n\n" +
+             "Wide tracking on short uppercase strings does read as engineering rather than " +
+             "as a caption, and earlier versions of this used it. It was taken back out: " +
+             "tracking spreads the same glyphs over more screen for the same pixel budget, " +
+             "and these labels are read small and at a distance, where pixel coverage is " +
+             "what sharpness actually is. The plates now supply the 'designed' look that the " +
+             "tracking was reaching for.")]
     [Range(0f, 30f)] public float characterSpacing = 0f;
 
     [Header("Shader")]
@@ -158,13 +161,24 @@ public class WorldLabelTypography : MonoBehaviour
              "the size they were designed to be read at.")]
     public float referenceDistance = 11f;
 
-    [Tooltip("Lower clamp on the distance scaling.\n\n" +
-             "Measured: Stage 4's fourteen story cameras sit between 1.7 m and 17 m from " +
-             "their nearest label. Holding a constant apparent size at 1.7 m needs a scale " +
-             "of 1.7/11 = 0.15, so anything above that CLAMPS - and a clamped label balloons " +
-             "on exactly the close shots where it was already too big. 0.5 could not hold " +
-             "size below 5.5 m, which covers most of the stage.")]
-    [Range(0.05f, 1f)] public float minScale = 0.15f;
+    [Tooltip("Lower clamp on the distance scaling. THIS CLAMP IS THE 'WHY IS THAT LABEL " +
+             "HUGE' BUG - keep it low.\n\n" +
+             "Constant apparent size needs scale = depth/referenceDistance. The moment that " +
+             "falls below this clamp the label STOPS SHRINKING as the camera closes in, and " +
+             "balloons. At 0.15 the clamp bit below 1.65 m of depth, and Stage 4 has labels " +
+             "much nearer than that - measured on vCam_08_Condenser:\n\n" +
+             "    ROTARY AIRLOCK VALVE    depth 0.7 m    61 px tall   (norm is 26)\n" +
+             "    RECLAIMED GLASS FIBRE   vCam_04       116 px tall   4.5x\n\n" +
+             "Swept across all fourteen Stage 4 cameras and every label, counting lines over " +
+             "35 px per line:\n\n" +
+             "    minScale 0.15   19 offenders   worst 116 px\n" +
+             "    minScale 0.06    2 offenders   worst  47 px\n" +
+             "    minScale 0.03    0 offenders\n\n" +
+             "So 0.03. It holds true size down to 0.33 m of depth, which is nearer than any " +
+             "camera gets, and still guards against the depth-to-zero blow-up the clamp is " +
+             "actually for. An earlier note here claimed the nearest label was 1.7 m; that " +
+             "came from measuring with the wrong camera aim.")]
+    [Range(0.02f, 1f)] public float minScale = 0.03f;
     [Range(1f, 4f)]    public float maxScale = 2.0f;
 
     [Tooltip("Fade a label out below this distance.\n\n" +
@@ -174,6 +188,32 @@ public class WorldLabelTypography : MonoBehaviour
              "threshold deleted the label the shot was about. vCam_07_Cyclone sits 3.3 m " +
              "from the words GAS CYCLONE SEPARATOR.")]
     public float hideNearerThan = 0.8f;
+
+    [Tooltip("How far outside the frame a label may be dragged back in, in viewport units. " +
+             "9 = off (the old unbounded clamp).\n\n" +
+             "THE MOST IMPORTANT VALUE IN THIS FILE. A label that names a machine has one " +
+             "job: to sit beside that machine. Measured across Stage 4's fourteen shots, " +
+             "with this off, only 13 of 171 label placements had their anchor genuinely in " +
+             "frame - 166 were drawn somewhere other than where they were authored:\n\n" +
+             "    vCam_01  PYROLYSIS OIL      anchor x 6.16   drawn 0.60   moved 5.58\n" +
+             "    vCam_02  INDUCED DRAFT FAN  anchor 9.0,7.9  drawn 0.60   moved 11.01\n" +
+             "    vCam_04d KILN DRUM          anchor -10.7    drawn 0.12   moved 11.57\n\n" +
+             "An anchor six screen-widths away is not 'slightly clipped'. Those labels were " +
+             "being hauled across the frame and parked at the edge with their leader lines " +
+             "pointing at nothing, which is what made the stage look cluttered and wrong.\n\n" +
+             "I rejected this limit once because it leaves some shots with no labels at all. " +
+             "That was the wrong reading: a shot with no labelled equipment in view SHOULD " +
+             "show no labels. Empty is correct; lying is not. 0.15 still rescues a heading " +
+             "that is genuinely just off the edge, which is what the clamp was built for.")]
+    [Range(0.05f, 9f)] public float maxRescue = 0.15f;
+
+    [Tooltip("Most labels to show at once. The nearest win, because the nearest machine is " +
+             "the one the shot is on.\n\n" +
+             "This is the crowding fix. Measured with no cap, Stage 4 shows between 7 and 13 " +
+             "labels on every one of its fourteen shots - a column of names down the edge, " +
+             "most of them for equipment off screen. Capping the count cannot empty a shot " +
+             "the way a rescue limit can: it only ever removes the least relevant.")]
+    [Range(1, 16)] public int maxVisible = 6;
 
     [Tooltip("Fade a label out beyond this distance.\n\n" +
              "INFINITY, i.e. OFF, and deliberately so. This was the first attempt at the " +
@@ -210,7 +250,8 @@ public class WorldLabelTypography : MonoBehaviour
     [Range(0.02f, 0.2f)] public float accentWidth = 0.075f;
 
     [Header("De-overlap")]
-    [Tooltip("When two labels overlap on screen, hide the farther one.\n\n" +
+    [Tooltip("When two labels collide on screen, move the farther one clear - and only hide " +
+             "it if there is nowhere to move it to. See nudgeInsteadOfHiding below.\n\n" +
              "Sixteen labels along one plant means that from most angles several line up " +
              "behind each other and overprint - the unreadable pile-up at the top of frame.\n\n" +
              "A distance cutoff was the obvious fix and it is wrong: measured per camera it " +
@@ -222,12 +263,14 @@ public class WorldLabelTypography : MonoBehaviour
     public bool deOverlap = true;
 
     [Tooltip("Padding around each label's screen rect, in viewport units.\n\n" +
-             "Small on purpose. At 0.012 the inflated rects touched even when the words " +
-             "clearly did not: in Stage 3 the middle heading, ZONE 2 MELTING, was hidden " +
-             "although there was an obvious gap for it between ZONE 1 and ZONE 3.\n\n" +
-             "Hiding a label is a heavy penalty - each of Stage 3's three names a different " +
-             "kiln zone, so losing one costs more than letting two sit close. Only genuine " +
-             "overlap should hide anything.")]
+             "Small on purpose, but note this was cut from 0.012 twice while chasing the " +
+             "wrong cause. The rects really were touching when the words did not - not " +
+             "because the padding was large, but because the rect came from the renderer's " +
+             "world AABB, which over-reported the width of a billboarded label by up to " +
+             "2.8x. That is fixed in ScreenRect, which now measures the text itself, so this " +
+             "value is doing only what it says.\n\n" +
+             "Keep it small anyway: each of Stage 3's three headings names a different kiln " +
+             "zone, so pushing one aside costs more than letting two sit close.")]
     [Range(0f, 0.1f)] public float overlapPadding = 0.003f;
 
     [Tooltip("When two labels collide, step the farther one up or down a line instead of " +
@@ -425,6 +468,7 @@ public class WorldLabelTypography : MonoBehaviour
                 ssl.maxScale          = maxScale;
                 ssl.hideNearerThan    = hideNearerThan;
                 ssl.hideFartherThan   = hideFartherThan;
+                ssl.maxRescue         = maxRescue;
                 ssl.faceCamera        = true;   // stops the perspective skew
             }
 
@@ -544,6 +588,17 @@ public class WorldLabelTypography : MonoBehaviour
 
                 if (step != 0)
                     t.transform.position += cam.transform.up * (step * nudgeStep * frustum);
+            }
+
+            // Count cap. keptRects is built nearest-first, so by the time it is full the
+            // labels in it are the nearest ones - the machinery the shot is actually on.
+            if (!clash && maxVisible > 0 && keptRects.Count >= maxVisible)
+            {
+                r.enabled = false;
+                SetChildren(t.transform, false);
+                if (diagnose && Time.frameCount % 120 == 0)
+                    Debug.Log($"[WorldLabelTypography] hid '{OneLine(t)}' - over the {maxVisible}-label cap.");
+                continue;
             }
 
             if (clash)

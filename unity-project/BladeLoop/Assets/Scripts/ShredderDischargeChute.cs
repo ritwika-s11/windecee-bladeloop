@@ -7,10 +7,10 @@ using UnityEngine.SceneManagement;
 ///
 /// THE PROBLEM, AS AN AUDIENCE SEES IT
 /// -----------------------------------
-/// Shred falls out of the rotors and lands on S2_ShredderChamber_Floor - a SOLID 2.4 x 2.0
-/// plate with no opening, sitting in mid-air under the machine. It stops there. The belt
-/// that carries material to the kiln starts 1.9 m away with nothing between them, so the
-/// granules simply appear on the belt.
+/// Shred falls out of the rotors and lands on ShredderRig/Platform - a SOLID plate with no
+/// opening, sitting in mid-air under the machine. It stops there. The belt that carries
+/// material to the kiln starts well clear of it with nothing between them, so the granules
+/// simply appear on the belt.
 ///
 /// It reads as a table someone left under the shredder, and the obvious question - how
 /// does the shred get from the machine onto the belt - has no answer on screen. A viewer
@@ -18,11 +18,18 @@ using UnityEngine.SceneManagement;
 ///
 /// Measured:
 ///
-///     chamber floor (flat plate)   x 2.30 -> 4.70   y 2.33 -> 2.38
-///     conveyor tail roller         x 6.60           y 1.95      (S2_FeedConveyor_ToKiln)
+///     rotors                       y 5.30
+///     ShredderRig/Platform         (5.00, 4.15, 0.00)   <- what shred lands on
+///     conveyor tail roller         (6.60, 1.95)         (S2_FeedConveyor_ToKiln)
 ///
-/// so the crossing is 1.9 m out and only 0.35 m down - a shallow run, which is exactly
-/// what a discharge pan and chute should look like.
+/// WHICH PLATE - THIS COST FOUR ATTEMPTS
+/// -------------------------------------
+/// Do not go looking for S2_ShredderChamber_Floor. It is a different part of the CEE model
+/// at y 2.35, nearly two metres BELOW the platform and off to one side, and it is not what
+/// the rotors discharge onto. Earlier versions of this component rebuilt that plate, which
+/// is why the fix kept appearing to do nothing: the thing on screen was never being
+/// touched. See the comment at the top of Build() - the code has always been the authority
+/// here, and this summary used to contradict it.
 ///
 /// NOTE ON WHICH BELT
 /// ------------------

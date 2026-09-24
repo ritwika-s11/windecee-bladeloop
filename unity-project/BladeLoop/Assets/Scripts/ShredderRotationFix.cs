@@ -46,22 +46,60 @@ using UnityEngine.SceneManagement;
 /// its parent, or the whole rig happens to be rotated - which is the only way this stays
 /// correct if the CEE model is ever re-exported with different orientations.
 ///
-/// NOT TOUCHED: THE CONVEYOR ROLLERS
-/// ---------------------------------
-/// Measuring turned up a second fault that is NOT part of this task, and I am not
-/// guessing at it a second time:
+/// THE CONVEYOR ROLLERS - NOW ON, AXIS ONLY
+/// ----------------------------------------
+/// Measuring turned up a second fault:
 ///
 ///     S2_Conveyor_Roller_0  bounds (0.24, 0.24, 0.70)  long axis world Z  spins about +X
 ///     S2_Conveyor_Roller_1  bounds (0.24, 0.24, 0.70)  long axis world Z  spins about +X
 ///
 /// Both rollers lie along world Z but rotate about world X, so they tumble end over end
-/// instead of rolling. The axis is clearly wrong. The SIGN is not something the geometry
-/// can tell me: it depends on which way material travels along the belt, and both rollers
-/// must share it rather than oppose each other the way the shafts do. ConveyorBeltScroller
-/// scrolls its texture in UV, which does not map to a world direction on its own.
+/// instead of rolling. The AXIS is clearly wrong and the geometry proves it. The SIGN is
+/// not something the geometry can tell me.
 ///
-/// Rather than pick a direction and risk being wrong twice, this is reported for Ritwika
-/// to confirm. Set fixConveyorRollers and beltTravelsTowardPositiveX once she has.
+/// This was left off pending Ritwika's confirmation, on the theory that the short belt
+/// might not be in any shot. IT IS.
+///
+/// MEASURING THIS CORRECTLY TAKES TWO CORRECTIONS, and both bit me:
+///
+///   1. The vCams' AUTHORED rotations are placeholders. LookAt is null on all five and the
+///      authored forward vectors point at the sky. PlantBootstrap wires each one to
+///      LookTarget_<suffix> at runtime. Reading the transform gives nonsense - the control
+///      test is that the SHREDDER must be in frame on the shredder shots, and it was not.
+///   2. PlantBootstrap also SETS THE FOV by name: 60 deg for wide shots, 35 for close-ups.
+///      The authored 40 is never used. Getting this wrong understates the close shots.
+///
+/// With both applied (positions confirmed unchanged - the CAM_ anchors match), at 1920x1080:
+///
+///     vCam_S2_01_PlantEntry      60 deg   both rollers in frame,  12 x  18 px
+///     vCam_S2_02_TruckDump       35 deg   both rollers in frame,  46 x  42 px
+///     vCam_S2_03_TeethSpin       35 deg   both rollers in frame,  56 x 107 px   <- ~10% of frame height
+///     vCam_S2_04_OutputGranules  35 deg   behind camera
+///     vCam_S2_05_FeedToKiln      35 deg   off frame
+///
+/// So it is on screen for three of five shots, and biggest on TeethSpin - the shot that is
+/// ABOUT things rotating, where a roller tumbling end over end beside correctly spinning
+/// shafts is exactly what an eye is drawn to.
+///
+/// WHY THE DIRECTION IS STILL ARBITRARY, AND WHY THAT IS FINE
+/// ---------------------------------------------------------
+/// I tried to settle the sign from the belt's own stripe motion, which would at least make
+/// the roller agree with what the audience can see moving. It does not help: the belt
+/// mesh's +U axis maps to world (-0.04, +1.00, +0.07) - essentially straight UP. The
+/// stripes scroll ACROSS the belt, not along it, so the along-belt X component is 0.044,
+/// which is numerically noise. ConveyorBeltScroller carries no directional information.
+///
+/// There is also no process flow to infer it from: this is the short decorative belt on
+/// the far side of the shredder, not S2_FeedConveyor_ToKiln, and the granules sitting on
+/// it are static props from the CEE FBX rather than anything our code moves.
+///
+/// That makes the sign a coin flip - but an unimportant one. EITHER sign produces a roller
+/// that ROLLS about its own long axis. Only the axis error is visible as wrong; a roller
+/// turning the "wrong" way just looks like a roller turning, especially at 49 x 93 px with
+/// no material visibly moving along the belt to contradict it. So the axis fix is taken and
+/// the direction is left as a documented arbitrary choice rather than a claim.
+///
+/// If Ritwika wants the other direction it is one toggle, and nothing else changes.
 /// </summary>
 [DefaultExecutionOrder(50)]
 public class ShredderRotationFix : MonoBehaviour
@@ -72,12 +110,19 @@ public class ShredderRotationFix : MonoBehaviour
              "not counter-rotating pairs, and are left alone.")]
     public float minOffsetFromCentre = 0.05f;
 
-    [Header("Conveyor rollers - OFF until the belt direction is confirmed")]
-    [Tooltip("The rollers also rotate about the wrong axis (they lie along Z and spin " +
-             "about X). Correcting the axis is safe; choosing the direction is not, so " +
-             "this stays off until Ritwika confirms which way the belt runs.")]
-    public bool fixConveyorRollers = false;
-    [Tooltip("True if material on the belt travels toward +X.")]
+    [Header("Conveyor rollers")]
+    [Tooltip("ON. The rollers lie along world Z but rotate about world X, so they tumble " +
+             "end over end instead of rolling. Measured, the short belt IS on screen for " +
+             "three of the five story shots - biggest on TeethSpin at 56 x 107 px, about a " +
+             "tenth of frame height - so this is worth correcting. Fixing the axis is the " +
+             "whole of the visible fault.")]
+    public bool fixConveyorRollers = true;
+
+    [Tooltip("ARBITRARY, and deliberately labelled as such. Which way this decorative belt " +
+             "runs is not recoverable: its UV +U axis points straight up in world space, so " +
+             "the stripe scroll says nothing about along-belt travel, and no material our " +
+             "code moves travels on it. Either value makes the roller ROLL rather than " +
+             "tumble, which is the part anyone can see. Flip it if Ritwika prefers.")]
     public bool beltTravelsTowardPositiveX = true;
 
     [Tooltip("Turn off to compare against the authored behaviour without recompiling.")]

@@ -41,7 +41,12 @@ public class ScreenSafeLabel : MonoBehaviour
 
     [Header("Fade")]
     [Tooltip("Below this distance the subject already fills the frame, so the heading only " +
-             "gets in the way. Fades out rather than popping.")]
+             "gets in the way. Fades out rather than popping.\n\n" +
+             "Measured as TRUE DISTANCE from the camera to the label. It used to be read " +
+             "off vp.z, the depth along the camera's forward axis, which is smaller for " +
+             "anything off the centre of frame - so labels were faded for being off to the " +
+             "side rather than for being close, and they faded in and out as a shot moved. " +
+             "Stage 3's kiln cameras look along the drum, which is exactly that case.")]
     public float hideNearerThan = 4.5f;
 
     [Tooltip("Beyond this distance the label fades out again.\n\n" +
@@ -54,9 +59,21 @@ public class ScreenSafeLabel : MonoBehaviour
              "as you reach the equipment, rather than every label shouting at once.")]
     public float hideFartherThan = Mathf.Infinity;
 
+    [Tooltip("How many metres the fade takes to run from invisible to full, at either end.\n\n" +
+             "Worth knowing: with hideNearerThan 4.5 and this at 2, everything within 6.5 m " +
+             "is at least partly transparent. A label at half alpha over a lit kiln reads as " +
+             "missing rather than as faded, so a wide band here is not the gentle option it " +
+             "looks like.")]
     public float fadeBand = 2.0f;
     [Tooltip("Hide entirely when the anchor is behind the camera.")]
     public bool hideWhenBehind = true;
+
+    [Tooltip("How far outside the safe area a label may be rescued from, in viewport units. " +
+             "Beyond this it fades instead, because it belongs to equipment outside the " +
+             "shot.\n\n" +
+             "9 or more disables the limit and restores the old unbounded clamp, which is " +
+             "what piled ten Stage 4 labels into a column down the right edge.")]
+    [Range(0.05f, 9f)] public float maxRescue = 9f;
 
     [Header("Behaviour")]
     public bool faceCamera = true;
@@ -129,10 +146,66 @@ public class ScreenSafeLabel : MonoBehaviour
         float k = Mathf.Clamp(depth / Mathf.Max(referenceDistance, 0.01f), minScale, maxScale);
         transform.localScale = baseScale * k;
 
-        // Only rescue it when it would actually be clipped; otherwise leave the authored
-        // position alone, so three labels never converge on the same safe-area corner.
-        float cx = Mathf.Clamp(vp.x, marginX, 1f - marginX);
-        float cy = Mathf.Clamp(vp.y, marginY, 1f - marginY);
+        // THE 3D VIEW IS NOT THE WHOLE SCREEN.
+        //
+        // During a run the order panel occupies the right of the frame, from
+        // OrderContext.TourSplitWidth (0.72) outward. This used to clamp against the full
+        // screen width, so a label rescued toward the right edge was pushed to 0.94 -
+        // behind the panel, where the words are simply not there. That is the Stage 4
+        // complaint about text disappearing under the black box on the right.
+        //
+        // OrderContext's own comment says "read this constant; do not type 0.72 anywhere",
+        // and every other component does. This one did not. TourControls line 126 already
+        // uses exactly this test, and it is also what keeps FREE PLAY unchanged: with no
+        // panel there is no OrderPanel.Instance, the limit is 1, and nothing moves.
+        float right = OrderPanel.Instance != null ? OrderContext.TourSplitWidth : 1f;
+
+        // Clamp the label's EDGES into the view, not its centre. A centre-only clamp still
+        // lets a wide label such as "GAS-TO-AIR HEAT EXCHANGER" hang past the split.
+        //
+        // The label is screen-aligned and flat, so its viewport size follows from its world
+        // size and its depth alone - no need to place it first.
+        float halfW = 0f, halfH = 0f;
+        if (label != null)
+        {
+            // DEPTH here, not distance - the frustum's height is measured on the plane
+            // parallel to the near plane, which is what vp.z indexes.
+            float frustumH = 2f * depth * Mathf.Tan(cam.fieldOfView * 0.5f * Mathf.Deg2Rad);
+            if (frustumH > 1e-4f)
+            {
+                var size = label.textBounds.size;
+                halfH = (size.y * transform.localScale.y) / frustumH * 0.5f;
+                halfW = (size.x * transform.localScale.x) / (frustumH * cam.aspect) * 0.5f;
+            }
+        }
+
+        float loX = marginX + halfW, hiX = right - marginX - halfW;
+        float loY = marginY + halfH, hiY = 1f - marginY - halfH;
+        // A label wider than the view cannot satisfy both edges; centre it rather than
+        // letting the clamp invert and fling it off-screen.
+        float cx = hiX >= loX ? Mathf.Clamp(vp.x, loX, hiX) : right * 0.5f;
+        float cy = hiY >= loY ? Mathf.Clamp(vp.y, loY, hiY) : 0.5f;
+
+        // RESCUE HAS A RANGE. Past it, the label is not in this shot.
+        //
+        // Clamping is meant to save a heading that is ALMOST in frame - the original bug,
+        // where a kiln zone title sat just off the top edge. But an unbounded clamp also
+        // drags in labels for machinery that is nowhere near the shot: their anchors land
+        // far outside the viewport and every one of them is pulled to the same margin,
+        // where the de-overlap then stacks them into a column. That is the crowded right
+        // edge in Stage 4 - ten labels in a vertical pile, most naming equipment the
+        // audience cannot see.
+        //
+        // So: rescue a label that is at most maxRescue outside the safe box, and fade the
+        // rest. This is NOT the distance cutoff that failed before - that asked "how far
+        // away is this machine", which says nothing about whether it is the subject. This
+        // asks "is it in the picture", which is the actual question.
+        if (maxRescue < 9f)
+        {
+            float pull = Mathf.Max(Mathf.Abs(cx - vp.x), Mathf.Abs(cy - vp.y));
+            if (pull > maxRescue) { SetAlpha(0f); return; }
+        }
+
         Vector3 target = cam.ViewportToWorldPoint(new Vector3(cx, cy, vp.z));
 
         if (!init) { current = target; init = true; }
