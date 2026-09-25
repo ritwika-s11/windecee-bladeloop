@@ -681,21 +681,50 @@ public class OrderDashboardController : MonoBehaviour
         else if (step == 2 && frontier.Count > 0)
         {
             var p = frontier[Mathf.Clamp(railIndex, 0, frontier.Count - 1)];
-            title = "There is no single best plan";
-            body  = "Running hard fills the order sooner but wastes more of every tonne. Running clean uses less "
+
+            // THE LOW/MID COLLAPSE, STATED RATHER THAN BURIED.
+            //
+            // A cement works accepts a lower grade than precast concrete, yet is offered
+            // exactly the same 41 plans - which looks like the buyer choice was ignored.
+            // It was not. Measured at the feed ceiling, every 0.1 mm across the range:
+            //
+            //     6.0 mm   7,715 kg/h feed   4,810 kg/h fibre   62.3% yield   MID
+            //    11.5 mm   8,435 kg/h feed   4,604 kg/h fibre   54.6% yield   LOW  <- Low starts
+            //    20.0 mm   9,000 kg/h feed   3,921 kg/h fibre   43.6% yield   LOW
+            //
+            // Fibre output peaks at 6 mm, which is still precast quality, and the coarse
+            // settings a cement works unlocks do not begin until 11.5 mm. From there the
+            // extra feed never pays for the fibre it costs: 20 mm feeds 17% more blade
+            // material and returns 18% less fibre per hour, wasting more of every tonne
+            // doing it. Dominated on both frontier axes, so correctly discarded.
+            // Confirmed independently by Ritwika; agreed to state it, not "fix" it.
+            bool lowCollapse = mode != Mode.Constraint && grade == Grade.Low;
+
+            title = lowCollapse ? "The same options as precast concrete"
+                                : "There is no single best plan";
+
+            body  = lowCollapse
+                  ? "A cement works will take a lower grade, but the plant has nothing lower worth "
+                  + "running. Fibre output peaks at 6 mm — still precast quality — and the coarse "
+                  + "settings a cement works unlocks do not start until 11.5 mm."
+                  : "Running hard fills the order sooner but wastes more of every tonne. Running clean uses less "
                   + "material but takes longer. Every position on the rail is the right answer for somebody.";
+
             aL = "FIBRE PER HOUR"; aV = $"{p.fibreKgH:N0} kg/h";
             bL = "OF EVERY TONNE"; bV = $"{p.yieldFrac * 100f:0.0}%";
-            // The Low/Mid collapse, stated as the measured fact it is. Fibre output
-            // peaks at 6 mm, which is already precast-concrete quality, so the coarser
-            // settings a cement works would unlock produce LESS fibre per hour and waste
-            // more material — beaten on both counts, so never worth offering.
-            note = (mode != Mode.Constraint && grade == Grade.Low)
-                 ? "Same options as precast concrete. Fibre output peaks while the fibre is still "
-                 + "precast quality, so running dirtier than this gives you less fibre per hour AND "
-                 + "wastes more material — there is nothing better down there to offer."
+
+            note = lowCollapse
+                 ? "Past that point the extra feed rate never pays for the fibre it costs: 20 mm "
+                 + "puts 17% more blade material through the plant and gets 18% LESS fibre per hour "
+                 + "back, wasting more of every tonne to do it. There is nothing down there to "
+                 + "trade, so nothing coarser is offered."
                  : $"All {frontier.Count} positions on the rail are optimal. Moving the handle trades one "
                  + "consequence for the other — never for nothing.";
+
+            // Ritwika asked for this one to be unmissable. noteIsVerdict is what lifts the
+            // note out of Faint into the accent colour; every other step keeps it quiet so
+            // that an orange sentence still means something when it appears.
+            noteIsVerdict = lowCollapse;
         }
         else if (step == 3)
         {
