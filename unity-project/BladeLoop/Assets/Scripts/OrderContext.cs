@@ -203,7 +203,7 @@ public static class OrderContext
     {
         Grade.High => "Clean and strong enough to go back into new composite parts, standing in for virgin glass fibre.",
         Grade.Mid  => "Not clean enough for structural reuse, but sold today as reinforcing filler for precast slabs, pavement and panels.",
-        _          => "Co-processed in a cement kiln: the glass replaces raw sand, the resin replaces coal. The most commercially mature route at scale - there is always a buyer."
+        _          => "Co-processed in a cement kiln: the glass replaces raw sand, the resin replaces coal. The most established route at scale."
     };
 
     public static string GradeLabel(Grade g) => g switch
@@ -381,7 +381,7 @@ public static class OrderContext
         {
             order = new Order("", "Cement works", Grade.Low, 3250f),
             model = new ProcessModel { TempC = 550f, RetentionMin = 35f, FeedKgH = 8800f, ParticleSizeMm = 16f },
-            endUse = "Glass replaces sand, resin replaces coal. There is always a buyer."
+            endUse = "Glass replaces sand, resin replaces coal."
         }
     };
 

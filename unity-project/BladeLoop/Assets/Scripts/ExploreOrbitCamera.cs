@@ -60,8 +60,36 @@ public class ExploreOrbitCamera : MonoBehaviour
         initialised = true;
     }
 
+    /// <summary>Drag-to-orbit and scroll-to-zoom are OFF.
+    ///
+    /// Pausing still works and is still where the set-points are edited; what is gone
+    /// is moving the camera while paused. Two reasons, both from testing:
+    ///
+    ///   - Zooming out far enough showed the plant from outside its own scenery -
+    ///     backdrops, unlit geometry and the ends of the floor were never built to be
+    ///     seen, so the feature's own range exposed them.
+    ///   - The orbit pivot is seeded a few metres ahead of the camera, which is right
+    ///     for preserving the frame but makes dragging swing hard on a close shot.
+    ///     Stage 3 pauses on a 4.7 m close-up and was the worst of them.
+    ///
+    /// Disabled HERE, in one place, rather than by unticking a component in five
+    /// scenes: scene files cannot be merged, and one guard is far easier to lift than
+    /// five checkboxes are to find. Everything below is left intact so turning it back
+    /// on is deleting these four lines.
+    ///
+    /// The camera simply holds the frame while paused - StoryModeController has
+    /// already disabled the Brain, so with nothing driving it the shot stays put,
+    /// which is what PauseFramePreserver was preserving in the first place.</summary>
+    public bool allowFreeLook = false;
+
     void Update()
     {
+        if (!allowFreeLook)
+        {
+            initialised = false;
+            return;
+        }
+
         if (controller == null || target == null || !controller.IsPaused)
         {
             initialised = false; // re-init at next pause from the current story shot

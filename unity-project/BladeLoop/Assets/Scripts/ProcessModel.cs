@@ -311,7 +311,7 @@ public class ProcessModel
     public string OilInfo()
     {
         var sp = OutputSplit();
-        return "Pyrolytic oil condensed from the vapour — stored and burned as plant fuel. About 16% of the feed at the design case, "
+        return "Pyrolytic oil condensed from the vapour — stored and sold as fuel. About 16% of the feed at the design case, "
              + "now " + sp.OilPct.ToString("0.0") + "% (" + sp.OilKgH.ToString("N0") + " kg/h). It shrinks slowly as conditions drift, because less resin is cracked into condensable vapour.";
     }
 
