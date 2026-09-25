@@ -99018,6 +99018,7 @@ MonoBehaviour:
   zoomDamping: 10
   rotationDamping: 9
   spinInertia: 0.4
+  allowFreeLook: 0
 --- !u!4 &1088918716
 Transform:
   m_ObjectHideFlags: 0
@@ -128789,7 +128790,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "PAUSED  \u2014  Show Interior, then click parts  \xB7  SPACE to resume"
+  m_text: "PAUSED  \u2014  SPACE to resume"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -147847,8 +147848,8 @@ MonoBehaviour:
 
     Z2 PYROLYSIS 250-450C
 
-    Z3 CRACK
-    450-600C'
+    Z3
+    CRACK 450-600C'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}

@@ -14,9 +14,8 @@ WHAT YOU NEED
   Windows 10 or later, 64-bit
   A graphics adapter supporting DirectX 11
   About 300 MB of free disk space
-  A mouse WITH A SCROLL WHEEL — this is a requirement, not a preference.
-    Explore mode orbits on left-drag and zooms on the scroll wheel, and a
-    trackpad without scroll gestures leaves the zoom unreachable.
+  A mouse. Nothing special — the interface is click-driven and a trackpad
+    is fine.
 
   Sound is optional. The narration is subtitled throughout.
 
@@ -53,11 +52,12 @@ USING IT
 --------
   It launches fullscreen at your desktop resolution.
   ALT + ENTER        switch to a window (resizable; the interface re-flows)
-  SPACE  or  P       pause the run and take the camera
-  left-drag          orbit, while paused
-  scroll wheel       zoom, while paused
-  SPACE again        resume; the camera returns to the composed shot
+  SPACE  or  P       pause the run
+  SPACE again        resume
   ESC                leave the run and return to the home page
+
+  The frame holds still while paused. Pausing is what lets you change a
+  setpoint mid-run, and on the kiln it is also how you open the cutaway.
 
 From the home page you can run one of three worked examples, or build your
 own order under CUSTOM ORDER. The guided run is about two and a half
@@ -66,6 +66,7 @@ minutes.
 While paused at the Shredding or Kiln stage, a panel appears at the lower
 left letting you change that stage's setpoint and watch the plant answer on
 the frozen frame. APPLY keeps the change; resuming without it reverts.
+Every change you make is recorded in the report at the end.
 
 
 WHAT IT WRITES TO YOUR MACHINE
@@ -86,6 +87,6 @@ Delete the folder. Nothing is left behind anywhere else.
 
 THIS BUILD
 ----------
-  Built from commit   eb82c94
+  Built from commit   b4e88b1
   Unpacked            251 MB
   Zipped               75 MB

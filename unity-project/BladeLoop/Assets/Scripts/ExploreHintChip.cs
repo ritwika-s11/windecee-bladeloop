@@ -32,6 +32,23 @@ public class ExploreHintChip : MonoBehaviour
     CanvasGroup group;
     float t;
 
+    /// <summary>Stages where pausing now does nothing, so the chip has nothing to offer.
+    ///
+    /// Drag-to-orbit and scroll-to-zoom were removed (see ExploreOrbitCamera), and only
+    /// Shredding and the Kiln own a set-point, so on these stages SPACE freezes the frame
+    /// and that is all. Inviting the viewer to "explore" and giving them nothing is worse
+    /// than staying quiet.
+    ///
+    /// Stage 2 and Stage 3 keep the chip: pausing there opens the set-point panel, and on
+    /// Stage 3 the cutaway as well. The wording is not ideal there either - the side panel
+    /// calls it ADJUST THE PLANT - but that is a text change in scenes I do not own, and
+    /// the promise it makes on those two stages is at least kept.
+    ///
+    /// Done here rather than by deleting the chip from the scenes: .unity files cannot be
+    /// merged, and one list is easier to find and undo than five deletions. Authorised by
+    /// Ritwika, whose file this is.</summary>
+    static readonly string[] SilentScenes = { "Stage1_StoryMode", "Stage4_V2", "Stage4_StoryMode" };
+
     void Awake()
     {
         group = GetComponent<CanvasGroup>();
@@ -39,6 +56,14 @@ public class ExploreHintChip : MonoBehaviour
         group.interactable = false;
         group.blocksRaycasts = false;          // never steals clicks from the scene
         if (controller == null) controller = FindFirstObjectByType<StoryModeController>();
+
+        string scene = gameObject.scene.name;
+        if (System.Array.IndexOf(SilentScenes, scene) >= 0)
+        {
+            // Disable rather than just holding alpha at zero: Update then does not run at
+            // all, and nothing is left listening or animating behind an invisible chip.
+            gameObject.SetActive(false);
+        }
     }
 
     void Update()
