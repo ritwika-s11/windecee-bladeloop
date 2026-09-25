@@ -448,15 +448,21 @@ public class HowItWorksController : MonoBehaviour
 
     /// <summary>What the app actually offers. Every claim here is a screen that exists:
     /// the three presets are OrderContext's preset table, the tour is the five scenes in
-    /// TourSceneSequencer, and the report is OutcomeReport.</summary>
+    /// TourSceneSequencer, and the report is OutcomeReport.
+    ///
+    /// The tour and report cards name the live set-points, because this page is where a
+    /// reader decides what the app can do and the passive wording undersold it: the tour
+    /// pauses into PauseSetpointPanel at Shredding and Kiln, and the report carries a
+    /// "changed during the run" section whenever SetpointLog has anything in it. Both
+    /// claims are screens that exist, which is the rule this page is held to.</summary>
     void FeatureCards()
     {
         string[] head = { "THREE WORKED EXAMPLES", "CUSTOM ORDER", "THE GUIDED TOUR", "A RUN REPORT" };
         string[] blurb = {
             "One farm, three outcomes. Run the same feedstock for a composite manufacturer, a precast concrete producer or a cement works, and watch where the material goes.",
             "Bring your own order. Say who is buying, what is in the yard, or what your shredder can manage — the plant works out every set-point that is optimal for somebody, and you choose along the trade-off.",
-            "Follow the material through all five stages with narration, with your order's numbers carried on a panel beside the plant the whole way.",
-            "A self-contained report at the end: what you asked for, what you set, what the plant produced, and whether it filled the order."
+            "Follow the material through all five stages with narration, your order's numbers on a panel beside the plant the whole way. Pause at the shredder or the kiln to change a set-point, and the plant answers on the spot.",
+            "A self-contained report at the end: what you asked for, what you set, anything you changed mid-run, what the plant produced, and whether it filled the order."
         };
 
         const float CardH = 158f;
