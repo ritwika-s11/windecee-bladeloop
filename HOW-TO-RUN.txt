@@ -1,0 +1,91 @@
+BladeLoop — how to run it
+=========================
+
+WinDECEE Group 4, Otto-von-Guericke University Magdeburg
+DE-Project, Summer Semester 2026
+
+An interactive visualisation of the thermal co-processing of decommissioned
+wind turbine blades. You place an order, the plant runs, and a report tells
+you what it made.
+
+
+WHAT YOU NEED
+-------------
+  Windows 10 or later, 64-bit
+  A graphics adapter supporting DirectX 11
+  About 300 MB of free disk space
+  A mouse WITH A SCROLL WHEEL — this is a requirement, not a preference.
+    Explore mode orbits on left-drag and zooms on the scroll wheel, and a
+    trackpad without scroll gestures leaves the zoom unreachable.
+
+  Sound is optional. The narration is subtitled throughout.
+
+  No runtime, framework or supporting software has to be installed. The
+  build ships with everything it needs.
+
+
+INSTALLING IT
+-------------
+There is no installer.
+
+  1. Unzip BladeLoop-Win.zip anywhere you like.
+  2. Open the folder and run BladeLoop.exe.
+
+That is the whole installation.
+
+KEEP THE FOLDER TOGETHER. BladeLoop.exe and the BladeLoop_Data folder next
+to it are one unit. Copying the .exe somewhere on its own will stop it
+finding its data and it will not start.
+
+
+THE SMARTSCREEN WARNING ON FIRST RUN
+------------------------------------
+The build is not code-signed, so Windows will very likely show a blue
+"Windows protected your PC" dialog the first time you run it.
+
+  Click  More info  →  Run anyway
+
+This is expected for any unsigned application and does not indicate a
+problem with the build. It normally appears only once per machine.
+
+
+USING IT
+--------
+  It launches fullscreen at your desktop resolution.
+  ALT + ENTER        switch to a window (resizable; the interface re-flows)
+  SPACE  or  P       pause the run and take the camera
+  left-drag          orbit, while paused
+  scroll wheel       zoom, while paused
+  SPACE again        resume; the camera returns to the composed shot
+  ESC                leave the run and return to the home page
+
+From the home page you can run one of three worked examples, or build your
+own order under CUSTOM ORDER. The guided run is about two and a half
+minutes.
+
+While paused at the Shredding or Kiln stage, a panel appears at the lower
+left letting you change that stage's setpoint and watch the plant answer on
+the frozen frame. APPLY keeps the change; resuming without it reverts.
+
+
+WHAT IT WRITES TO YOUR MACHINE
+------------------------------
+Nothing, unless you ask.
+
+The application stores no settings and requires no account. The only file
+it ever writes is the run report, and only when you click SAVE REPORT at
+the end of a run. That is a single self-contained HTML file placed on your
+Desktop, which opens in any browser and needs nothing from the application
+to read.
+
+
+UNINSTALLING
+------------
+Delete the folder. Nothing is left behind anywhere else.
+
+
+THIS BUILD
+----------
+  Built from commit   1126255
+  Unpacked            251 MB
+  Zipped               75 MB
