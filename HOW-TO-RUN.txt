@@ -87,6 +87,6 @@ Delete the folder. Nothing is left behind anywhere else.
 
 THIS BUILD
 ----------
-  Built from commit   b4e88b1
+  Built from commit   ec7372e
   Unpacked            251 MB
   Zipped               75 MB
