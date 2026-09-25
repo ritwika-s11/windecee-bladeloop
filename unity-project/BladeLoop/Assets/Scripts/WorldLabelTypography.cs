@@ -292,11 +292,12 @@ public class WorldLabelTypography : MonoBehaviour
     [Tooltip("Off to compare against the authored look without recompiling.")]
     public bool apply = true;
 
-    [Tooltip("Write to the log whenever a label is hidden, and what hid it. A player build " +
-             "writes Player.log, so this is readable after the fact without attaching " +
-             "anything - which is the only way to tell a hidden label from a faded one " +
-             "when all you have is a screenshot.")]
-    public bool diagnose = true;
+    [Tooltip("Write to the log whenever a label is hidden, and what hid it.\n\n" +
+             "OFF for the submitted build. It earned its keep - it is how we proved which " +
+             "Stage 4 labels were being dropped rather than guessing from screenshots - but " +
+             "it fires every two seconds per hidden label, and a shipped player's log should " +
+             "be readable. Turn it back on the moment a label misbehaves again.")]
+    public bool diagnose = false;
 
     /// <summary>Does this rect collide with anything already placed this frame?</summary>
     bool Clashes(Rect r)

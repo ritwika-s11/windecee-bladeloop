@@ -31,7 +31,20 @@ public class DashboardSceneBinder : MonoBehaviour
         }
         if (DashboardController.Instance == null)
         {
-            Debug.LogWarning($"[DashboardSceneBinder] No DashboardController found after {waited:F1}s — dashboard scene not loaded?");
+            // NOT AN ERROR ANY MORE, AND NOT WORTH A WARNING.
+            //
+            // The dashboard was the stage-info panel from the first build. It was
+            // superseded by OrderPanel, which shows the same thing against the live
+            // order, and _DashboardBootstrap in MainMenu was deactivated then - so
+            // _Dashboard is never loaded and this controller is never going to appear.
+            //
+            // The binder objects were left in Stage 1 and Stage 2. Harmless in
+            // themselves, but this warning fired once per stage in every run, in the
+            // shipped player's log, pointing at a feature that was retired on purpose.
+            // A log a reader can trust is one where every line means something.
+            //
+            // Removing the binder objects would be the tidier fix; it is also two scene
+            // edits for zero behaviour change, which is not a trade worth making.
             yield break;
         }
 
