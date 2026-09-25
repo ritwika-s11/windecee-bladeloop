@@ -155,15 +155,29 @@ public class PauseSetpointPanel : MonoBehaviour
         valueAtPause = v;
         pendingPreview = false;
 
-        bool particle = knob == Knob.Particle;
+                bool particle = knob == Knob.Particle;
+
+        // Finer shredding is slower shredding (OrderSolver.MaxFeed). Without this
+        // floor, a Low order dragged to 2 mm reads High grade at ~5,800 kg/h fibre -
+        // a plant the shredder cannot feed, faster than any plan the solver allows.
+        float minP = 1f;
+        if (particle)
+        {
+            while (minP < 20f && OrderSolver.MaxFeed(minP) < m.FeedKgH) minP += 0.1f;
+            minP = Mathf.Min(minP, v);   // never above the value the run already has
+        }
+
         titleTxt.text = particle ? "SHREDDER — PARTICLE SIZE" : "KILN — TEMPERATURE";
         unitTxt.text  = particle ? "mm" : "°C";
         hintTxt.text  = particle
-            ? "Finer shred decomposes more completely, but the shredder feeds slower."
+            ? (minP > 1.05f
+                ? "Finer than " + minP.ToString("0.#") + " mm needs a slower feed than this run's "
+                  + m.FeedKgH.ToString("N0") + " kg/h."
+                : "Finer shred decomposes more completely, but the shredder feeds slower.")
             : "Hotter runs decompose more of the resin, at more energy per tonne.";
 
         slider.onValueChanged.RemoveAllListeners();
-        slider.minValue     = particle ? 1f : 400f;
+        slider.minValue     = particle ? minP : 400f;
         slider.maxValue     = particle ? 20f : 700f;
         slider.wholeNumbers = false;
         slider.SetValueWithoutNotify(v);
