@@ -38,10 +38,17 @@ using TMPro;
 /// untouched. With no order active it never appears at all, so free play and editor
 /// playback are exactly as they were.
 ///
-/// TWO CHANGES PER RUN
-/// -------------------
-/// See SetpointLog.MaxChanges. Briefly: a change you can undo for free is not a
-/// decision, and an unlimited slider turns the plant into a toy.
+/// CHANGE AS OFTEN AS YOU LIKE
+/// ---------------------------
+/// There is no cap, and there was one: two per run, justified as a plant rule. That
+/// reasoning did not survive contact with the model. ProcessModel is steady state -
+/// no transient, no settling time, no penalty for moving a setpoint - so the cap
+/// charged a cost the simulation never imposes, which in a teaching tool is worse
+/// than no rule at all. See SetpointLog for the longer version.
+///
+/// The consequence it was reaching for is already in the app and charged by the
+/// model: the report records what changed, and the verdict flips to TARGET MISSED
+/// when the fibre drops below the buyer's grade.
 /// </summary>
 public class PauseSetpointPanel : MonoBehaviour
 {
