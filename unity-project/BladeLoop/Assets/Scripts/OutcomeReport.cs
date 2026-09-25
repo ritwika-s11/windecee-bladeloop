@@ -92,6 +92,13 @@ public static class OutcomeReport
         // ---- verdict ---------------------------------------------------------
         AppendVerdict(sb, m, hasOrder);
 
+        // ---- operator changes, if the run was steered mid-way ----------------
+        // Directly under the verdict and above "How the plant was set", because it
+        // changes how those settings should be read: they are where the run FINISHED,
+        // not where it started. Renders nothing when nobody touched anything, so an
+        // untouched run's report is byte-for-byte what it was before this existed.
+        AppendOperatorChanges(sb);
+
         // ---- three columns ---------------------------------------------------
         sb.Append("<div class=\"cols\">");
         AppendOrderColumn(sb, m, hasOrder);
@@ -137,7 +144,18 @@ public static class OutcomeReport
         sb.Append("<div class=\"vbody\">");
         sb.Append("Asked for <b>").Append(Esc(OrderContext.GradeLabel(target))).Append("</b>, produced <b>")
           .Append(Esc(OrderContext.GradeLabel(achieved))).Append("</b>. ");
-        if (met)
+        if (met && achieved < target)
+        {
+            // OVER-DELIVERY IS NOT THE SAME AS MEETING THE ORDER, and saying "meets the
+            // grade the buyer ordered" for both reads as a shrug at the better outcome.
+            // It matters more now that the setpoints can be moved mid-run: a user who
+            // deliberately improved the fibre was being told only that they had not
+            // broken anything.
+            int up = (int)target - (int)achieved;
+            sb.Append("That is ").Append(up >= 2 ? "two grades" : "a grade")
+              .Append(" better than this buyer asked for, so the order is filled with room to spare.");
+        }
+        else if (met)
         {
             sb.Append("The fibre meets the grade the buyer ordered.");
         }
@@ -152,7 +170,15 @@ public static class OutcomeReport
               .Append(" lower, so it goes to a different market.");
         }
         sb.Append("</div>");
-        sb.Append("<div class=\"vuse\">").Append(Esc(OrderContext.EndUseFor(achieved))).Append("</div>");
+        // NAME THE GRADE THE DESCRIPTION BELONGS TO.
+        //
+        // This line describes the market for the grade that was PRODUCED, but it used
+        // to sit unattributed under a verdict naming two different grades. Order LOW,
+        // over-deliver to HIGH, and the reader saw "Order filled" above a paragraph
+        // about structural composite parts while their buyer was a cement works - and
+        // reasonably concluded the report had contradicted itself.
+        sb.Append("<div class=\"vuse\"><b>").Append(Esc(OrderContext.GradeLabel(achieved)))
+          .Append("</b> fibre: ").Append(Esc(OrderContext.EndUseFor(achieved))).Append("</div>");
         sb.Append("</section>");
     }
 
@@ -242,6 +268,74 @@ public static class OutcomeReport
           .Append("It sits near 1.5% when the plant is on spec and climbs toward 10% as the ")
           .Append("feed gets coarser, which is why particle size moves it more than anything else.</p>");
         sb.Append("</section>");
+    }
+
+    /// <summary>
+    /// What the operator changed while the run was on screen.
+    ///
+    /// WHY THE REPORT HAS TO SAY THIS. Every other figure in this document is computed
+    /// from OrderContext.Model, which holds the FINAL settings. If the user dropped the
+    /// shredder from 4 mm to 15 mm at the kiln, the plant column would quietly report
+    /// 15 mm as though it had been true for the whole campaign, and the verdict would
+    /// grade a run that never happened at one setting. Stating the change is what keeps
+    /// the rest of the report honest.
+    ///
+    /// It is also the only place the consequence of the change is legible: purity and
+    /// fibre per hour at the start beside the same two at the end.
+    ///
+    /// ProcessModel is steady-state - one setting in, one outcome out - so this does NOT
+    /// claim to blend the two setpoints over the days spent at each. It says plainly
+    /// which figures the outcome was computed from. See SetpointLog for why that is the
+    /// right shape at this size.
+    /// </summary>
+    static void AppendOperatorChanges(StringBuilder sb)
+    {
+        if (!SetpointLog.Any || SetpointLog.Entry == null) return;
+
+        var entry = SetpointLog.Entry;
+        var final = OrderContext.Model;
+        if (final == null) return;
+
+        sb.Append("<div class=\"cols\">");
+        sb.Append("<section class=\"col wide\"><h2>Changed during the run</h2>");
+
+        // NEWEST FIRST, and capped. There is no limit on how many times a setpoint can
+        // be moved, so an uncapped list can run past the bottom of the page; and the
+        // last change is the one the reader is asking about, so it belongs at the top.
+        var recent = SetpointLog.Recent(SetpointLog.MaxShown);
+        foreach (var c in recent)
+        {
+            sb.Append("<div class=\"row\"><span class=\"k\">").Append(Esc(c.label))
+              .Append("<span class=\"dsg\" style=\"display:inline;margin:0 0 0 .5em\">at ")
+              .Append(Esc(c.stage)).Append("</span></span>")
+              .Append("<span class=\"v\">").Append(Esc(SetpointLog.Fmt(c, c.from)))
+              .Append(" &rarr; ").Append(Esc(SetpointLog.Fmt(c, c.to))).Append("</span>")
+              .Append("</div>");
+        }
+
+        int hidden = SetpointLog.Used - recent.Count;
+        if (hidden > 0)
+            sb.Append("<div class=\"dsg\">and ").Append(hidden)
+              .Append(hidden == 1 ? " earlier change" : " earlier changes")
+              .Append(", not listed</div>");
+
+        float p0 = entry.FiberPurityPct, p1 = final.FiberPurityPct;
+        float f0 = entry.OutputSplit().GlassKgH, f1 = final.OutputSplit().GlassKgH;
+
+        Row(sb, "Purity",         p0.ToString("0.0") + "% &rarr; " + p1.ToString("0.0") + "%");
+        Row(sb, "Fibre per hour", f0.ToString("N0") + " &rarr; " + f1.ToString("N0") + " kg/h");
+        Row(sb, "Grade",
+            Esc(OrderContext.GradeLabel(OrderContext.GradeOf(p0, entry.TensileRetentionPct)))
+            + " &rarr; " +
+            Esc(OrderContext.GradeLabel(OrderContext.GradeOf(p1, final.TensileRetentionPct))));
+
+        sb.Append("<p class=\"note\">The plant is modelled at steady state, so every other ")
+          .Append("figure in this report is computed from the <b>final</b> settings rather ")
+          .Append("than blended across the campaign. This section is what the run started ")
+          .Append("from.</p>");
+
+        sb.Append("</section>");
+        sb.Append("</div>");
     }
 
     static void AppendFooterBlocks(StringBuilder sb, ProcessModel m, bool hasOrder)

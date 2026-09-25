@@ -232,6 +232,11 @@ public class OrderPanel : MonoBehaviour
     // IBM Plex needs about 1.3; 1.55 leaves the margin that bug cost us.
     const float LineFactor = 1.55f;
 
+    /// <summary>Canvas reference width for this panel alone. Smaller than the 1920 the
+    /// rest of the app uses, which is what makes everything in here render larger.
+    /// See BuildShell.</summary>
+    const float PanelRefWidth = 1700f;
+
     void BuildShell()
     {
         var canvasGo = new GameObject("OrderPanelCanvas",
@@ -246,7 +251,19 @@ public class OrderPanel : MonoBehaviour
 
         var scaler = canvasGo.GetComponent<CanvasScaler>();
         scaler.uiScaleMode         = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-        scaler.referenceResolution = new Vector2(1920f, 1080f);
+        // 1700, not 1920. THIS IS THE FONT SIZE CONTROL.
+        //
+        // Every size in this file is written in reference units, so scaling the whole
+        // canvas raises the type, the rules, the bars and the paddings together and by
+        // exactly the same amount. Editing twenty literals by hand would have given a
+        // worse result and a much larger diff, and the first thing to drift out of step
+        // would have been the y-advances that sit beside each size.
+        //
+        // 1920/1700 is a 13% lift, and it is the largest the cards survive: the
+        // viewport measures 801 units instead of 928, and at that height the kiln card
+        // lands eleven units inside the window. Separation is the one card that still
+        // overruns, and it says so at its foot.
+        scaler.referenceResolution = new Vector2(PanelRefWidth, PanelRefWidth * 9f / 16f);
         scaler.matchWidthOrHeight  = 0.5f;
 
         // The panel occupies everything the 3D view does not. Anchored as a
@@ -312,6 +329,7 @@ public class OrderPanel : MonoBehaviour
         public bool[] lit;          // the ones THIS stage decides
         public bool   showOutput;   // the split is only known once the plant has run
         public bool   showExplore;  // the pause/look-around hint
+        public bool   showSpec;     // the buyer's quality floor
         public string blockHdr;
         public string blockBody;
     }
@@ -347,10 +365,12 @@ public class OrderPanel : MonoBehaviour
                 c.shown[3] = true;                       // particle size, decided here
                 c.lit[3]   = true;
                 c.showExplore = true;
+                c.showSpec    = true;
                 c.blockHdr  = "WHAT SIZE TO SHRED TO";
                 c.blockBody = m.ParticleInfo() + "\n\n" +
                               "Particle size carries the heaviest weight in the model — more than " +
-                              "temperature. This is where the biggest decision is made.";
+                              "temperature. This is where the biggest decision is made." +
+                              NextUp("the kiln", "temperature and how long the material stays in it");
                 break;
 
             case "Stage3_StoryMode":
@@ -360,7 +380,8 @@ public class OrderPanel : MonoBehaviour
                 c.lit[0]   = c.lit[1]   = true;
                 c.showExplore = true;
                 c.blockHdr  = "HOW HOT, HOW LONG";
-                c.blockBody = m.TempInfo() + "\n\n" + m.RetentionInfo();
+                c.blockBody = m.TempInfo() + "\n\n" + m.RetentionInfo()
+                            + NextUp("separation", "what the plant actually recovered");
                 break;
 
             case "Stage4_V2":
@@ -374,7 +395,11 @@ public class OrderPanel : MonoBehaviour
                 // that say the same thing. Purity and tensile are rendered with the
                 // bars, where they belong - they describe the same product.
                 c.blockHdr  = "WHAT YOU ACTUALLY GOT";
-                c.blockBody = OrderContext.EndUseFor(OrderContext.AchievedGrade);
+                // Named. The grade in the panel's headline is the one that was ORDERED,
+                // so on a run where the two differ an unattributed description of a
+                // third market reads as a contradiction rather than as the result.
+                c.blockBody = "Graded " + OrderContext.GradeLabel(OrderContext.AchievedGrade)
+                            + ".\n\n" + OrderContext.EndUseFor(OrderContext.AchievedGrade);
                 break;
 
             case "Transport_StoryMode":
@@ -382,6 +407,7 @@ public class OrderPanel : MonoBehaviour
                 // own (interface contract, section 4). Nothing is decided here, so
                 // the settings block stays empty and the copy says why.
                 c.title = "IN TRANSIT";  c.chapter = "";
+                c.showSpec = true;
                 c.blockHdr  = "ON THE ROAD";
                 c.blockBody = $"{OrderContext.BladesLabel}, cut down on site and trucked to " +
                               "the plant.\n\nNothing is decided on the road. The first real choice comes " +
@@ -393,6 +419,7 @@ public class OrderPanel : MonoBehaviour
                 // The wind farm decides quantity, not quality, so it shows the
                 // campaign figures and no settings at all.
                 c.title = "WIND FARM";  c.chapter = "STAGE 1 OF 4";
+                c.showSpec = true;
                 // Explore works here too, and the wind farm is where a viewer is
                 // most likely to want a closer look. Without this the panel stayed
                 // silent and the in-scene chip was left to say it instead, which is
@@ -407,17 +434,48 @@ public class OrderPanel : MonoBehaviour
                               // Rate times time is the whole of it, so show both.
                               $"The plant recovers about {OrderContext.FibreKgH:N0} kg of fibre " +
                               $"an hour, so this order is {OrderContext.CampaignLabel} of " +
-                              "continuous running.";
+                              "continuous running." +
+                              NextUp("the shredder", "how fine the blade material is cut");
                 break;
         }
 
         return c;
     }
 
+    // ---- filling the column ---------------------------------------------------
+    //
+    // AN EARLIER ATTEMPT SPREAD THE SLACK INTO THE SECTION GAPS, and it looked exactly
+    // like what it was: a short card stretched to fit. Leading is not content, and a
+    // padded-out page is visible to anyone.
+    //
+    // What the sparse cards actually needed was bigger type and more to say, and the
+    // dense one needed less room for the same facts. All three are here:
+    //
+    //   - the panel canvas renders at a smaller reference width (see BuildShell), so
+    //     every glyph, rule and bar scales together and the cards keep one type size;
+    //   - stages 1-3 carry a spec block and a next-stage line, both real content;
+    //   - Separation's output split is one composition bar instead of five rows.
+
+    /// <summary>Where the run goes after this stage, and what gets decided there.
+    ///
+    /// Two jobs. It orients the viewer - the tour cuts between stages with no map, so
+    /// "what am I about to watch decide" is a question the panel can answer for a
+    /// line of text. And it is honest content for the space the sparse cards have
+    /// going spare, which is a better use of it than leading.
+    ///
+    /// Not on Separation: there is nothing after it, and a panel promising a fifth
+    /// stage would be a lie. Not on Transport either, whose copy already says the
+    /// first real choice comes at the shredder.</summary>
+    static string NextUp(string where, string what)
+        => "\n\nNext: " + where + ", where " + what + " is decided.";
+
     /// <summary>Rebuilds the panel for the current scene and settings.</summary>
-    public void Refresh()
+    public void Refresh() { BuildCard(); }
+
+    /// <summary>Lays the card out once. Returns the height the content came to.</summary>
+    float BuildCard()
     {
-        if (root == null || !OrderContext.HasOrder) return;
+        if (root == null || !OrderContext.HasOrder) return 0f;
 
         var card  = CardFor(SceneManager.GetActiveScene().name);
         var order = OrderContext.Active;
@@ -460,6 +518,41 @@ public class OrderPanel : MonoBehaviour
         // second branch.
         Text("Buyer", order.customerType,
              18f, BladeLoopTheme.Muted, BladeLoopTheme.Sans, ref y);
+
+        // ---- where the run is now heading ------------------------------------
+        //
+        // THE HEADLINE ABOVE IS THE ORDER, AND THE ORDER DOES NOT CHANGE. That was
+        // fine while the settings were fixed at the start: ordered and produced were
+        // the same thing, so one label said both. Once a setpoint can be moved
+        // mid-run they come apart, and the panel went on announcing HIGH GRADE over
+        // a plant that had been dropped to 16 mm and could no longer make it.
+        //
+        // So the order keeps the headline and the consequence gets its own line.
+        //
+        // ONLY AFTER THE USER HAS CHANGED SOMETHING. The panel deliberately withholds
+        // the output split until Separation, on the grounds that the plant has not run
+        // yet and showing a result early is both a spoiler and a lie. Predicting the
+        // grade from stage one would break that rule. Predicting it after the user has
+        // moved a setpoint does not: they made a decision and are owed its consequence,
+        // and it cannot spoil a run they are actively steering. An untouched run shows
+        // exactly what it always did.
+        if (SetpointLog.Any)
+        {
+            Grade got = OrderContext.AchievedGrade;
+            Grade want = order.targetGrade;
+            bool short_ = got > want;
+
+            y += 10f;
+            Text("Heading", "HEADING FOR " + OrderContext.GradeLabel(got), 16f,
+                 short_ ? BladeLoopTheme.Oxide : BladeLoopTheme.StreamGas,
+                 BladeLoopTheme.MonoBold, ref y);
+
+            Text("HeadingWhy",
+                 short_ ? "below what this buyer takes"
+                        : got < want ? "above what this buyer needs"
+                                     : "on spec for this buyer",
+                 14f, BladeLoopTheme.Faint, BladeLoopTheme.Sans, ref y);
+        }
 
         y += 12f;
         y = Divider(y) + 24f;
@@ -564,98 +657,191 @@ public class OrderPanel : MonoBehaviour
             y = Divider(y) + 24f;
             SectionHeader(card.blockHdr, ref y, "|  design case");
 
+            // ---- ONE COMPOSITION BAR, NOT FIVE PROGRESS BARS --------------------
+            //
+            // The five streams are PARTS OF ONE TONNE. Drawn as five separate tracks
+            // they read as five unrelated measurements, and because fibre is ~69% and
+            // loss ~1.5% every track had to be scaled against 72% so the small ones
+            // were not slivers - a divisor the reader could not see and would not have
+            // guessed. A single stacked bar states the real relationship directly: the
+            // segments ARE the tonne, and their widths are literally their shares.
+            //
+            // It is also less than half the height, which is what lets this card carry
+            // the larger type the sparse cards wanted without losing anything.
             string[] streams = { "Fibre", "Oil", "Syngas", "Char", "Loss" };
             var cols = BladeLoopTheme.StreamColours;
             var sp = m.OutputSplit();
             float[] pcts = { sp.GlassPct, sp.OilPct, sp.SyngasPct, sp.CharPct, sp.LossPct };
 
-            // The same five numbers for the design case. These become a tick on each
-            // bar rather than another column of text: a fill that visibly overshoots
-            // or falls short of a target mark is the one comparison that needs no
-            // reading at all, and it is the idiom every real gauge already uses.
             var rsp = OrderContext.ReferenceSplit;
             float[] refPcts = { rsp.GlassPct, rsp.OilPct, rsp.SyngasPct, rsp.CharPct, rsp.LossPct };
 
+            // Normalised against the streams' own sum rather than a literal 100, so a
+            // split that rounds to 99.9 still fills the bar exactly.
+            float sum = 0f;
+            for (int i = 0; i < pcts.Length; i++) sum += Mathf.Max(pcts[i], 0f);
+            if (sum <= 0.01f) sum = 100f;
+
+            const float BarH = 34f;
+            var barRt = MakeRect(content, "SplitBar");
+            barRt.anchorMin = new Vector2(0f, 1f);
+            barRt.anchorMax = new Vector2(1f, 1f);
+            barRt.pivot     = new Vector2(0.5f, 1f);
+            barRt.offsetMin = new Vector2(Pad, 0f);
+            barRt.offsetMax = new Vector2(-Pad, 0f);
+            barRt.anchoredPosition = new Vector2(barRt.anchoredPosition.x, -y);
+            barRt.sizeDelta = new Vector2(barRt.sizeDelta.x, BarH);
+
+            var barBg = barRt.gameObject.AddComponent<Image>();
+            barBg.color = BladeLoopTheme.RuleSoft;
+            barBg.raycastTarget = false;
+
+            // Fractional anchors, so the segments stay exact at any window width.
+            float cursor = 0f;
             for (int i = 0; i < streams.Length; i++)
             {
-                Text(streams[i] + "Lbl", streams[i], 18f, BladeLoopTheme.Bone,
-                     BladeLoopTheme.Sans, ref y, advance: false);
+                float f = Mathf.Max(pcts[i], 0f) / sum;
+                var seg = MakeRect(barRt, streams[i] + "Seg");
+                seg.anchorMin = new Vector2(cursor, 0f);
+                seg.anchorMax = new Vector2(Mathf.Min(cursor + f, 1f), 1f);
+                // A hairline of panel colour between segments. Without it two adjacent
+                // dark streams merge into one block and the bar stops being readable.
+                seg.offsetMin = new Vector2(i == 0 ? 0f : 1f, 0f);
+                seg.offsetMax = Vector2.zero;
 
-                var track = MakeRect(content, streams[i] + "Track");
-                track.anchorMin = new Vector2(0f, 1f);
-                track.anchorMax = new Vector2(1f, 1f);
-                track.pivot     = new Vector2(0.5f, 1f);
-                track.offsetMin = new Vector2(Pad + LabelW, 0f);
-                track.offsetMax = new Vector2(-(Pad + PctW), 0f);
-                track.anchoredPosition = new Vector2(track.anchoredPosition.x, -(y + 9f));
-                track.sizeDelta = new Vector2(track.sizeDelta.x, 9f);
+                var segImg = seg.gameObject.AddComponent<Image>();
+                segImg.color = cols[i];
+                segImg.raycastTarget = false;
 
-                var trackImg = track.gameObject.AddComponent<Image>();
-                trackImg.color = BladeLoopTheme.RuleSoft;
-                trackImg.raycastTarget = false;
-
-                // Fill width comes from anchorMax.x, so it is resolution independent.
-                var fill = MakeRect(track, streams[i] + "Fill");
-                fill.anchorMin = Vector2.zero;
-                // Scaled against 72% rather than 100%, or four of the five bars are
-                // slivers: fibre is ~69% and loss ~1.5%. Same divisor for every bar,
-                // so the relative lengths stay honest.
-                fill.anchorMax = new Vector2(Mathf.Clamp01(pcts[i] / 72f), 1f);
-                fill.offsetMin = Vector2.zero;
-                fill.offsetMax = Vector2.zero;
-
-                var fillImg = fill.gameObject.AddComponent<Image>();
-                fillImg.color = cols[i];
-                fillImg.raycastTarget = false;
-
-                // Design-case target tick. Created AFTER the fill so it draws on top
-                // of it, and made taller than the track so it still reads where the
-                // fill has already run past it. Same /72f divisor as the fill, or the
-                // mark would sit at a position the bar could never reach.
-                float tx = Mathf.Clamp01(refPcts[i] / 72f);
-                var mark = MakeRect(track, streams[i] + "Target");
-                mark.anchorMin = new Vector2(tx, 0f);
-                mark.anchorMax = new Vector2(tx, 1f);
-                mark.offsetMin = new Vector2(-1f, -3f);
-                mark.offsetMax = new Vector2( 1f,  3f);
-
-                var markImg = mark.gameObject.AddComponent<Image>();
-                markImg.color = BladeLoopTheme.Bone;
-                markImg.raycastTarget = false;
-
-                var pct = Text(streams[i] + "Pct", pcts[i].ToString("0.0") + "%", 18f,
-                               BladeLoopTheme.Bone, BladeLoopTheme.Mono, ref y, advance: false);
-                pct.alignment = TextAlignmentOptions.TopRight;
-
-                y += 18f * LineFactor + 8f;
+                cursor += f;
             }
+
+            // The design case, as one tick on the fibre boundary. On a stacked bar the
+            // only boundary worth marking is where fibre ENDS: everything to its left
+            // is product, everything to its right is not, so "did this run beat the
+            // design case" is one glance at which side of the mark the cream ends on.
+            float refMark = Mathf.Clamp01(refPcts[0] / 100f);
+            var tick = MakeRect(barRt, "DesignTick");
+            tick.anchorMin = new Vector2(refMark, 0f);
+            tick.anchorMax = new Vector2(refMark, 1f);
+            tick.offsetMin = new Vector2(-1f, -5f);
+            tick.offsetMax = new Vector2( 1f,  5f);
+            var tickImg = tick.gameObject.AddComponent<Image>();
+            tickImg.color = BladeLoopTheme.Bone;
+            tickImg.raycastTarget = false;
+
+            y += BarH + 16f;
+
+            // ---- legend, two columns -------------------------------------------
+            // Five rows of swatch-name-percent stacked would cost back everything the
+            // bar just saved. Two columns of three fit the width and read as a key to
+            // the bar above rather than as five more measurements.
+            const float RowH = 26f;
+            for (int i = 0; i < streams.Length; i++)
+            {
+                int col = i / 3, row = i % 3;
+                float x0 = col == 0 ? 0f : 0.5f;
+                float ry = y + row * RowH;
+
+                var sw = MakeRect(content, streams[i] + "Sw");
+                sw.anchorMin = new Vector2(x0, 1f);
+                sw.anchorMax = new Vector2(x0, 1f);
+                sw.pivot     = new Vector2(0f, 1f);
+                sw.anchoredPosition = new Vector2(Pad + (col == 0 ? 0f : 6f), -(ry + 5f));
+                sw.sizeDelta = new Vector2(11f, 11f);
+                var swImg = sw.gameObject.AddComponent<Image>();
+                swImg.color = cols[i];
+                swImg.raycastTarget = false;
+
+                // TWO LABELS, NOT ONE WITH <align=right> IN IT. TMP's align tag is a
+                // LINE property, not a split point: it right-aligned the stream name
+                // along with the number and the two closed up into "Fibre69.0%".
+                var lab = MakeRect(content, streams[i] + "Key");
+                lab.anchorMin = new Vector2(x0, 1f);
+                lab.anchorMax = new Vector2(x0 + 0.5f, 1f);
+                lab.pivot     = new Vector2(0.5f, 1f);
+                lab.offsetMin = new Vector2(Pad + (col == 0 ? 20f : 26f), 0f);
+                lab.offsetMax = new Vector2(col == 0 ? -10f : -Pad, 0f);
+                lab.anchoredPosition = new Vector2(lab.anchoredPosition.x, -ry);
+                lab.sizeDelta = new Vector2(lab.sizeDelta.x, RowH);
+                var lt = lab.gameObject.AddComponent<TextMeshProUGUI>();
+                lt.text = streams[i];
+                lt.fontSize = 16f;
+                lt.color = BladeLoopTheme.Muted;
+                lt.font = BladeLoopTheme.Sans;
+                lt.alignment = TextAlignmentOptions.TopLeft;
+                lt.raycastTarget = false;
+                lt.textWrappingMode = TextWrappingModes.NoWrap;
+                lt.overflowMode = TextOverflowModes.Overflow;
+
+                var val = MakeRect(content, streams[i] + "KeyV");
+                val.anchorMin = lab.anchorMin;
+                val.anchorMax = lab.anchorMax;
+                val.pivot     = lab.pivot;
+                val.offsetMin = lab.offsetMin;
+                val.offsetMax = lab.offsetMax;
+                val.anchoredPosition = lab.anchoredPosition;
+                val.sizeDelta = lab.sizeDelta;
+                var vt = val.gameObject.AddComponent<TextMeshProUGUI>();
+                vt.text = pcts[i].ToString("0.0") + "%";
+                vt.fontSize = 16f;
+                vt.color = BladeLoopTheme.Bone;
+                vt.font = BladeLoopTheme.MonoBold;
+                vt.alignment = TextAlignmentOptions.TopRight;
+                vt.raycastTarget = false;
+                vt.textWrappingMode = TextWrappingModes.NoWrap;
+                vt.overflowMode = TextOverflowModes.Overflow;
+            }
+
+            y += RowH * 3f + 10f;
 
             // The tick is named in the section header above, on its own line, so it
             // costs nothing here. An unexplained mark would just be noise.
 
             // Quality sits with the bars: it describes the same product they do.
-            y += 4f;
-            Text("QualityLbl", "Purity", 17f, BladeLoopTheme.Muted,
-                 BladeLoopTheme.Sans, ref y, advance: false);
-            // Purity is the number the grade tiers are actually drawn on, so it is the
-            // one that most needs an anchor: 82.5% sounds poor until you can see that
-            // best-in-class recovery is 93%, not 100%. The reference rides the same
-            // line via rich text rather than taking one of its own - the Separation
-            // card cannot afford the extra row. <alpha> works even though this label
-            // is a single TMP object, which a second colour parameter would not.
-            var q = Text("QualityVal",
-                         $"{m.FiberPurityPct:0.0}%<alpha=#77> / {refM.FiberPurityPct:0.0}<alpha=#FF>" +
-                         $"   ·   tensile {m.TensileRetentionPct:0.0}%<alpha=#77> / {refM.TensileRetentionPct:0.0}<alpha=#FF>",
-                         17f, BladeLoopTheme.Bone, BladeLoopTheme.MonoBold,
-                         ref y, advance: false);
-            q.richText = true;
-            q.alignment = TextAlignmentOptions.TopRight;
-            y += 17f * LineFactor + 14f;
+            //
+            // TWO ROWS. It used to be one line carrying both measures and both design
+            // values, which fitted at the old type size and collided with its own
+            // label at this one - "Purity" and "93.0% / 93.0" landed on top of each
+            // other. The design value stays alongside each figure: 82.5% sounds poor
+            // until you can see that best-in-class recovery is 93%, not 100%.
+            y += 6f;
+            QualityRow("Purity", m.FiberPurityPct, refM.FiberPurityPct, ref y);
+            QualityRow("Tensile", m.TensileRetentionPct, refM.TensileRetentionPct, ref y);
+            y += 8f;
         }
         else
         {
-            // Stages that have no output section still need the block's own heading.
-            y += 12f;
+            // ---- what this buyer will actually accept -------------------------
+            //
+            // The grade thresholds were in the app from the start and the viewer never
+            // saw one until the run report - so for four minutes "HIGH GRADE" was a
+            // label with no definition behind it, and "is this going well" had no
+            // answer. These are the spec, not the result: stating them spoils nothing,
+            // and they are what make the purity figure at Separation mean something
+            // when it finally arrives.
+            //
+            // ONE LINE, AND NOT ON EVERY CARD. Measured: as a header plus two rows it
+            // cost 90 units and pushed three of the four cards into scrolling, which
+            // is how a useful addition turns into a worse panel. By the kiln it has
+            // been on screen for two stages and the kiln card is the one with three
+            // settings to show, so that is where it stops.
+            if (card.showSpec)
+            {
+                y += 12f;
+                y = Divider(y) + 24f;
+                SectionHeader("WHAT THIS BUYER NEEDS", ref y);
+
+                Grade want = order.targetGrade;
+                Text("Spec",
+                     want == Grade.Low
+                       ? "Takes whatever the plant produces."
+                       : "Purity at least " + (want == Grade.High ? OrderContext.HighPurity : OrderContext.MidPurity).ToString("0")
+                         + "%   ·   strength at least " + (want == Grade.High ? OrderContext.HighTensile : OrderContext.MidTensile).ToString("0") + "%",
+                     17f, BladeLoopTheme.Bone, BladeLoopTheme.Sans, ref y);
+            }
+
+            y += 10f;
             y = Divider(y) + 24f;
             SectionHeader(card.blockHdr, ref y);
         }
@@ -676,8 +862,66 @@ public class OrderPanel : MonoBehaviour
         // The measured stack, not the window. Shorter than the viewport and the
         // ScrollRect simply has nothing to scroll, so every card that already fit
         // behaves exactly as it did before.
+        float total = y + 30f;
         if (content != null)
-            content.sizeDelta = new Vector2(0f, y + 30f);
+            content.sizeDelta = new Vector2(0f, total);
+
+        // A card taller than the window has always been able to scroll; nothing ever
+        // said so. With Separation now the one card that overruns, a silent scroll is
+        // a card that simply looks truncated. One soft band along the foot of the
+        // viewport reads as "there is more under here" without adding a scrollbar to
+        // a panel that has no other chrome.
+        ShowScrollCue(viewport != null && total > viewport.rect.height + 2f);
+        return total;
+    }
+
+    RectTransform scrollCue;
+
+    void ShowScrollCue(bool show)
+    {
+        if (!show)
+        {
+            if (scrollCue != null) scrollCue.gameObject.SetActive(false);
+            return;
+        }
+
+        if (scrollCue == null)
+        {
+            // A sibling of the viewport, not part of the scrolling content - it marks
+            // the window's edge, so it must not travel with what it is masking.
+            scrollCue = MakeRect(viewport.parent, "ScrollCue");
+            scrollCue.anchorMin = new Vector2(0f, 0f);
+            scrollCue.anchorMax = new Vector2(1f, 0f);
+            scrollCue.pivot     = new Vector2(0.5f, 0f);
+            scrollCue.sizeDelta = new Vector2(0f, 1f);
+
+            var img = scrollCue.gameObject.AddComponent<Image>();
+            img.color = BladeLoopTheme.Rule;
+            img.raycastTarget = false;
+
+            var lbl = MakeRect(scrollCue, "Cue");
+            lbl.anchorMin = new Vector2(0f, 0f);
+            lbl.anchorMax = new Vector2(1f, 0f);
+            lbl.pivot     = new Vector2(0.5f, 1f);
+            lbl.offsetMin = new Vector2(Pad, 0f);
+            lbl.offsetMax = new Vector2(-Pad, 0f);
+            lbl.anchoredPosition = new Vector2(0f, -4f);
+            lbl.sizeDelta = new Vector2(lbl.sizeDelta.x, 20f);
+
+            var t = lbl.gameObject.AddComponent<TextMeshProUGUI>();
+            t.text = "SCROLL FOR MORE  ↓";
+            t.fontSize = 12f;
+            t.characterSpacing = 3f;
+            t.color = BladeLoopTheme.Faint;
+            t.font = BladeLoopTheme.SansBold;
+            t.alignment = TextAlignmentOptions.TopRight;
+            t.raycastTarget = false;
+        }
+
+        // Sits on the viewport's bottom edge, which the hint box already insets.
+        scrollCue.anchoredPosition = new Vector2(0f, viewport.offsetMin.y);
+        scrollCue.gameObject.SetActive(true);
+        scrollCue.SetAsLastSibling();
     }
 
     /// <summary>The pause-and-look-around hint, pinned to the foot of the panel.
@@ -882,6 +1126,40 @@ public class OrderPanel : MonoBehaviour
 
         if (advance) y += h + 6f;
         return t;
+    }
+
+    /// <summary>A measured quality figure beside the design case's, on one row.
+    /// The reference rides the same line in a dimmer colour rather than taking a row
+    /// of its own - the Separation card cannot afford four rows here.</summary>
+    void QualityRow(string label, float actual, float design, ref float y)
+    {
+        Text("Q" + label, label, 17f, BladeLoopTheme.Muted,
+             BladeLoopTheme.Sans, ref y, advance: false);
+
+        var v = Text("Q" + label + "V",
+                     actual.ToString("0.0") + "%<alpha=#77>  / " + design.ToString("0.0") + "<alpha=#FF>",
+                     17f, BladeLoopTheme.Bone, BladeLoopTheme.MonoBold, ref y, advance: false);
+        v.richText = true;
+        v.alignment = TextAlignmentOptions.TopRight;
+
+        y += 17f * LineFactor + 4f;
+    }
+
+    /// <summary>One threshold this run has to clear, as a labelled floor.
+    ///
+    /// Deliberately "at least 90%" rather than a bar. A bar invites the reader to
+    /// compare it with something, and on stages 1-3 there is nothing to compare it
+    /// with yet - the plant has not run. This is a requirement, and it reads as one.</summary>
+    void SpecRow(string label, float pct, ref float y)
+    {
+        Text("Spec" + label, label, 17f, BladeLoopTheme.Muted,
+             BladeLoopTheme.Sans, ref y, advance: false);
+
+        var v = Text("Spec" + label + "V", "at least " + pct.ToString("0") + "%", 17f,
+                     BladeLoopTheme.Bone, BladeLoopTheme.MonoBold, ref y, advance: false);
+        v.alignment = TextAlignmentOptions.TopRight;
+
+        y += 17f * LineFactor + 6f;
     }
 
     float Divider(float top)

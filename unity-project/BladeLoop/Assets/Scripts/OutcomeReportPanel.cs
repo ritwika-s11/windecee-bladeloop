@@ -37,7 +37,8 @@ public class OutcomeReportPanel : MonoBehaviour
     const float ColGap    = 44f;
 
     RectTransform root;
-    RectTransform body;          // everything that fades in after the slide
+    RectTransform body;          // the scrolling document
+    RectTransform chrome;        // pinned over it: Save, Back, and the saved-path note
     CanvasGroup   bodyGroup;
     TMP_Text      savedNote;
 
@@ -101,13 +102,65 @@ public class OutcomeReportPanel : MonoBehaviour
         bg.color = BladeLoopTheme.Panel;
         bg.raycastTarget = true;                // this panel DOES eat clicks
 
-        body = MakeRect(root, "Body");
-        body.anchorMin = Vector2.zero;
-        body.anchorMax = Vector2.one;
-        body.offsetMin = Vector2.zero;
-        body.offsetMax = Vector2.zero;
-        bodyGroup = body.gameObject.AddComponent<CanvasGroup>();
+        // ---- fade layer ------------------------------------------------------
+        // The whole report fades in together, chrome included, so the CanvasGroup sits
+        // above the scroll split rather than on the scrolling content.
+        var fade = MakeRect(root, "Fade");
+        fade.anchorMin = Vector2.zero;
+        fade.anchorMax = Vector2.one;
+        fade.offsetMin = Vector2.zero;
+        fade.offsetMax = Vector2.zero;
+        bodyGroup = fade.gameObject.AddComponent<CanvasGroup>();
         bodyGroup.alpha = 0f;
+
+        // ---- scroll viewport -------------------------------------------------
+        //
+        // The report is laid out top-down in 1920x1080 reference space with no regard
+        // for where 1080 ends, and it has been overrunning the bottom of the screen -
+        // "Fibre quality" and "What the run costs" were already half off. Anything that
+        // lengthens it, like the operator-changes block, makes that worse. So the
+        // content scrolls, and the layout code below is left exactly as it is.
+        var viewport = MakeRect(fade, "Viewport");
+        viewport.anchorMin = Vector2.zero;
+        viewport.anchorMax = Vector2.one;
+        viewport.offsetMin = Vector2.zero;
+        viewport.offsetMax = Vector2.zero;
+        viewport.gameObject.AddComponent<RectMask2D>();
+
+        // A scroll wheel event travels UP from whatever graphic it hits. The panel
+        // background lives on `root`, which is this object's PARENT, so it could never
+        // deliver the event to the ScrollRect below it. This transparent sheet is the
+        // raycast target inside the scroll area that makes the wheel work.
+        var catcher = viewport.gameObject.AddComponent<Image>();
+        catcher.color = new Color(0f, 0f, 0f, 0f);
+        catcher.raycastTarget = true;
+
+        body = MakeRect(viewport, "Body");
+        body.anchorMin = new Vector2(0f, 1f);
+        body.anchorMax = new Vector2(1f, 1f);
+        body.pivot     = new Vector2(0.5f, 1f);
+        body.offsetMin = new Vector2(0f, 0f);
+        body.offsetMax = new Vector2(0f, 0f);
+        body.anchoredPosition = Vector2.zero;
+        body.sizeDelta = new Vector2(0f, ScreenH());   // grown to fit in BuildReport
+
+        var scroll = fade.gameObject.AddComponent<ScrollRect>();
+        scroll.viewport          = viewport;
+        scroll.content           = body;
+        scroll.horizontal        = false;
+        scroll.vertical          = true;
+        scroll.movementType      = ScrollRect.MovementType.Clamped;
+        scroll.scrollSensitivity = 42f;
+        scroll.inertia           = false;   // a document, not a flick list
+
+        // ---- pinned chrome ---------------------------------------------------
+        // Save and Back must stay reachable from any scroll position, so they sit
+        // OUTSIDE the scrolling content, above it.
+        chrome = MakeRect(fade, "Chrome");
+        chrome.anchorMin = Vector2.zero;
+        chrome.anchorMax = Vector2.one;
+        chrome.offsetMin = Vector2.zero;
+        chrome.offsetMax = Vector2.zero;
     }
 
     IEnumerator Slide()
@@ -163,6 +216,13 @@ public class OutcomeReportPanel : MonoBehaviour
         // ---- verdict --------------------------------------------------------
         top = BuildVerdict(top, hasOrder);
 
+        // ---- operator changes, if the run was steered mid-way ---------------
+        // Same position as in the downloaded HTML, and for the same reason: it changes
+        // how "HOW THE PLANT WAS SET" below should be read. Returns `top` unchanged
+        // when nothing was touched, so an untouched run's screen is pixel-identical to
+        // what it was before this existed.
+        top = BuildOperatorChanges(top);
+
         // ---- three columns --------------------------------------------------
         float colW = (ScreenW() - Margin * 2f - ColGap * 2f) / 3f;
         float cx   = Margin;
@@ -181,6 +241,80 @@ public class OutcomeReportPanel : MonoBehaviour
 
         // ---- actions --------------------------------------------------------
         BuildButtons();
+
+        // ---- size the scroll content ----------------------------------------
+        // The layout is written top-down in absolute y, so the deepest column IS the
+        // document height. The tail allowance clears the pinned action row, which
+        // floats over the content rather than being part of it - without it the last
+        // line of "what the run costs" can only ever be read from behind a button.
+        float deepest = Mathf.Max(d1, d2) + Margin + 110f;
+        body.sizeDelta = new Vector2(0f, Mathf.Max(ScreenH(), deepest));
+    }
+
+    /// <summary>
+    /// What the operator changed while the run was on screen. The screen twin of
+    /// OutcomeReport.AppendOperatorChanges - see there for why the report has to say it.
+    ///
+    /// Two columns rather than three: the changes on the left, their consequence on the
+    /// right. The three-column grid below is for the run's standing figures; this is a
+    /// before-and-after, and forcing it into thirds would leave an empty column.
+    /// </summary>
+    float BuildOperatorChanges(float top)
+    {
+        if (!SetpointLog.Any || SetpointLog.Entry == null) return top;
+
+        var entry = SetpointLog.Entry;
+        var final = OrderContext.Model;
+        if (final == null) return top;
+
+        float colW = (ScreenW() - Margin * 2f - ColGap) * 0.5f;
+        float lx = Margin, rx = Margin + colW + ColGap;
+
+        // Newest first and capped, matching the downloaded report. Uncapped this column
+        // would grow without bound and push the three-column grid off the page.
+        float ly = Head(lx, colW, top, "CHANGED DURING THE RUN");
+        var recent = SetpointLog.Recent(SetpointLog.MaxShown);
+        foreach (var c in recent)
+        {
+            Row(lx, colW, ref ly, c.label + "  ·  " + c.stage,
+                SetpointLog.Fmt(c, c.from) + "  →  " + SetpointLog.Fmt(c, c.to));
+        }
+
+        int hidden = SetpointLog.Used - recent.Count;
+        if (hidden > 0)
+        {
+            Label(body, "OpHidden",
+                  "and " + hidden + (hidden == 1 ? " earlier change" : " earlier changes")
+                  + ", not listed",
+                  12.5f, BladeLoopTheme.Faint, BladeLoopTheme.Sans, lx, ly, colW, 20f);
+            ly += 24f;
+        }
+
+        float p0 = entry.FiberPurityPct, p1 = final.FiberPurityPct;
+        float f0 = entry.OutputSplit().GlassKgH, f1 = final.OutputSplit().GlassKgH;
+
+        float ry = Head(rx, colW, top, "WHAT IT DID");
+        Row(rx, colW, ref ry, "Purity",
+            p0.ToString("0.0") + "%  →  " + p1.ToString("0.0") + "%");
+        Row(rx, colW, ref ry, "Fibre per hour",
+            f0.ToString("N0") + "  →  " + f1.ToString("N0") + " kg/h");
+        Row(rx, colW, ref ry, "Grade",
+            OrderContext.GradeLabel(OrderContext.GradeOf(p0, entry.TensileRetentionPct))
+            + "  →  " +
+            OrderContext.GradeLabel(OrderContext.GradeOf(p1, final.TensileRetentionPct)));
+
+        float y = Mathf.Max(ly, ry) + 4f;
+        var note = Label(body, "OpNote",
+            "The plant is modelled at steady state, so every other figure here is computed "
+            + "from the final settings rather than blended across the campaign. This is what "
+            + "the run started from.",
+            12.5f, BladeLoopTheme.Faint, BladeLoopTheme.Sans,
+            Margin, y, ScreenW() - Margin * 2f, 34f);
+        note.textWrappingMode = TextWrappingModes.Normal;
+
+        y += 40f;
+        Rule(body, Margin, y, ScreenW() - Margin * 2f);
+        return y + 28f;
     }
 
     float BuildVerdict(float top, bool hasOrder)
@@ -205,10 +339,26 @@ public class OutcomeReportPanel : MonoBehaviour
             accent = met ? BladeLoopTheme.StreamGas : BladeLoopTheme.Oxide;
             line = "Asked for " + OrderContext.GradeLabel(target)
                  + ", produced " + OrderContext.GradeLabel(got) + ".  ";
-            line += met
-                ? "The fibre meets the grade the buyer ordered."
-                : "The fibre is still sellable, but not to this buyer — it grades out "
-                  + (steps >= 2 ? "two steps" : "one step") + " lower, so it goes to a different market.";
+
+            // Three outcomes, not two. Over-delivery used to share the "meets the grade
+            // the buyer ordered" wording with an exact hit, which shrugs at the better
+            // result - and with setpoints now movable mid-run, deliberately improving
+            // the fibre is something a user does on purpose and should be told about.
+            if (met && got < target)
+            {
+                int up = (int)target - (int)got;
+                line += "That is " + (up >= 2 ? "two grades" : "a grade")
+                      + " better than this buyer asked for, so the order is filled with room to spare.";
+            }
+            else if (met)
+            {
+                line += "The fibre meets the grade the buyer ordered.";
+            }
+            else
+            {
+                line += "The fibre is still sellable, but not to this buyer — it grades out "
+                      + (steps >= 2 ? "two steps" : "one step") + " lower, so it goes to a different market.";
+            }
         }
 
         float w = ScreenW() - Margin * 2f;
@@ -242,7 +392,13 @@ public class OutcomeReportPanel : MonoBehaviour
 
         if (hasOrder)
         {
-            var use = Label(body, "VUse", OrderContext.EndUseFor(OrderContext.AchievedGrade),
+            // Named, not bare. This describes the market for the grade that was
+            // PRODUCED; unattributed under a verdict that names two grades, it read as
+            // a contradiction - "Order filled" for a cement works above a paragraph
+            // about structural composite parts.
+            var use = Label(body, "VUse",
+                  OrderContext.GradeLabel(OrderContext.AchievedGrade) + " fibre:  "
+                  + OrderContext.EndUseFor(OrderContext.AchievedGrade),
                   15f, BladeLoopTheme.Muted, BladeLoopTheme.Sans, Margin, top, w, 44f);
             use.textWrappingMode = TextWrappingModes.Normal;
             top += 50f;
@@ -373,7 +529,7 @@ public class OutcomeReportPanel : MonoBehaviour
         float sx = Margin + (ScreenW() - Margin * 2f - ColGap * 2f) / 3f + ColGap;
         float sw = (rx - (bw + gap)) - sx - 24f;
 
-        savedNote = Label(body, "SavedNote", "", 13.5f, BladeLoopTheme.Faint, BladeLoopTheme.Sans,
+        savedNote = Label(chrome, "SavedNote", "", 13.5f, BladeLoopTheme.Faint, BladeLoopTheme.Sans,
                           sx, ScreenH() - by - bh + 14f, sw, 40f);
         savedNote.textWrappingMode = TextWrappingModes.Normal;
     }
@@ -581,7 +737,8 @@ public class OutcomeReportPanel : MonoBehaviour
     void MakeButton(string name, string text, float x, float yFromBottom, float w, float h,
                     bool primary, UnityEngine.Events.UnityAction onClick)
     {
-        var rt = MakeRect(body, name);
+        // `chrome`, not `body`: these are pinned to the window, not to the document.
+        var rt = MakeRect(chrome, name);
         rt.anchorMin = new Vector2(0f, 0f);
         rt.anchorMax = new Vector2(0f, 0f);
         rt.pivot     = new Vector2(0f, 0f);
