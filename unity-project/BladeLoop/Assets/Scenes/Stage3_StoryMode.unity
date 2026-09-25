@@ -106551,7 +106551,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'ZONE 2 MELTING
+  m_text: 'ZONE 2 PYROLYSIS
 
     250-450 C'
   m_isRightToLeft: 0
@@ -106696,8 +106696,10 @@ MonoBehaviour:
   minScale: 0.45
   maxScale: 2.2
   hideNearerThan: 4.5
+  hideFartherThan: Infinity
   fadeBand: 2
   hideWhenBehind: 1
+  maxRescue: 9
   faceCamera: 1
   damping: 10
 --- !u!21 &1189913140
@@ -135201,8 +135203,10 @@ MonoBehaviour:
   minScale: 0.45
   maxScale: 2.2
   hideNearerThan: 4.5
+  hideFartherThan: Infinity
   fadeBand: 2
   hideWhenBehind: 1
+  maxRescue: 9
   faceCamera: 1
   damping: 10
 --- !u!1 &1586631260
@@ -142149,8 +142153,10 @@ MonoBehaviour:
   minScale: 0.45
   maxScale: 2.2
   hideNearerThan: 4.5
+  hideFartherThan: Infinity
   fadeBand: 2
   hideWhenBehind: 1
+  maxRescue: 9
   faceCamera: 1
   damping: 10
 --- !u!1 &1698411502
@@ -160257,8 +160263,10 @@ MonoBehaviour:
   minScale: 0.45
   maxScale: 2.2
   hideNearerThan: 4.5
+  hideFartherThan: Infinity
   fadeBand: 2
   hideWhenBehind: 1
+  maxRescue: 9
   faceCamera: 1
   damping: 10
 --- !u!1 &1876696000
@@ -178436,10 +178444,6 @@ MonoBehaviour:
   maxCycleLength: 7.5
   minFeedFactor: 0.7
   maxFeedFactor: 2
-  visualFloorC: 540
-  visualCeilingC: 610
-  hotByTime: 28
-  rampDurationSec: 16
   referenceRetentionMin: 35
   minRpmFactor: 0.6
   maxRpmFactor: 1.6
