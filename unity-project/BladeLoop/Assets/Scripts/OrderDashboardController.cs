@@ -377,7 +377,7 @@ public class OrderDashboardController : MonoBehaviour
                          + $"of the feed, {s.GlassKgH:N0} kg/h."; };
             case "OIL":
                 return () => { var s = Live().OutputSplit();
-                    return $"Pyrolysis oil, condensed and burned as plant fuel. Right now {s.OilPct:0.0}% "
+                    return $"Pyrolysis oil, condensed and sold as fuel. Right now {s.OilPct:0.0}% "
                          + $"of the feed, {s.OilKgH:N0} kg/h."; };
             case "SYNGAS":
                 return () => { var s = Live().OutputSplit();
@@ -2224,7 +2224,7 @@ public class OrderDashboardController : MonoBehaviour
     static string Destination(int i) => i switch
     {
         0 => "back into composite parts",
-        1 => "burned as plant fuel",
+        1 => "sold as fuel",
         2 => "piped back to the burners",
         3 => "carbon residue, sold on",
         _ => "dust and moisture, lost"

@@ -389,7 +389,9 @@ public class OrderPanel : MonoBehaviour
                 c.shown[0] = c.shown[1] = c.shown[2] = c.shown[3] = true;
                 c.lit[2]   = true;                       // feed rate sets the kg/h
                 c.showOutput  = true;                    // only now is there a result
-                c.showExplore = true;
+                // No hint here: Separation decides no set-point, so pausing on it
+                // offers nothing to change. The card is also the tallest in the panel.
+                c.showExplore = false;
                 // At Separation the output section IS the payoff, so it carries the
                 // block's heading and body instead of the panel running two headers
                 // that say the same thing. Purity and tensile are rendered with the
@@ -421,10 +423,9 @@ public class OrderPanel : MonoBehaviour
                 c.title = "WIND FARM";  c.chapter = "STAGE 1 OF 4";
                 c.showSpec = true;
                 // Explore works here too, and the wind farm is where a viewer is
-                // most likely to want a closer look. Without this the panel stayed
-                // silent and the in-scene chip was left to say it instead, which is
-                // the one place the two hints could both appear at once.
-                c.showExplore = true;
+                // No hint on the wind farm: nothing here is adjustable, and the hint
+                // now advertises set-point editing rather than looking around.
+                c.showExplore = false;
                 c.blockHdr  = "THIS ORDER NEEDS";
                 c.blockBody = $"{OrderContext.FeedTonnesLabel} of blade material\n" +
                               $"{OrderContext.BladesLabel}   ·   {OrderContext.TurbinesLabel}\n\n" +
@@ -980,21 +981,20 @@ public class OrderPanel : MonoBehaviour
         ruleImg.color = BladeLoopTheme.Rule;
         ruleImg.raycastTarget = false;
 
-        var hdr = HintText(box, "HintHdr", "LOOK AROUND", 15f, BladeLoopTheme.Muted,
+        var hdr = HintText(box, "HintHdr", "ADJUST THE PLANT", 15f, BladeLoopTheme.Muted,
                            BladeLoopTheme.SansBold, 22f, 23f);
         hdr.characterSpacing = 6f;
 
-        // SPACE, not Backspace: StoryModeController binds spaceKey and pKey, and
-        // the in-scene overlay already says "PRESS SPACE TO EXPLORE". Two different
-        // instructions for the same action is worse than none.
+        // SPACE, not Backspace: StoryModeController binds spaceKey and pKey.
         //
-        // The clicking sentence is added ONLY where clicking actually works. The
-        // professor's outstanding note is literally "it is not possible to click any
-        // part" - printing that promise into a stage with no ClickableParts would
-        // restate the complaint as a feature. Because the check is made live, the
-        // sentence appears by itself the moment Anirban applies the Explore spec;
-        // no edit here is needed to turn it on.
-        string hint = "Press <b>SPACE</b> to pause, then drag to orbit and scroll to zoom.";
+        // This used to promise drag-to-orbit and scroll-to-zoom. Both are gone - see
+        // ExploreOrbitCamera - so the hint now names the thing pausing actually does
+        // here: Shredding and the Kiln each own a set-point you can change on the
+        // frozen frame. It is only built on those two stages.
+        //
+        // The clicking sentence is added ONLY where clicking actually works, and the
+        // check is live, so it appears by itself wherever click targets exist.
+        string hint = "Press <b>SPACE</b> to modify plant settings.";
         if (SceneHasWorkingClickTargets())
             hint += " Click any part of the machine to read what it does.";
 
